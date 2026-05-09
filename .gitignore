@@ -1,49 +1,58 @@
-# ── Environment secrets (NEVER commit these) ──────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# AutiSense-AI — Git Ignore Rules
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Environment secrets (NEVER commit) ───────────────────────────────────────
 .env
 .env.local
 .env.*.local
 *.env
 backend/.env
 backend/.env.local
-autism-frontend/.env
-autism-frontend/.env.local
-backend-python/.env
-backend-python/.env.local
+frontend/.env
+frontend/.env.local
+ml-service/.env
+ml-service/.env.local
 
-# ── Node dependencies ─────────────────────────────────────────────────────────
+# ── Node dependencies ────────────────────────────────────────────────────────
 node_modules/
-backend/node_modules/
-autism-frontend/node_modules/
 
-# ── Build outputs ─────────────────────────────────────────────────────────────
+# ── Build outputs ────────────────────────────────────────────────────────────
 dist/
 build/
 .vite/
+.next/
 
-# ── Logs ──────────────────────────────────────────────────────────────────────
+# ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
-frontend-dev.log
-backend-dev.log
+run-logs/
 
-# ── Python ML service ─────────────────────────────────────────────────────────
-backend-python/.venv/
+# ── Python ───────────────────────────────────────────────────────────────────
 .venv/
-backend-python/__pycache__/
 __pycache__/
-backend-python/**/__pycache__/
-backend-python/**/*.pyc
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# ── Trained model artifacts (large binary files — regenerate with train_model.py)
-backend-python/app/asd_model.pkl
-backend-python/app/asd_scaler.pkl
-backend-python/app/asd_metadata.pkl
+# ── Trained model artifacts (large binaries — regenerate with train_model.py)
+ml-service/models/*.pkl
+ml-service/app/*.pkl
 *.pkl
+
+# ── Database files ───────────────────────────────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ── Upload directories ───────────────────────────────────────────────────────
+ml-service/ai-engine/uploads/
+uploads/
 
 # ── OS / Editor junk ─────────────────────────────────────────────────────────
 .DS_Store
@@ -56,5 +65,8 @@ Thumbs.db
 *.sln
 *.sw?
 
-# ── Legacy ───────────────────────────────────────────────────────────────────
-backend/manassaathi.db
+# ── Package lock files (only root + service-level are committed) ─────────────
+# package-lock.json is committed — do not ignore
+
+# ── Docker volumes ───────────────────────────────────────────────────────────
+mongo_data/

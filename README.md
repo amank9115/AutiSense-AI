@@ -1,368 +1,219 @@
-🧠 AI-Enabled Autism Screening Platform
+<p align="center">
+  <img src="frontend/public/illustrations/manassaathi-logo.png" alt="AutiSense-AI Logo" width="120" />
+</p>
+
+<h1 align="center">AutiSense-AI</h1>
+
+<p align="center">
+  <strong>AI-Enabled Autism Screening Platform</strong><br/>
+  Real-time behavioral analysis · ML risk prediction · Clinical-grade reports
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
+</p>
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   React + Vite  │────▶│  Express.js API  │────▶│  FastAPI + ML   │
+│   (frontend/)   │     │   (backend/)     │     │  (ml-service/)  │
+│                 │     │                  │     │                 │
+│  • Camera UI    │     │  • Auth (JWT)    │     │  • scikit-learn │
+│  • Dashboards   │     │  • REST API      │     │  • MediaPipe    │
+│  • Charts       │     │  • MongoDB ODM   │     │  • PDF Reports  │
+│  • AI Assistant │     │  • Gateway proxy  │     │  • OpenCV       │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                │
+                        ┌───────┴───────┐
+                        │  MongoDB Atlas │
+                        └───────────────┘
+```
+
+---
+
+## 📂 Project Structure
+
+```
+AutiSense-AI/
+│
+├── .github/workflows/ci.yml       # CI pipeline (lint → build → check)
+│
+├── frontend/                       # React 19 + Vite + TypeScript
+│   ├── src/
+│   │   ├── pages/                  # 23 page components
+│   │   ├── components/
+│   │   │   ├── ui/                 # Design primitives
+│   │   │   ├── ai/                 # ML overlay components
+│   │   │   ├── camera/             # Camera preview + analysis
+│   │   │   ├── charts/             # Behavioral analytics charts
+│   │   │   ├── chat/               # AI agent chat
+│   │   │   ├── layout/             # Navbar, Footer, AppShell
+│   │   │   └── ...                 # auth, effects, story, etc.
+│   │   ├── hooks/                  # Custom React hooks
+│   │   ├── context/                # Auth, Screening, Theme
+│   │   ├── services/               # API clients
+│   │   ├── routes/                 # App router
+│   │   └── types/                  # TypeScript definitions
+│   └── public/                     # Static assets
+│
+├── backend/                        # Node.js + Express API
+│   └── src/
+│       ├── server.js               # Express bootstrap (routes, middleware)
+│       ├── db.js                   # MongoDB connection + Mongoose models
+│       ├── ml.js                   # JS-based ML scoring fallback
+│       ├── config/                 # Environment configuration
+│       ├── gateway/                # Proxy to Python ML & AI Engine
+│       └── data/                   # ML dataset loader
+│
+├── ml-service/                     # Python FastAPI + ML Models
+│   ├── app/
+│   │   ├── main.py                 # FastAPI entry point
+│   │   ├── ml_analyzer.py          # ML analysis logic
+│   │   └── pdf_generator.py        # PDF report generation
+│   ├── ai-engine/                  # Computer vision modules
+│   │   ├── behavior_analysis.py
+│   │   ├── emotion_detection.py
+│   │   └── camera_stream.py
+│   ├── models/                     # Trained .pkl artifacts (gitignored)
+│   └── train_model.py              # Model training script
+│
+├── docs/                           # Reference documentation
+├── docker-compose.yml              # Local MongoDB
+├── .editorconfig                   # Consistent formatting
+├── .env.example                    # All env vars documented
+└── package.json                    # Root scripts (concurrently)
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** ≥ 18 &nbsp;|&nbsp; **Python** ≥ 3.10 &nbsp;|&nbsp; **MongoDB Atlas** account (or local via Docker)
 
-An intelligent AI-powered platform for early Autism Spectrum Disorder (ASD) screening and behavioral analysis using computer vision, machine learning, and real-time analytics.
+### 1. Clone & Install
 
-The platform helps parents, clinicians, and doctors detect early behavioral indicators of autism by analyzing facial expressions, eye contact, emotional responses, and attention patterns through live camera screening and machine learning models.
+```bash
+git clone https://github.com/amank9115/AutiSense-AI.git
+cd AutiSense-AI
 
-🌍 Project Overview
+# Install all dependencies
+npm run install:all
+```
 
-ManasSaathi is a comprehensive autism screening system that integrates:
+### 2. Configure Environment
 
-🎥 Real-time video analysis
+```bash
+# Copy the reference env file and fill in your values
+cp .env.example backend/.env
+cp .env.example frontend/.env
+```
 
-🤖 Machine learning based risk prediction
+Edit `backend/.env` with your MongoDB Atlas URI and optional API keys.
 
-📊 Advanced behavioral analytics dashboards
+### 3. Start All Services
 
-👨‍⚕️ Doctor and clinician monitoring tools
-
-📈 Long-term developmental tracking
-
-The system analyzes behavioral patterns through camera-based screening and generates risk assessments and developmental insights to support early intervention.
-
-✨ Key Features
-🎥 Live Camera Screening
-
-Real-time behavioral screening using computer vision models that analyze:
-
-Eye contact
-
-Facial expressions
-
-Attention patterns
-
-Emotional responses
-
-The system generates AI-based autism risk scores from these observations.
-
-📊 Advanced Behavioral Analytics
-
-Interactive dashboards with visual insights including:
-
-Risk indicator meters
-
-Attention heatmaps
-
-Emotion timeline charts
-
-Behavioral radar charts
-
-Weekly developmental progress reports
-
-👥 Multi-Role System
-
-The platform supports three user roles:
-
-Parents
-
-Child screening
-
-Progress monitoring
-
-Development insights
-
-Clinicians
-
-Behavioral analysis tools
-
-Case monitoring
-
-Session reports
-
-Doctors
-
-Clinical dashboards
-
-Longitudinal behavior tracking
-
-Diagnostic insights
-
-🔐 Secure Authentication
-
-Secure login system with:
-
-Email OTP authentication
-
-Phone verification
-
-JWT-based authentication
-
-MongoDB user storage
-
-📈 Progress Tracking
-
-Track developmental behavior across time:
-
-Weekly progress reports
-
-Session history
-
-Behavioral pattern comparison
-
-AI-generated insights
-
-🤖 AI Behavior Analysis Engine
-
-The AI engine performs:
-
-Face detection
-
-Emotion recognition
-
-Gesture detection
-
-Attention tracking
-
-Behavioral feature extraction
-
-These features are used to generate autism risk predictions using ML models.
-
-💬 Collaboration Tools
-
-Built-in collaboration features for healthcare professionals:
-
-Doctor–clinician messaging
-
-Case discussion platform
-
-Shared behavioral reports
-
-📱 Responsive Interface
-
-Fully responsive UI built using modern technologies:
-
-Mobile friendly
-
-Tablet compatible
-
-Desktop dashboards
-
-🏗️ System Architecture
-
-React Frontend
-↓
-Node.js Backend API
-↓
-Python ML Service
-↓
-Computer Vision Analysis
-↓
-MongoDB Database
-↓
-Behavioral Insights Dashboard
-
-⚙️ Tech Stack
-Frontend
-
-Modern web interface built using:
-
-React 19
-
-TypeScript
-
-Vite
-
-Tailwind CSS
-
-Chart.js / Recharts
-
-Key features implemented:
-
-Camera screening interface
-
-Analytics dashboards
-
-Parent and doctor portals
-
-Behavioral visualization charts
-
-Backend API
-
-Server-side system responsible for:
-
-Authentication
-
-API endpoints
-
-session management
-
-database communication
-
-Technologies:
-
-Node.js
-
-Express.js
-
-MongoDB Atlas
-
-JWT Authentication
-
-Machine Learning Service
-
-AI engine responsible for behavior analysis.
-
-Technologies:
-
-Python
-
-FastAPI
-
-OpenCV
-
-TensorFlow
-
-MediaPipe
-
-ML tasks include:
-
-Face detection
-
-Emotion recognition
-
-Gesture detection
-
-Autism risk classification
-
-Data Sources
-
-The platform uses Autism Diagnostic datasets in ARFF format to train and evaluate machine learning models.
-
-Example behavioral features extracted:
-
-Eye contact duration
-
-Emotion variability
-
-Social interaction signals
-
-Attention tracking metrics
-
-🚀 Quick Start
-Frontend Setup
-
-cd autism-frontend
-npm install
+```bash
 npm run dev
+```
 
-Frontend runs on:
-http://localhost:5173
+This starts all three services concurrently:
 
-Backend Setup
+| Service       | URL                        | Color   |
+|---------------|----------------------------|---------|
+| **Frontend**  | http://localhost:5173       | 🟦 Cyan    |
+| **Backend**   | http://localhost:4000       | 🟩 Green   |
+| **ML Service**| http://localhost:8001       | 🟪 Magenta |
 
-cd backend
-npm install
-npm run dev
+Or start individually:
 
-Backend runs on:
-http://localhost:5000
+```bash
+npm run dev:frontend    # React dev server
+npm run dev:backend     # Express API
+npm run dev:ml          # FastAPI ML service
+```
 
-Python ML Service Setup
+---
 
-cd backend-python
+## 🤖 AI & ML Features
 
-python -m venv .venv
+| Feature | Technology | Description |
+|---------|-----------|-------------|
+| **Live Camera Screening** | MediaPipe + OpenCV | Real-time behavioral analysis |
+| **Risk Prediction** | scikit-learn | ASD risk scoring on AQ-10 scale |
+| **Emotion Detection** | Computer Vision | Facial expression analysis |
+| **AI Assistant** | Gemini API | Contextual guidance for parents |
+| **PDF Reports** | ReportLab | Clinical-grade screening reports |
 
-.venv\Scripts\activate
+---
 
-pip install -r requirements.txt
+## 📡 API Endpoints
 
-uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/login` | Email/password login |
+| POST | `/api/v1/auth/register` | New user registration |
+| POST | `/api/v1/auth/google` | Google OAuth login |
 
-ML service runs on:
-http://localhost:8001
+### ML Screening
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/ml/camera-screening` | Analyze camera frames |
+| POST | `/api/v1/ml/live-inference` | Real-time per-frame scoring |
+| GET | `/api/v1/ml/sessions/:id` | Get session results |
+| GET | `/api/v1/ml/sessions/:id/report` | Download PDF report |
 
-📡 Core API Endpoints
-ML Camera Screening
+### Analytics
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/analysis/live-behavior` | Behavioral timeline |
+| GET | `/api/v1/analysis/emotion-timeline` | Emotion tracking |
+| GET | `/api/v1/analysis/weekly-progress` | Weekly progress data |
 
-POST /api/v1/ml/camera-screening
+---
 
-Analyzes live camera frames and returns behavioral metrics.
+## 👥 Multi-Role System
 
-Behavioral Analysis
+| Role | Capabilities |
+|------|-------------|
+| **Parent** | Child screening, progress monitoring, development insights |
+| **Clinician** | Behavioral analysis tools, case monitoring, session reports |
+| **Doctor** | Clinical dashboards, longitudinal tracking, diagnostic insights |
 
-GET /api/v1/analysis/live-behavior
-GET /api/v1/analysis/emotion-timeline
-GET /api/v1/analysis/weekly-progress
+---
 
-Returns behavioral insights and progress analytics.
+## 🔮 Future Roadmap
 
-Authentication
+- [ ] Speech analysis integration
+- [ ] AI-powered therapy recommendations
+- [ ] Mobile application (React Native)
+- [ ] Deep learning behavior models
+- [ ] Telemedicine integration
 
-POST /api/v1/auth/email-otp
-POST /api/v1/auth/verify-otp
-POST /api/v1/auth/login
-POST /api/v1/auth/register
+---
 
-Handles secure login and registration.
+## 🤝 Contributors
 
-📂 Project Structure
+| Contributor | Role |
+|-------------|------|
+| **Aman Kumar** | Full-Stack Developer & ML Engineer |
+| Team Members | Contributing developers |
 
-Ai-Enabled-Autism-Screening-Platform
+---
 
-autism-frontend
-│
-├── src
-├── components
-├── pages
-└── services
+## 📜 License
 
-backend
-│
-├── src
-├── routes
-├── controllers
-└── models
+This project is developed for **educational and research purposes**. Not intended for clinical diagnosis.
 
-backend-python
-│
-├── app
-├── models
-└── services
-
-🎯 Use Cases
-
-The platform can be used in:
-
-Pediatric Clinics
-
-Assist doctors in early ASD screening.
-
-Child Development Centers
-
-Monitor behavioral patterns over time.
-
-Telehealth Platforms
-
-Enable remote autism screening.
-
-Research Institutions
-
-Collect behavioral datasets for autism studies.
-
-🔮 Future Improvements
-
-Planned enhancements include:
-
-Speech analysis integration
-
-AI-powered therapy recommendations
-
-Mobile application
-
-Deep learning behavior models
-
-Telemedicine integration
-
-🤝 Contributors
-
-Project developed for AI Healthcare Innovation & Early Autism Detection.
-
-Contributors:
-
-Aman
-Team Members
-
-📜 License
-
-This project is developed for educational and research purposes.
+> ⚠️ **Disclaimer**: This platform provides screening support only. It does not provide medical diagnoses. Always consult a licensed healthcare professional for clinical evaluations.

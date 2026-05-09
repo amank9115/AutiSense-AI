@@ -1,0 +1,27 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# AutiSense-AI — Local Development Stack
+# ──────────────────────────────────────────────────────────────────────────────
+# Usage:
+#   docker compose up -d          → Start MongoDB
+#   docker compose down           → Stop everything
+#   docker compose down -v        → Stop + delete volumes (wipes DB)
+# ──────────────────────────────────────────────────────────────────────────────
+
+version: "3.9"
+
+services:
+  # ── MongoDB (local dev) ────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: autisense-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: autisense
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+    driver: local

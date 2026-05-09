@@ -1,6 +1,18 @@
 {
-  "dependencies": {
-    "framer-motion": "^12.35.0",
-    "recharts": "^3.8.0"
+  "name": "autisense-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Enabled Autism Screening Platform — React + Express + FastAPI + ML",
+  "scripts": {
+    "dev": "concurrently -n FE,BE,ML -c cyan,green,magenta \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:ml\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:ml": "cd ml-service && uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload",
+    "build": "cd frontend && npm run build",
+    "install:all": "cd frontend && npm install && cd ../backend && npm install && cd ../ml-service && pip install -r requirements.txt",
+    "lint": "cd frontend && npm run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
