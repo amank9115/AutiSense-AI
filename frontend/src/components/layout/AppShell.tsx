@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom"
-import DemoBanner from "../components/demo/DemoBanner"
-import AnimatedBackground from "../components/effects/AnimatedBackground"
-import CustomCursor from "../components/effects/CustomCursor"
-import Footer from "../components/layout/Footer"
-import GlassNavbar from "../components/layout/GlassNavbar"
-import { useAuth } from "../context/AuthContext"
+import DemoBanner from "../demo/DemoBanner"
+import AnimatedBackground from "../effects/AnimatedBackground"
+import CustomCursor from "../effects/CustomCursor"
+import Footer from "./Footer"
+import GlassNavbar from "./GlassNavbar"
+import { useAuth } from "../../context/AuthContext"
 
 const AppShell = () => {
   const { isGuest } = useAuth()

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Navigate } from "react-router-dom"
-import { useAuth, type UserRole } from "../context/AuthContext"
+import { useAuth, type UserRole } from "../../context/AuthContext"
 
 const ProtectedRoute = ({ children, role }: { children: ReactNode; role?: UserRole }) => {
   const { user, isGuest } = useAuth()
