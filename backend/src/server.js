@@ -22,8 +22,8 @@ import {
   aiEngineUploadVideoJson,
   aiEngineUploadVideoStream,
   isAiEngineEnabled,
-} from "./aiEngineGateway.js"
-import { scoreWithPythonLive, scoreWithPythonWindow, generatePdfReport, getPySessionData } from "./pythonMlGateway.js"
+} from "./gateway/aiEngineGateway.js"
+import { scoreWithPythonLive, scoreWithPythonWindow, generatePdfReport, getPySessionData } from "./gateway/pythonMlGateway.js"
 
 dotenv.config()
 

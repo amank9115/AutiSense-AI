@@ -1,5 +1,5 @@
-﻿import { fetchJson } from "../../api/client"
-import type { MlInferenceRequest, MlInferenceResponse } from "../../ai/inferenceContracts"
+import { fetchJson } from "../../api/client"
+import type { MlInferenceRequest, MlInferenceResponse } from "../../types/inferenceContracts"
 
 export const mlGateway = {
   runInference: async (payload: MlInferenceRequest): Promise<MlInferenceResponse> => {

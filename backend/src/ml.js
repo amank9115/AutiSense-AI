@@ -1,4 +1,4 @@
-import { mlDatasetModel } from "./mlDataset.js"
+import { mlDatasetModel } from "./data/mlDataset.js"
 
 const sigmoid = (x) => 1 / (1 + Math.exp(-x))
 

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter, Route, Routes } from "react-router-dom"
-import ProtectedRoute from "../auth/ProtectedRoute"
-import AppShell from "../layout/AppShell"
+import ProtectedRoute from "../components/auth/ProtectedRoute"
+import AppShell from "../components/layout/AppShell"
 
 const LandingPage = lazy(() => import("../pages/LandingPage"))
 const LoginPage = lazy(() => import("../pages/LoginPage"))
