@@ -3,6 +3,10 @@ import { AiService } from './ai.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DocumentProcessor } from './document.processor';
 
+jest.mock('@langchain/google-genai', () => ({
+  ChatGoogleGenerativeAI: jest.fn().mockImplementation(() => ({})),
+}));
+
 describe('AiService', () => {
   let service: AiService;
 
