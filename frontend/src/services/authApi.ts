@@ -1,6 +1,8 @@
 import { fetchJson } from "../api/client"
 import { User, UserRole } from "../store"
 
+export type AuthRole = "parent" | "doctor";
+
 export type AuthResponse = {
   access_token?: string;
   user?: User;

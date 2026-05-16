@@ -16,15 +16,15 @@ const AuthPage = () => {
   const initialMode = searchParams?.get("mode") === "register" ? "register" : "login"
   const [mode, setMode] = useState<Mode>(initialMode)
   const [role, setRole] = useState<UserRole>("parent")
-  const [name, setName] = useState("")
+  const [userName, setUserName] = useState<string>("")
   const { login } = useAuth()
   const router = useRouter()
 
   const title = useMemo(() => `${mode === "login" ? "Login" : "Register"} as ${role === "parent" ? "Parent" : "Doctor"}`, [mode, role])
 
   const submit = () => {
-    const finalName = name.trim() || (role === "parent" ? "Parent User" : "Doctor User")
-    login(finalName, role)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (login as any)({ id: 'demo', name: userName || 'User', email: 'user@demo.com', role: role as string }, 'demo-token')
     router.push(role === "parent" ? "/parent-dashboard" : "/doctor-dashboard")
   }
 
@@ -58,8 +58,8 @@ const AuthPage = () => {
         <AnimatePresence mode="wait">
           <motion.div key={`${mode}-${role}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mt-5 space-y-3">
             <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={userName}
+              onChange={(event) => setUserName(event.target.value)}
               placeholder={role === "parent" ? "Parent name" : "Doctor name"}
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200"
             />

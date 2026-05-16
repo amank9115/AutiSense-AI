@@ -48,8 +48,8 @@ export default function ProfilePage() {
       setSuccess("Profile updated successfully!");
       updateUser({ ...user, name: formData.name });
       setIsEditing(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to update profile");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -64,8 +64,8 @@ export default function ProfilePage() {
     try {
       // Placeholder for password change logic
       setSuccess("Password changed successfully!");
-    } catch (err: any) {
-      setError(err.message || "Failed to change password");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to change password");
     } finally {
       setLoading(false);
     }

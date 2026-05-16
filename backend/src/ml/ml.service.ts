@@ -69,7 +69,11 @@ export class MlService {
 
     return this.request<MlPredictResponse>('/predict/live', {
       method: 'POST',
-      body: JSON.stringify({ session_key: sessionKey, frame, child_info: childInfo }),
+      body: JSON.stringify({
+        session_key: sessionKey,
+        frame,
+        child_info: childInfo,
+      }),
     });
   }
 
@@ -88,7 +92,10 @@ export class MlService {
     });
   }
 
-  async generateReport(sessionKey: string, childInfo?: Record<string, string>): Promise<ArrayBuffer> {
+  async generateReport(
+    sessionKey: string,
+    childInfo?: Record<string, string>,
+  ): Promise<ArrayBuffer> {
     if (!this.enabled) {
       throw new Error('Python ML service is disabled');
     }
@@ -106,7 +113,9 @@ export class MlService {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Report generation failed (${response.status}): ${text}`);
+        throw new Error(
+          `Report generation failed (${response.status}): ${text}`,
+        );
       }
 
       return await response.arrayBuffer();
@@ -120,6 +129,8 @@ export class MlService {
       throw new Error('Python ML service is disabled');
     }
 
-    return this.request<Record<string, unknown>>(`/report/session/${sessionKey}`);
+    return this.request<Record<string, unknown>>(
+      `/report/session/${sessionKey}`,
+    );
   }
 }

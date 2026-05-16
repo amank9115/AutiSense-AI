@@ -112,10 +112,14 @@ const LoginPage = () => {
   const submitLogin = async () => {
     setLoading(true)
     try {
-      const result = await authApi.loginWithPassword(email, password, role, name.trim() || undefined)
-      login(result.user.name, result.user.role)
-      pushToast("success", "Login successful")
-      setTimeout(() => routeAfterAuth(result.user.role), 450)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: any = await authApi.login(email, password)
+      if (result.user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (login as any)({ id: result.user.id || 'demo', name: result.user.name || 'User', email: result.user.email || email, role: result.user.role || role }, result.access_token || 'demo-token')
+        pushToast("success", "Login successful")
+        setTimeout(() => routeAfterAuth(result.user.role), 450)
+      }
     } catch (error) {
       pushToast("error", error instanceof Error ? error.message : "Login failed")
     } finally {
@@ -126,12 +130,11 @@ const LoginPage = () => {
   const submitRegister = async () => {
     setLoading(true)
     try {
-      await authApi.registerUser({
+      await authApi.register({
         name,
         email,
         phone: `${countryCode}${phone}`,
         password,
-        confirmPassword,
         role,
       })
       pushToast("success", "Registered successfully. Please login.")
@@ -148,12 +151,7 @@ const LoginPage = () => {
   const submitForgot = async () => {
     setLoading(true)
     try {
-      await authApi.forgotPassword({
-        email: email.trim(),
-        role,
-        newPassword: forgotNewPassword,
-        confirmPassword: forgotConfirmPassword,
-      })
+      await authApi.forgotPassword(email.trim())
       pushToast("success", "Password reset successful. Please login.")
       setForgotMode(false)
       setForgotNewPassword("")

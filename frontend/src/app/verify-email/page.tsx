@@ -13,9 +13,12 @@ export default function VerifyEmailPage() {
   const [message, setMessage] = useState("");
   const setAuth = useAppStore((state) => state.setAuth);
 
+  const [token, setToken] = useState<string | null>(null);
+
   useEffect(() => {
-    const verificationToken = searchParams.get("token");
+    const verificationToken = searchParams?.get("token");
     if (verificationToken) {
+      setToken(verificationToken);
       verifyEmail(verificationToken);
     } else {
       setStatus("error");

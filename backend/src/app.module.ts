@@ -13,10 +13,12 @@ import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100, // 100 requests per minute
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100, // 100 requests per minute
+      },
+    ]),
     PrismaModule,
     UsersModule,
     AuthModule,

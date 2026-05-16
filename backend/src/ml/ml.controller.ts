@@ -7,7 +7,8 @@ export class MlController {
 
   @Post('camera-screening')
   async cameraScreening(
-    @Body() body: {
+    @Body()
+    body: {
       frames: Array<{
         eyeContact: number;
         attentionSpan: number;
@@ -31,7 +32,11 @@ export class MlController {
       image_base64: frame.imageBase64,
     }));
 
-    const result = await this.mlService.predictWindow(sessionKey, frames, body.childInfo);
+    const result = await this.mlService.predictWindow(
+      sessionKey,
+      frames,
+      body.childInfo,
+    );
 
     return {
       success: result.success,
@@ -48,7 +53,8 @@ export class MlController {
 
   @Post('live-inference')
   async liveInference(
-    @Body() body: {
+    @Body()
+    body: {
       sessionKey: string;
       frame: {
         eyeContact: number;

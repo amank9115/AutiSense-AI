@@ -15,7 +15,9 @@ export class UsersService {
   }
 
   async findByVerificationToken(token: string): Promise<User | null> {
-    return this.prisma.user.findFirst({ where: { emailVerificationToken: token } });
+    return this.prisma.user.findFirst({
+      where: { emailVerificationToken: token },
+    });
   }
 
   async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {

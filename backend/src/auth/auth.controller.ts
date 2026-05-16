@@ -1,4 +1,16 @@
-import { Controller, Post, Body, UseGuards, Request, Query, Get, HttpException, HttpStatus, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Query,
+  Get,
+  HttpException,
+  HttpStatus,
+  Res,
+  Req,
+} from '@nestjs/common';
 import type { Response, Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,40 +40,61 @@ export class AuthController {
 
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  login(@Request() req: RequestWithUser, @Res({ passthrough: true }) res: Response) {
+  login(
+    @Request() req: RequestWithUser,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     try {
       const result = this.authService.login(req.user);
       if (result.refresh_token) {
         this.setRefreshTokenCookie(res, result.refresh_token);
       }
       return { access_token: result.access_token, user: result.user };
-    } catch (error: any) {
-      const status = error.message?.includes('verify') ? HttpStatus.FORBIDDEN : HttpStatus.UNAUTHORIZED;
-      throw new HttpException(error.message || 'Login failed', status);
+    } catch (error: unknown) {
+      const status =
+        error instanceof Error && error.message.includes('verify')
+          ? HttpStatus.FORBIDDEN
+          : HttpStatus.UNAUTHORIZED;
+      throw new HttpException(
+        error instanceof Error ? error.message : 'Login failed',
+        status,
+      );
     }
   }
 
   @Post('register')
-  async register(
-    @Body() registerDto: RegisterDto,
-  ) {
+  async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Get('verify-email')
-  async verifyEmail(@Query('token') token: string, @Res({ passthrough: true }) res: Response) {
+  async verifyEmail(
+    @Query('token') token: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.verifyEmail(token);
     if (result.refresh_token) {
       this.setRefreshTokenCookie(res, result.refresh_token);
     }
-    return { message: result.message, access_token: result.access_token, user: result.user };
+    return {
+      message: result.message,
+      access_token: result.access_token,
+      user: result.user,
+    };
   }
 
   @Post('refresh')
-  async refresh(@Req() req: ExpressRequest, @Res({ passthrough: true }) res: Response) {
-    const refreshToken = req.cookies['refresh_token'];
+  async refresh(
+    @Req() req: ExpressRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const refreshToken: string | undefined = req.cookies['refresh_token'];
     if (!refreshToken) {
-      throw new HttpException('No refresh token found', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'No refresh token found',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
     try {
       const result = await this.authService.refreshSession(refreshToken);
@@ -82,7 +115,9 @@ export class AuthController {
   }
 
   @Post('resend-verification')
-  async resendVerification(@Body() resendVerificationDto: ResendVerificationDto) {
+  async resendVerification(
+    @Body() resendVerificationDto: ResendVerificationDto,
+  ) {
     return this.authService.resendVerification(resendVerificationDto.email);
   }
 
@@ -100,9 +135,15 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     try {
-      return await this.authService.resetPassword(resetPasswordDto.token, resetPasswordDto.newPassword);
-    } catch (error: any) {
-      throw new HttpException(error.message || 'Reset failed', HttpStatus.BAD_REQUEST);
+      return await this.authService.resetPassword(
+        resetPasswordDto.token,
+        resetPasswordDto.newPassword,
+      );
+    } catch (error: unknown) {
+      throw new HttpException(
+        error instanceof Error ? error.message : 'Reset failed',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 

@@ -27,7 +27,15 @@ export class ReportProcessor extends WorkerHost {
   }
 
   async process(job: Job<ReportJobData>): Promise<void> {
-    const { sessionKey, childName, parentEmail, parentName, parentPhone, city, state } = job.data;
+    const {
+      sessionKey,
+      childName,
+      parentEmail,
+      parentName,
+      parentPhone,
+      city,
+      state,
+    } = job.data;
 
     this.logger.log(`Processing report for session: ${sessionKey}`);
 
@@ -41,19 +49,31 @@ export class ReportProcessor extends WorkerHost {
       if (city) childInfo.city = city;
       if (state) childInfo.state = state;
 
-      const pdfBuffer = await this.mlService.generateReport(sessionKey, childInfo);
+      const pdfBuffer = await this.mlService.generateReport(
+        sessionKey,
+        childInfo,
+      );
 
-      this.logger.log(`PDF generated for session: ${sessionKey} (${pdfBuffer.byteLength} bytes)`);
+      this.logger.log(
+        `PDF generated for session: ${sessionKey} (${pdfBuffer.byteLength} bytes)`,
+      );
 
       // If parent email is available, send it
       if (parentEmail) {
-        await this.emailService.sendReport(parentEmail, childName || 'Child', pdfBuffer);
+        await this.emailService.sendReport(
+          parentEmail,
+          childName || 'Child',
+          pdfBuffer,
+        );
         this.logger.log(`Report emailed to: ${parentEmail}`);
       }
 
       await job.updateProgress(100);
     } catch (error) {
-      this.logger.error(`Report processing failed for session ${sessionKey}`, error);
+      this.logger.error(
+        `Report processing failed for session ${sessionKey}`,
+        error,
+      );
       throw error;
     }
   }

@@ -57,6 +57,8 @@ uploads/
 # ── OS / Editor junk ─────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj

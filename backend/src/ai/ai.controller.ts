@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { IngestDto } from './dto/ingest.dto';
@@ -15,9 +9,7 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('ingest')
-  async ingestDocument(
-    @Body() ingestDto: IngestDto,
-  ) {
+  ingestDocument(@Body() ingestDto: IngestDto) {
     return this.aiService.queueDocumentForIngestion(
       ingestDto.documentId,
       ingestDto.fileUrl,
@@ -27,10 +19,7 @@ export class AiController {
 
   @Post('chat/:sessionId')
   @UseGuards(JwtAuthGuard)
-  async chat(
-    @Param('sessionId') sessionId: string,
-    @Body() chatDto: ChatDto,
-  ) {
+  async chat(@Param('sessionId') sessionId: string, @Body() chatDto: ChatDto) {
     const stream = await this.aiService.streamChat(sessionId, chatDto.message);
     let fullResponse = '';
 

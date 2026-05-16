@@ -8,8 +8,11 @@ export class EmailService {
   private readonly fromEmail: string;
 
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY || 're_mock_key_for_dev');
-    this.fromEmail = process.env.EMAIL_FROM || 'MannSaathi <noreply@mannsaathi.com>';
+    this.resend = new Resend(
+      process.env.RESEND_API_KEY || 're_mock_key_for_dev',
+    );
+    this.fromEmail =
+      process.env.EMAIL_FROM || 'MannSaathi <noreply@mannsaathi.com>';
   }
 
   async sendVerificationEmail(
@@ -73,12 +76,14 @@ export class EmailService {
 
     try {
       if (!process.env.RESEND_API_KEY) {
-         this.logger.warn(`Resend API Key missing. Simulating sending email to ${to}`);
-         this.logger.debug(`Verification URL: ${verifyUrl}`);
-         return {
-           success: true,
-           message: 'Simulated verification email sent successfully',
-         }
+        this.logger.warn(
+          `Resend API Key missing. Simulating sending email to ${to}`,
+        );
+        this.logger.debug(`Verification URL: ${verifyUrl}`);
+        return {
+          success: true,
+          message: 'Simulated verification email sent successfully',
+        };
       }
 
       const { data, error } = await this.resend.emails.send({
@@ -89,14 +94,19 @@ export class EmailService {
       });
 
       if (error) {
-        this.logger.error('Failed to send verification email with Resend:', error);
+        this.logger.error(
+          'Failed to send verification email with Resend:',
+          error,
+        );
         return {
           success: false,
           message: error.message,
         };
       }
 
-      this.logger.log(`Verification email sent to ${to}. Message ID: ${data?.id}`);
+      this.logger.log(
+        `Verification email sent to ${to}. Message ID: ${data?.id}`,
+      );
       return {
         success: true,
         message: 'Verification email sent successfully',
@@ -165,12 +175,14 @@ export class EmailService {
 
     try {
       if (!process.env.RESEND_API_KEY) {
-         this.logger.warn(`Resend API Key missing. Simulating sending password reset email to ${to}`);
-         this.logger.debug(`Reset URL: ${resetUrl}`);
-         return {
-           success: true,
-           message: 'Simulated password reset email sent successfully',
-         }
+        this.logger.warn(
+          `Resend API Key missing. Simulating sending password reset email to ${to}`,
+        );
+        this.logger.debug(`Reset URL: ${resetUrl}`);
+        return {
+          success: true,
+          message: 'Simulated password reset email sent successfully',
+        };
       }
 
       const { data, error } = await this.resend.emails.send({
@@ -181,14 +193,19 @@ export class EmailService {
       });
 
       if (error) {
-        this.logger.error('Failed to send password reset email with Resend:', error);
+        this.logger.error(
+          'Failed to send password reset email with Resend:',
+          error,
+        );
         return {
           success: false,
           message: error.message,
         };
       }
 
-      this.logger.log(`Password reset email sent to ${to}. Message ID: ${data?.id}`);
+      this.logger.log(
+        `Password reset email sent to ${to}. Message ID: ${data?.id}`,
+      );
       return {
         success: true,
         message: 'Password reset email sent successfully',
@@ -218,7 +235,9 @@ export class EmailService {
 
     try {
       if (!process.env.RESEND_API_KEY) {
-        this.logger.warn(`Resend API Key missing. Simulating sending report to ${to}`);
+        this.logger.warn(
+          `Resend API Key missing. Simulating sending report to ${to}`,
+        );
         return { success: true, message: 'Simulated report email sent' };
       }
 

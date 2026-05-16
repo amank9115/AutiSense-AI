@@ -29,9 +29,15 @@ export class AuthService {
     return null;
   }
 
-  login(user: User): { access_token: string; refresh_token: string; user: { id: string; email: string; name: string | null; role: string } } {
+  login(user: User): {
+    access_token: string;
+    refresh_token: string;
+    user: { id: string; email: string; name: string | null; role: string };
+  } {
     if (!user.emailVerified) {
-      throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
+      throw new Error(
+        'Please verify your email before logging in. Check your inbox for the verification link.',
+      );
     }
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
@@ -46,9 +52,11 @@ export class AuthService {
     };
   }
 
-  async refreshSession(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+  async refreshSession(
+    refreshToken: string,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     try {
-      const decoded = this.jwtService.verify(refreshToken) as { email: string };
+      const decoded = this.jwtService.verify<{ email: string }>(refreshToken);
       const user = await this.usersService.findOne(decoded.email);
 
       if (!user) {
@@ -60,7 +68,7 @@ export class AuthService {
         access_token: this.jwtService.sign(payload),
         refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
       };
-    } catch (_e) {
+    } catch {
       throw new Error('Invalid refresh token');
     }
   }
@@ -72,7 +80,11 @@ export class AuthService {
     phone?: string;
     role?: string;
     baseUrl?: string;
-  }): Promise<{ user: { id: string; email: string; name: string; role: string }; message: string; previewUrl?: string }> {
+  }): Promise<{
+    user: { id: string; email: string; name: string; role: string };
+    message: string;
+    previewUrl?: string;
+  }> {
     // Check if email already exists
     const existingUser = await this.usersService.findOne(data.email);
     if (existingUser) {
@@ -109,12 +121,19 @@ export class AuthService {
         name: user.name,
         role: user.role,
       },
-      message: 'Account created. Please check your email to verify your account.',
+      message:
+        'Account created. Please check your email to verify your account.',
       previewUrl: emailResult.previewUrl,
     };
   }
 
-  async verifyEmail(token: string): Promise<{ message: string; access_token?: string; refresh_token?: string; user?: { id: string; email: string; name: string; role: string }; alreadyVerified?: boolean }> {
+  async verifyEmail(token: string): Promise<{
+    message: string;
+    access_token?: string;
+    refresh_token?: string;
+    user?: { id: string; email: string; name: string; role: string };
+    alreadyVerified?: boolean;
+  }> {
     const user = await this.usersService.findByVerificationToken(token);
     if (!user) {
       throw new Error('Invalid or expired verification token');
@@ -123,7 +142,9 @@ export class AuthService {
       return { message: 'Email already verified', alreadyVerified: true };
     }
     if (user.tokenExpiresAt && user.tokenExpiresAt < new Date()) {
-      throw new Error('Verification token has expired. Please request a new one.');
+      throw new Error(
+        'Verification token has expired. Please request a new one.',
+      );
     }
     await this.usersService.update(user.id, {
       emailVerified: true,
@@ -151,8 +172,9 @@ export class AuthService {
 
   async resendVerification(email: string, baseUrl?: string) {
     const user = await this.usersService.findOne(email);
-    const genericMessage = 'If that email exists, a verification link has been sent.';
-    
+    const genericMessage =
+      'If that email exists, a verification link has been sent.';
+
     if (!user) {
       return { message: genericMessage };
     }
@@ -197,8 +219,9 @@ export class AuthService {
   async forgotPassword(email: string, baseUrl?: string) {
     const user = await this.usersService.findOne(email);
     // Generic message to prevent email enumeration
-    const genericMessage = 'If that email exists, a password reset link has been sent.';
-    
+    const genericMessage =
+      'If that email exists, a password reset link has been sent.';
+
     if (!user) {
       return { message: genericMessage };
     }

@@ -13,7 +13,7 @@ export class AiService {
 
   constructor(
     private prisma: PrismaService,
-    private documentProcessor: DocumentProcessor
+    private documentProcessor: DocumentProcessor,
   ) {
     this.llm = new ChatGoogleGenerativeAI({
       model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
@@ -27,11 +27,18 @@ export class AiService {
     fileUrl: string,
     mimetype: string,
   ) {
-    this.logger.log(`Document ingestion started asynchronously for ${documentId} (Native async processing)`);
+    this.logger.log(
+      `Document ingestion started asynchronously for ${documentId} (Native async processing)`,
+    );
     // Run asynchronously without awaiting so the endpoint responds immediately
-    this.documentProcessor.processDocument({ documentId, fileUrl, mimetype }).catch(err => {
-      this.logger.error(`Async processing failed for document ${documentId}`, err);
-    });
+    this.documentProcessor
+      .processDocument({ documentId, fileUrl, mimetype })
+      .catch((err) => {
+        this.logger.error(
+          `Async processing failed for document ${documentId}`,
+          err,
+        );
+      });
     return { status: 'processing' as const, documentId };
   }
 
@@ -56,7 +63,8 @@ export class AiService {
     });
 
     // 2. Build context from chat history only (RAG disabled pending document models)
-    const context = 'No external documents available. Answer based on your general knowledge about autism support.';
+    const context =
+      'No external documents available. Answer based on your general knowledge about autism support.';
 
     // 3. Setup prompt
     const prompt = ChatPromptTemplate.fromMessages([
@@ -112,6 +120,7 @@ export class AiService {
         modelVersion: data.modelVersion,
         riskScore: data.riskScore,
         riskLabel: data.riskLabel,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         summary: data.summary as any,
         recommendations: data.recommendations,
         metrics: data.metrics as any[],
@@ -120,7 +129,7 @@ export class AiService {
     return { success: true, sessionId: session.id, ...data };
   }
 
-  async getScreeningHistory(userId: string): Promise<unknown[]> {
+  async getScreeningHistory(userId: string) {
     return this.prisma.screeningSession.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },

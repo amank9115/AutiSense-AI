@@ -20,7 +20,7 @@ export default function ResetPasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const queryToken = searchParams.get("token");
+    const queryToken = searchParams?.get("token");
     if (!queryToken) {
       setStatus("error");
       setMessage("No reset token provided. Please request a new link.");
@@ -53,9 +53,9 @@ export default function ResetPasswordPage() {
       const response = await authApi.resetPassword({ token, newPassword: password });
       setStatus("success");
       setMessage(response.message);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setMessage(err.message || "Failed to reset password.");
+      setMessage(err instanceof Error ? err.message : "Failed to reset password.");
     } finally {
       setLoading(false);
     }

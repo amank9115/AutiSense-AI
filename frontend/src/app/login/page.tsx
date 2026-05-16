@@ -26,7 +26,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Check if redirected from signup with pending verification
-    const verified = searchParams.get('verified');
+    const verified = searchParams?.get('verified');
     if (verified === 'false') {
       const storedEmail = localStorage.getItem('pendingVerificationEmail');
       if (storedEmail) {
@@ -44,6 +44,10 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login(email, password);
+      if (!response.user || !response.access_token) {
+        setError("Login failed. Please try again.");
+        return;
+      }
       setAuth(response.user, response.access_token);
 
       // Redirect based on role returned from the server, ignoring the toggle state
@@ -52,8 +56,8 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard/parent");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in. Please check your credentials.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to sign in. Please check your credentials.");
     } finally {
       setLoading(false);
     }
@@ -69,8 +73,8 @@ export default function LoginPage() {
       const response = await authApi.resendVerification(email);
       setVerificationSent(true);
       setError(response.message || "Verification email sent!");
-    } catch (err: any) {
-      setError(err.message || "Failed to resend verification email.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to resend verification email.");
     } finally {
       setResending(false);
     }

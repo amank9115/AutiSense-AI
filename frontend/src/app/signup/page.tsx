@@ -68,8 +68,8 @@ export default function SignupPage() {
         setError("Registration succeeded but login failed. Please try logging in.");
         setLoading(false);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to create account. Please try again.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -87,8 +87,8 @@ export default function SignupPage() {
       } else {
         setError(response.message || "Failed to resend.");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to resend verification.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to resend verification.");
     }
   };
 
@@ -174,7 +174,7 @@ export default function SignupPage() {
                       <div>
                         <h3 className="text-xl text-success font-extrabold mb-2">Check your email</h3>
                         <p className="text-success/80 text-sm font-medium">
-                          We've sent a magic link to <strong className="text-success">{successData.email}</strong>.
+                          We&apos;ve sent a magic link to <strong className="text-success">{successData.email}</strong>.
                           <br/><br/>
                           Click the link in the email to verify your account and log in automatically.
                         </p>

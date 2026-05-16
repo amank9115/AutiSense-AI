@@ -108,7 +108,7 @@ export default function ScreeningPage() {
     try {
       if (frames.length >= 3) {
         // Call ML service for analysis
-        const mlResult = await fetchJson<any>("/ml/camera-screening", {
+        const mlResult = await fetchJson<{ riskScore?: number; riskLabel?: string; modelVersion?: string; featureAverages?: { eye_contact?: number; attention_span?: number; emotion_signals?: number }; recommendations?: string[] }>("/ml/camera-screening", {
           method: "POST",
           body: JSON.stringify({ frames }),
         });

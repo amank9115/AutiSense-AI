@@ -21,9 +21,9 @@ export default function ForgotPasswordPage() {
       const response = await authApi.forgotPassword(email);
       setStatus("success");
       setMessage(response.message);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setMessage(err.message || "Failed to send reset link.");
+      setMessage(err instanceof Error ? err.message : "Failed to send reset link.");
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
       <main className="flex-grow flex items-center justify-center pt-24 pb-16 px-4">
         <Card className="max-w-md w-full p-8 rounded-3xl bg-white shadow-xl text-center">
           <h1 className="font-headline font-extrabold text-3xl text-primary mb-4">Reset Password</h1>
-          
+
           {status === "success" ? (
             <div className="animate-in fade-in slide-in-from-top-4">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <p className="text-on-surface-variant mb-8 text-sm">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </p>
               
               <form onSubmit={handleSubmit} className="space-y-6 text-left">
