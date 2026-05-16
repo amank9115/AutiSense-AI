@@ -81,13 +81,17 @@ export default function DoctorDashboard() {
 
         <nav className="flex-1 space-y-2">
           {[
-            { icon: "dashboard", label: "Overview", active: true },
-            { icon: "group", label: "Patient List" },
-            { icon: "calendar_month", label: "Appointments" },
-            { icon: "analytics", label: "Clinical Insights" },
-            { icon: "folder_shared", label: "Archive" },
+            { icon: "dashboard", label: "Overview", active: true, href: "/dashboard/doctor" },
+            { icon: "group", label: "Patient List", href: "/dashboard/doctor/patients" },
+            { icon: "calendar_month", label: "Appointments", href: "/dashboard/doctor/appointments" },
+            { icon: "analytics", label: "Clinical Insights", href: "/dashboard/doctor/insights" },
+            { icon: "folder_shared", label: "Archive", href: "/dashboard/doctor/archive" },
           ].map((item, i) => (
-            <button key={i} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${item.active ? "bg-primary text-on-primary shadow-2xl shadow-primary/20 font-bold" : "text-on-surface-variant hover:bg-surface-container-high"}`}>
+            <button
+              key={i}
+              onClick={() => router.push(item.href)}
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${item.active ? "bg-primary text-on-primary shadow-2xl shadow-primary/20 font-bold" : "text-on-surface-variant hover:bg-surface-container-high"}`}
+            >
               <span className="material-symbols-outlined">{item.icon}</span>
               <span className="font-extrabold text-[10px] uppercase tracking-widest">{item.label}</span>
             </button>
@@ -138,7 +142,12 @@ export default function DoctorDashboard() {
           <Card className="xl:col-span-2 p-10 border-none bg-white rounded-[3rem] shadow-2xl">
             <div className="flex items-center justify-between mb-10">
               <h3 className="font-headline font-extrabold text-3xl text-primary tracking-tight">Recent Activity</h3>
-              <button className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.2em] hover:underline">View All Patients</button>
+              <button
+              onClick={() => router.push("/dashboard/doctor/patients")}
+              className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.2em] hover:underline"
+            >
+              View All Patients
+            </button>
             </div>
             <div className="space-y-4">
               <PatientRow name="Leo Harrington" id="PID-8291" age="4y 2m" status="Report Generated" date="Oct 24, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuC4hA10WbTxc8TNA9o1o7cke0TvhBXlZtjUF31PmM8oEswZND8L8mm8Hm4mnbgBk5p0CZrO3Zm03fez2ChRd-gLjNrN8OKyL8HJQsroHnTqkKj5H9GJ-iHXWcLrxHEaRyFiSzEb2bWia5qdUunacS6Dwhuw_LeqPSwXtAHyWLF5-_A5uUrd9Ffsrq_pWT_SjUfRHgG65LfbdmqUgcjEOxi6EG1vM3n7ycosgyD2Dm41Vf3Jd0W4neKTdPBo3_EPorSsUSf7XIrMKYI" />
@@ -154,7 +163,13 @@ export default function DoctorDashboard() {
                 <span className="material-symbols-outlined text-white/50 text-4xl mb-6">warning_amber</span>
                 <h4 className="font-headline font-bold text-2xl mb-4 tracking-tight leading-snug">Symptom Cluster Detected</h4>
                 <p className="text-white/80 font-medium leading-relaxed mb-8">System detected a high-frequency hand-flapping cluster in 3 new screenings this morning.</p>
-                <Button variant="outline" className="w-full bg-white/10 border-white/20 text-white font-extrabold py-4 rounded-2xl hover:bg-white/20 uppercase tracking-widest text-[10px]">Review Cluster</Button>
+                <Button
+                variant="outline"
+                onClick={() => router.push("/dashboard/doctor/patients")}
+                className="w-full bg-white/10 border-white/20 text-white font-extrabold py-4 rounded-2xl hover:bg-white/20 uppercase tracking-widest text-[10px]"
+              >
+                Review Cluster
+              </Button>
               </div>
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             </Card>

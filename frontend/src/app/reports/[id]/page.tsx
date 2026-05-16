@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Button, Input } from "@/components/ui/StitchUI";
 import Image from "next/image";
 
@@ -52,16 +53,19 @@ export default function PatientReportPage() {
           <p className="text-[10px] font-extrabold text-primary uppercase tracking-widest opacity-60">Provider Portal</p>
         </div>
         <nav className="flex-1 space-y-2">
-          {["dashboard", "folder_shared", "assignment_add", "assessment", "settings"].map((icon, i) => (
-            <a key={i} className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${icon === "assessment" ? "bg-secondary-container text-on-secondary-container font-bold" : "text-on-surface-variant hover:bg-surface-container-high"}`} href="#">
-              <span className="material-symbols-outlined">{icon}</span>
+          {[
+            { icon: "dashboard", label: "Dashboard", href: "/dashboard/doctor" },
+            { icon: "folder_shared", label: "Patient Records", href: "/dashboard/doctor/patients" },
+            { icon: "assignment_add", label: "Screening Tools", href: "/assessment/camera" },
+            { icon: "assessment", label: "Reports", href: "/results" },
+            { icon: "settings", label: "Settings", href: "/profile" },
+          ].map((item, i) => (
+            <Link key={i} href={item.href} className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${item.icon === "assessment" ? "bg-secondary-container text-on-secondary-container font-bold" : "text-on-surface-variant hover:bg-surface-container-high"}`}>
+              <span className="material-symbols-outlined">{item.icon}</span>
               <span className="font-bold uppercase tracking-widest text-[10px]">
-                {icon === "dashboard" ? "Dashboard" : 
-                 icon === "folder_shared" ? "Patient Records" :
-                 icon === "assignment_add" ? "Screening Tools" :
-                 icon === "assessment" ? "Reports" : "Settings"}
+                {item.label}
               </span>
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="mt-auto pt-6 border-t border-outline-variant/10">

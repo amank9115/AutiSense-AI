@@ -157,10 +157,13 @@ export default function ResultsPage() {
                 </div>
               </div>
               <p className="text-xs sm:text-sm text-on-surface-variant mb-4 sm:mb-6 font-medium leading-relaxed opacity-60">Specializes in sensory processing support.</p>
-              <a className="text-primary font-extrabold text-[10px] flex items-center gap-2 hover:underline uppercase tracking-widest" href="#">
+              <button
+              onClick={() => window.print()}
+              className="text-primary font-extrabold text-[10px] flex items-center gap-2 hover:underline uppercase tracking-widest bg-transparent border-none cursor-pointer"
+            >
                 View Profile
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </a>
+              </button>
             </div>
           </aside>
         </div>

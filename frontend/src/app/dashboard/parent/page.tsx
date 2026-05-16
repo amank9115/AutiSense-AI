@@ -78,9 +78,9 @@ export default function ParentDashboard() {
             <nav className="hidden items-center gap-1.5 md:flex">
               {[
                 { icon: "dashboard", label: "Dashboard", href: "/dashboard/parent" },
-                { icon: "child_care", label: "My Children" },
-                { icon: "calendar_month", label: "Appointments" },
-                { icon: "history", label: "History" },
+                { icon: "child_care", label: "My Children", href: "/dashboard/parent/children" },
+                { icon: "calendar_month", label: "Appointments", href: "/dashboard/parent/appointments" },
+                { icon: "history", label: "History", href: "/dashboard/parent/history" },
               ].map((item, i) => (
                 <button
                   key={i}
@@ -120,10 +120,18 @@ export default function ParentDashboard() {
                 You have one new report available for review from Dr. Smith.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start pt-4">
-                <Button variant="primary" className="px-10 py-5 rounded-2xl font-extrabold uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all text-xs">
+                <Button
+                variant="primary"
+                onClick={() => router.push("/results")}
+                className="px-10 py-5 rounded-2xl font-extrabold uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all text-xs"
+              >
                   View Latest Report
                 </Button>
-                <Button variant="outline" className="px-10 py-5 rounded-2xl font-extrabold uppercase tracking-widest hover:bg-surface-container-high transition-all border-2 text-xs">
+                <Button
+                variant="outline"
+                onClick={() => router.push("/professionals")}
+                className="px-10 py-5 rounded-2xl font-extrabold uppercase tracking-widest hover:bg-surface-container-high transition-all border-2 text-xs"
+              >
                   Book Next Session
                 </Button>
               </div>

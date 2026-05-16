@@ -169,7 +169,7 @@ export default function LandingPage() {
           </div>
           <h2 className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl text-on-background mb-8 leading-tight tracking-tight">Ready to let your journey <span className="text-primary-accent">bloom</span>?</h2>
           <p className="text-on-surface-variant text-xl mb-12 max-w-2xl mx-auto">Join thousands of families who have found peace through our sensory-first navigator.</p>
-          <Link href="/login">
+          <Link href="/signup">
             <button className="bg-primary-accent text-on-primary px-14 py-6 rounded-full font-headline font-extrabold text-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary-accent/20">
               Create Free Account
             </button>

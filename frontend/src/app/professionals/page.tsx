@@ -5,7 +5,7 @@ import { Navbar, Footer } from "@/components/layout/Navigation";
 import { Button, Input } from "@/components/ui/StitchUI";
 import Image from "next/image";
 
-const SpecialistCard = ({ name, title, specialty, rating, desc, img }: { name: string, title: string, specialty: string, rating: string, desc: string, img: string }) => (
+const SpecialistCard = ({ name, title, specialty, rating, desc, img, email }: { name: string, title: string, specialty: string, rating: string, desc: string, img: string, email?: string }) => (
   <div className="bg-surface-container-low rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6 hover:shadow-2xl transition-all duration-500 group border border-outline-variant/5">
     <div className="w-24 sm:w-32 h-24 sm:h-32 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-md group-hover:scale-105 transition-transform relative mx-auto sm:mx-0">
       <Image src={img} alt={name} fill className="object-cover" />
@@ -24,8 +24,17 @@ const SpecialistCard = ({ name, title, specialty, rating, desc, img }: { name: s
       </div>
       <p className="text-xs sm:text-sm text-on-surface-variant line-clamp-2 mb-4 sm:mb-6 font-body leading-relaxed">{desc}</p>
       <div className="mt-auto flex flex-col sm:flex-row gap-2 sm:gap-3">
-        <Button variant="primary" className="flex-grow py-2 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-lg">Book Now</Button>
-        <button className="px-3 sm:px-4 border border-primary/20 text-primary rounded-full hover:bg-primary/5 transition-colors shadow-sm">
+        <Button
+          variant="primary"
+          onClick={() => alert(`Booking with ${name} — appointment system coming soon.`)}
+          className="flex-grow py-2 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-lg"
+        >
+          Book Now
+        </Button>
+        <button
+          onClick={() => email && window.open(`mailto:${email}`, "_blank")}
+          className="px-3 sm:px-4 border border-primary/20 text-primary rounded-full hover:bg-primary/5 transition-colors shadow-sm"
+        >
           <span className="material-symbols-outlined text-lg sm:text-xl align-middle">mail</span>
         </button>
       </div>

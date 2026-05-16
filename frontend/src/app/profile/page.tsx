@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card, Input } from "@/components/ui/StitchUI";
-import GlassNavbar from "@/components/layout/GlassNavbar";
-import { Footer } from "@/components/layout/Navigation";
+import { Navbar, Footer } from "@/components/layout/Navigation";
 import { authApi } from "@/services/authApi";
 
 export default function ProfilePage() {
@@ -75,7 +74,7 @@ export default function ProfilePage() {
 
   return (
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col">
-      <GlassNavbar />
+      <Navbar />
 
       <main className="flex-grow pt-28 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-8">

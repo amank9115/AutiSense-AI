@@ -67,7 +67,12 @@ export const Navbar: React.FC = () => {
                   Dashboard
                 </button>
               </Link>
-              <button 
+              <Link href="/profile">
+                <button className="text-on-surface-variant font-bold hover:text-primary-accent transition-colors">
+                  Profile
+                </button>
+              </Link>
+              <button
                 onClick={handleLogout}
                 className="bg-error/10 text-error px-6 py-2 rounded-full font-headline font-bold text-sm hover:bg-error/20 active:scale-95 transition-all shadow-sm"
               >
@@ -117,7 +122,12 @@ export const Navbar: React.FC = () => {
                     Dashboard
                   </button>
                 </Link>
-                <button 
+                <Link href="/profile" onClick={() => setIsOpen(false)}>
+                  <button className="w-full bg-primary-container text-on-primary-container px-6 py-3 rounded-full font-headline font-bold text-sm">
+                    Profile
+                  </button>
+                </Link>
+                <button
                   onClick={() => { handleLogout(); setIsOpen(false); }}
                   className="w-full bg-error/10 text-error px-6 py-3 rounded-full font-headline font-bold text-sm"
                 >
@@ -149,9 +159,9 @@ export const Footer: React.FC = () => {
           <p className="font-body text-sm text-on-surface-variant/70">© 2024 MannSaathi. All rights reserved. Built for sensory comfort.</p>
         </div>
         <div className="flex gap-10">
-          <Link href="#" className="text-on-surface-variant font-medium hover:text-primary-accent transition-colors duration-300 text-sm">Privacy Policy</Link>
-          <Link href="#" className="text-on-surface-variant font-medium hover:text-primary-accent transition-colors duration-300 text-sm">Terms of Service</Link>
-          <Link href="#" className="text-on-surface-variant font-medium hover:text-primary-accent transition-colors duration-300 text-sm">Accessibility Support</Link>
+          <Link href="/privacy" className="text-on-surface-variant font-medium hover:text-primary-accent transition-colors duration-300 text-sm">Privacy Policy</Link>
+          <Link href="/terms" className="text-on-surface-variant font-medium hover:text-primary-accent transition-colors duration-300 text-sm">Terms of Service</Link>
+          <Link href="/accessibility" className="text-on-surface-variant font-medium hover:text-primary-accent transition-colors duration-300 text-sm">Accessibility Support</Link>
         </div>
       </div>
     </footer>
