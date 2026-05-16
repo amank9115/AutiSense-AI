@@ -69,7 +69,7 @@ export class AuthController {
         this.setRefreshTokenCookie(res, result.refresh_token);
       }
       return { access_token: result.access_token };
-    } catch (error: any) {
+    } catch {
       res.clearCookie('refresh_token');
       throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
     }

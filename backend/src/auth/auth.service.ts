@@ -29,7 +29,7 @@ export class AuthService {
     return null;
   }
 
-  login(user: User) {
+  login(user: User): { access_token: string; refresh_token: string; user: { id: string; email: string; name: string | null; role: string } } {
     if (!user.emailVerified) {
       throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
     }
@@ -46,11 +46,11 @@ export class AuthService {
     };
   }
 
-  async refreshSession(refreshToken: string) {
+  async refreshSession(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
     try {
-      const decoded = this.jwtService.verify(refreshToken);
+      const decoded = this.jwtService.verify(refreshToken) as { email: string };
       const user = await this.usersService.findOne(decoded.email);
-      
+
       if (!user) {
         throw new Error('User not found');
       }
@@ -60,7 +60,7 @@ export class AuthService {
         access_token: this.jwtService.sign(payload),
         refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
       };
-    } catch (e) {
+    } catch (_e) {
       throw new Error('Invalid refresh token');
     }
   }
@@ -72,7 +72,7 @@ export class AuthService {
     phone?: string;
     role?: string;
     baseUrl?: string;
-  }) {
+  }): Promise<{ user: { id: string; email: string; name: string; role: string }; message: string; previewUrl?: string }> {
     // Check if email already exists
     const existingUser = await this.usersService.findOne(data.email);
     if (existingUser) {
@@ -114,7 +114,7 @@ export class AuthService {
     };
   }
 
-  async verifyEmail(token: string) {
+  async verifyEmail(token: string): Promise<{ message: string; access_token?: string; refresh_token?: string; user?: { id: string; email: string; name: string; role: string }; alreadyVerified?: boolean }> {
     const user = await this.usersService.findByVerificationToken(token);
     if (!user) {
       throw new Error('Invalid or expired verification token');

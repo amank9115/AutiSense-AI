@@ -4,20 +4,16 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
-  Get,
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { IngestDto } from './dto/ingest.dto';
-import { ChatDto } from './dto/chat.dto';
-
-interface RequestWithUser {
-  user: { userId: string; email: string; role: string };
-}
 
 @Controller('ai')
 export class AiController {
+import { IngestDto } from './dto/ingest.dto';
+import { ChatDto } from './dto/chat.dto';
+
+import { AiService } from './ai.service';
   constructor(private readonly aiService: AiService) {}
 
   @Post('ingest')
@@ -36,7 +32,6 @@ export class AiController {
   async chat(
     @Param('sessionId') sessionId: string,
     @Body() chatDto: ChatDto,
-    @Request() req: RequestWithUser,
   ) {
     const stream = await this.aiService.streamChat(sessionId, chatDto.message);
     let fullResponse = '';

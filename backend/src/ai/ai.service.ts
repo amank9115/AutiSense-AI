@@ -22,7 +22,7 @@ export class AiService {
     });
   }
 
-  async queueDocumentForIngestion(
+  queueDocumentForIngestion(
     documentId: string,
     fileUrl: string,
     mimetype: string,
@@ -32,7 +32,7 @@ export class AiService {
     this.documentProcessor.processDocument({ documentId, fileUrl, mimetype }).catch(err => {
       this.logger.error(`Async processing failed for document ${documentId}`, err);
     });
-    return { status: 'processing', documentId };
+    return { status: 'processing' as const, documentId };
   }
 
   async streamChat(sessionId: string, message: string) {
@@ -120,7 +120,7 @@ export class AiService {
     return { success: true, sessionId: session.id, ...data };
   }
 
-  async getScreeningHistory(userId: string) {
+  async getScreeningHistory(userId: string): Promise<unknown[]> {
     return this.prisma.screeningSession.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },

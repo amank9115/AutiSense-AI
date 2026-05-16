@@ -34,9 +34,9 @@ export class ScreeningController {
       modelVersion: string;
       riskScore: number;
       riskLabel: string;
-      summary: any;
+      summary: Record<string, unknown>;
       recommendations: string[];
-      metrics: any[];
+      metrics: Record<string, unknown>[];
     },
   ) {
     const result = await this.aiService.saveScreeningResult({
