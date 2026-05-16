@@ -7,13 +7,11 @@ import {
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-
-@Controller('ai')
-export class AiController {
 import { IngestDto } from './dto/ingest.dto';
 import { ChatDto } from './dto/chat.dto';
 
-import { AiService } from './ai.service';
+@Controller('ai')
+export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('ingest')
