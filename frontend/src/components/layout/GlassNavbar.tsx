@@ -1,5 +1,7 @@
+"use client";
 import { useState } from "react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../../context/AuthContext"
 import { useTheme } from "../../context/ThemeContext"
 import BrandLogo from "../branding/BrandLogo"
@@ -18,12 +20,12 @@ const GlassNavbar = () => {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [emergencyOpen, setEmergencyOpen] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const router = useRouter()
+  const pathname = usePathname()
 
   const goToSection = (id: string) => {
-    if (location.pathname !== "/") {
-      navigate(`/#${id}`)
+    if (pathname !== "/") {
+      router.push(`/#${id}`)
       return
     }
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -35,7 +37,7 @@ const GlassNavbar = () => {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(14,165,233,0.16),transparent_35%),radial-gradient(circle_at_86%_80%,rgba(16,185,129,0.16),transparent_35%)]" />
 
         <div className="relative flex items-center justify-between gap-4">
-          <Link to="/" className="mr-3 shrink-0">
+          <Link href="/" className="mr-3 shrink-0">
             <BrandLogo />
           </Link>
 
@@ -57,16 +59,21 @@ const GlassNavbar = () => {
             <button onClick={toggleTheme} className="rounded-xl border border-slate-300/80 bg-white/85 px-3 py-2 text-xs font-semibold text-slate-800 transition hover:scale-105 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-100">{theme === "dark" ? "Light" : "Dark"}</button>
 
             {!user ? (
-              <>
-                <button onClick={() => navigate("/login")} className="grid h-9 w-9 place-items-center rounded-xl border border-slate-300 bg-white/70 text-slate-800 transition hover:scale-105 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:bg-slate-700" title="Login" aria-label="Go to login page">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" /><path d="M5 19C6.4 15.8 9 14.4 12 14.4C15 14.4 17.6 15.8 19 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                </button>
-              </>
+              <button onClick={() => router.push("/login")} className="grid h-9 w-9 place-items-center rounded-xl border border-slate-300 bg-white/70 text-slate-800 transition hover:scale-105 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:bg-slate-700" title="Login" aria-label="Go to login page">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" /><path d="M5 19C6.4 15.8 9 14.4 12 14.4C15 14.4 17.6 15.8 19 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+              </button>
             ) : (
-              <>
-                <span className="hidden text-xs text-slate-700 sm:inline dark:text-slate-200">{user.name}</span>
-                <button onClick={() => { logout(); navigate("/") }} className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:text-slate-100">Logout</button>
-              </>
+              <button
+                onClick={() => router.push(user?.role === "doctor" ? "/dashboard/doctor/profile" : "/dashboard/parent/profile")}
+                className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-800 transition hover:scale-105 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:bg-slate-700"
+                title="View Profile"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M5 19C6.4 15.8 9 14.4 12 14.4C15 14.4 17.6 15.8 19 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                <span className="hidden sm:inline">{user.name}</span>
+              </button>
             )}
             <EmergencyPanel open={emergencyOpen} onClose={() => setEmergencyOpen(false)} />
           </div>

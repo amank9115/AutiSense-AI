@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Lexend:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#edcd58",
+                        "tertiary-fixed": "#fcdb65",
+                        "on-surface-variant": "#5e605b",
+                        "secondary-dim": "#325c3f",
+                        "secondary-container": "#c7f7d0",
+                        "tertiary-dim": "#645100",
+                        "inverse-primary": "#a7eefe",
+                        "on-error": "#fff7f6",
+                        "tertiary-container": "#fcdb65",
+                        "primary-dim": "#005c69",
+                        "on-tertiary": "#fff8ed",
+                        "inverse-on-surface": "#9e9d99",
+                        "primary": "#176876",
+                        "secondary-fixed-dim": "#b9e8c3",
+                        "primary-fixed": "#a7eefe",
+                        "on-error-container": "#65000b",
+                        "on-secondary-fixed-variant": "#406a4c",
+                        "on-tertiary-fixed": "#483a00",
+                        "on-surface": "#31332f",
+                        "error": "#ac3434",
+                        "surface-container-low": "#f5f3ef",
+                        "outline-variant": "#b2b2ad",
+                        "on-tertiary-fixed-variant": "#6a5600",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#a7eefe",
+                        "on-primary-fixed": "#004651",
+                        "on-secondary": "#e8ffe9",
+                        "surface-tint": "#176876",
+                        "secondary-fixed": "#c7f7d0",
+                        "surface-container-highest": "#e3e3dd",
+                        "secondary": "#3e684a",
+                        "surface-container-high": "#e9e8e3",
+                        "on-secondary-fixed": "#234d31",
+                        "surface-container": "#efeee9",
+                        "surface": "#fbf9f5",
+                        "on-primary-fixed-variant": "#116472",
+                        "surface-bright": "#fbf9f5",
+                        "surface-variant": "#e3e3dd",
+                        "inverse-surface": "#0e0e0d",
+                        "on-primary-container": "#005a68",
+                        "error-dim": "#70030f",
+                        "on-primary": "#eefbff",
+                        "outline": "#7a7b76",
+                        "on-background": "#31332f",
+                        "surface-dim": "#dadad4",
+                        "primary-fixed-dim": "#99dfef",
+                        "on-secondary-container": "#365f42",
+                        "tertiary": "#725d00",
+                        "on-tertiary-container": "#5e4d00",
+                        "error-container": "#f56965",
+                        "background": "#fbf9f5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fbf9f5;
+            color: #31332f;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#fbf9f5] dark:bg-[#1a1c18] flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#176876] dark:text-[#5BA1B0] text-3xl" data-icon="spa">spa</span>
+<h1 class="font-['Plus_Jakarta_Sans'] font-bold text-lg text-[#176876] dark:text-[#5BA1B0] tracking-tight">The Gentle Navigator</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#31332f] dark:text-[#e2e2dc] font-medium hover:text-[#176876] transition-colors duration-300 px-3 py-1 rounded-full hover:bg-[#f1efe9]" href="#">Home</a>
+<a class="text-[#31332f] dark:text-[#e2e2dc] font-medium hover:text-[#176876] transition-colors duration-300 px-3 py-1 rounded-full hover:bg-[#f1efe9]" href="#">Assess</a>
+<a class="text-[#31332f] dark:text-[#e2e2dc] font-medium hover:text-[#176876] transition-colors duration-300 px-3 py-1 rounded-full hover:bg-[#f1efe9]" href="#">Results</a>
+<a class="text-[#176876] dark:text-[#5BA1B0] font-bold px-5 py-2 bg-[#d1e8eb] dark:bg-[#204d54] rounded-full" href="#">Experts</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-[#f1efe9] dark:hover:bg-[#2d2e2b] transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border-2 border-surface-container-highest">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGXtXDE8Fu3Zd20nQDHWJUeJgvyP4-vfqUaMGhIxgewf9Z4XIALRhTKvONRtyKTCFG3yvUzlfuzCvviiP3I1p24NDA1HX8U65oB091gkaku7UU-l_LvWIuhDz068_KrVTZXJpqsLHJzOToPP0gca1R6W1QDXo2OSfFCozLBE3YIqOhPomtgpW-k79IiHhuAQ2L49rGoQwqpbuOvKjs0noJYRt3outgZXnJGurd3I43YUnYDzzGb7VUjN3pbFVJuJejhtyaUZGLJOI"/>
+</div>
+</div>
+</header>
+<main class="max-w-[1440px] mx-auto flex gap-8 px-8 py-10 min-h-[calc(100vh-80px)]">
+<!-- Filter Sidebar -->
+<aside class="w-80 flex-shrink-0">
+<div class="bg-surface-container-low rounded-lg p-8 sticky top-28 border border-transparent">
+<div class="mb-8">
+<h2 class="font-headline font-bold text-xl text-on-surface mb-2">Find a Specialist</h2>
+<p class="text-sm text-on-surface-variant leading-relaxed">Filter by expertise, location, and rating to find the perfect fit for your family's needs.</p>
+</div>
+<div class="space-y-8">
+<!-- Search Input -->
+<div class="space-y-2">
+<label class="text-xs font-semibold text-primary uppercase tracking-wider ml-1">Name or Keyword</label>
+<div class="relative">
+<input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 pl-11 focus:ring-2 focus:ring-primary/20 text-on-surface placeholder:text-on-surface-variant/60 transition-all" placeholder="Search professionals..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+</div>
+</div>
+<!-- Specialty Dropdown -->
+<div class="space-y-2">
+<label class="text-xs font-semibold text-primary uppercase tracking-wider ml-1">Specialty</label>
+<select class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 text-on-surface appearance-none">
+<option>All Specializations</option>
+<option>Pediatrician</option>
+<option>Child Psychologist</option>
+<option>Speech Therapist</option>
+<option>Occupational Therapist</option>
+<option>Sensory Expert</option>
+</select>
+</div>
+<!-- Rating Filter -->
+<div class="space-y-3">
+<label class="text-xs font-semibold text-primary uppercase tracking-wider ml-1">Minimum Rating</label>
+<div class="flex items-center gap-2">
+<input class="w-full accent-primary h-2 bg-surface-container-highest rounded-full appearance-none cursor-pointer" max="5" min="1" step="0.5" type="range"/>
+<span class="text-sm font-medium text-on-surface">4.0+</span>
+</div>
+</div>
+<!-- Availability Toggle -->
+<div class="flex items-center justify-between bg-surface-container-highest/50 p-4 rounded-xl">
+<span class="text-sm font-medium text-on-surface">Accepting New Clients</span>
+<button class="w-12 h-6 bg-secondary rounded-full relative p-1 transition-colors">
+<div class="w-4 h-4 bg-white rounded-full translate-x-6"></div>
+</button>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-semibold shadow-sm hover:scale-[1.02] active:scale-95 transition-all duration-300">
+                        Apply Filters
+                    </button>
+<button class="w-full text-primary font-medium py-2 hover:bg-surface-container-high rounded-full transition-colors text-sm">
+                        Clear all filters
+                    </button>
+</div>
+</div>
+</aside>
+<!-- Main Grid Area -->
+<div class="flex-grow">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="text-2xl font-headline font-bold text-on-surface">Verified Professionals</h3>
+<p class="text-on-surface-variant">Showing 24 experts matching your criteria</p>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 bg-surface-container-low rounded-full text-sm font-medium border border-outline-variant/10">Sort by: Recommended</button>
+<button class="p-2 bg-surface-container-low rounded-full border border-outline-variant/10">
+<span class="material-symbols-outlined text-on-surface-variant">grid_view</span>
+</button>
+</div>
+</div>
+<!-- Specialist Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface-container-low rounded-lg p-6 flex gap-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 group">
+<div class="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female pediatrician in her late 40s wearing a white clinical coat over a soft sage green blouse. She has a warm, empathetic smile and is set against a brightly lit, blurred clinic background with soft warm tones. The lighting is natural and high-key, conveying a sense of trustworthiness, expertise, and gentle care consistent with a calming health sanctuary." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8WkQsRpmGW6uLOIwi-adfCXSuBEa3Bnhr0kZUurI7Z__FyE9YPQV1jJw4VLIpxkPgsgeUmnQl1Vg7Pph9dQQuPuaSgPQ_90ZtJGWVgRr9ibGz4Q18bteRcXX25p-rlkESmp0hOwWtzddavznkb6651paS62UKAkRsAsPheZj4hmBdN1BHDoMG3ETG_ruF75k0qWJOkhIjnxV7CJPCX9qCzond2JbXJRk-x3WFFh5beuJHf6c8ofm7Rxs-115rUZ0yiQ4oDGL4NRQ"/>
+</div>
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full mb-2">Pediatrician</span>
+<h4 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Dr. Elena Rodriguez</h4>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-container/30 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-tertiary-container">4.9</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-6">Expert in neurodiverse development with 15+ years experience in supporting children through sensory transitions.</p>
+<div class="mt-auto flex gap-3">
+<button class="flex-grow bg-primary text-on-primary py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dim transition-colors">Book Now</button>
+<button class="px-4 border border-primary text-primary rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-xl align-middle">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-low rounded-lg p-6 flex gap-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 group">
+<div class="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A male occupational therapist in his mid 30s with a kind, friendly expression, wearing a casual but professional navy blue polo shirt. He is photographed in a softly lit studio with a warm off-white background that reflects a high-end, modern aesthetic. The mood is approachable and focused, emphasizing a supportive environment for professional consultation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH0vaEYPg7zSynN2fI27AgYroHwEocEdr1rSLrRBBAWEmHzEm7JoXSGGVdUuUf8nNkz1kobA-PptgnyndUvbat6u61F5yobwLqaaVlKnEJESsJM8Vv6GHJG2AUU4J28vSojAnltJ3qHwWaaOq_6M_swGG6Wrcl4SE-fc05AY1J14GbjmA85qN_nWoA_kLOOlr5aViwQ6v9RHkoWiGhd568dXGQd-JK5dCv14CjJJe3V39Z85dh2skRtHkxcQgc61C8sD5tG0m4kCo"/>
+</div>
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full mb-2">Occupational Therapist</span>
+<h4 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Marcus Thorne, MS</h4>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-container/30 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-tertiary-container">4.8</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-6">Specializing in sensory integration and motor skill development in safe, play-based environments.</p>
+<div class="mt-auto flex gap-3">
+<button class="flex-grow bg-primary text-on-primary py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dim transition-colors">Book Now</button>
+<button class="px-4 border border-primary text-primary rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-xl align-middle">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-low rounded-lg p-6 flex gap-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 group">
+<div class="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A woman in her early 30s with a calm, patient demeanor, working as a Child Psychologist. She wears a soft beige sweater and is positioned in an editorial-style portrait with soft, diffused lighting. The background is a clean, minimalist room with organic wooden textures, following the sanctuary aesthetic of the brand. The lighting highlights her approachable personality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNTp2xJorGu6YKbkQcoTBJWbq9gHxQUOTKnXbdB4D_9V4bZCXHG7n5SuLyKdF2PAivLntEG6Yboe8MRjMxYf-oDHVAoZuVrsv1HCK8j6oR-KkxAfH1mT7B60FJfYFH0lqZsxuIfDU0VMoeDeyyf9LMHZFjHYgeZLikYtl3fHPevIqd2ruXzXj-n7if6vOSHE9E-YcpG4jHiXRFAgDRHclb8Ws5_aaxkHkEZetLGEuV6pxsjVim8K8lVW4mqceDHxlNgLP6mYuHjSI"/>
+</div>
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full mb-2">Child Psychologist</span>
+<h4 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Dr. Sarah Jenkins</h4>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-container/30 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-tertiary-container">5.0</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-6">Cognitive behavioral therapy expert focused on anxiety and emotional regulation for children and adolescents.</p>
+<div class="mt-auto flex gap-3">
+<button class="flex-grow bg-primary text-on-primary py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dim transition-colors">Book Now</button>
+<button class="px-4 border border-primary text-primary rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-xl align-middle">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-low rounded-lg p-6 flex gap-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 group">
+<div class="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A male professional speech therapist in a crisp light blue shirt, looking directly at the camera with a confident and reassuring smile. The scene is a modern, high-end office with soft architectural shadows and a palette of warm grays and teal accents. The composition is clean and focused, reflecting a professional yet gentle sanctuary atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHHeExVfVyYG2FrBnKoLjgWP6e4CPYdOqtZ3PhdoPv-mSe0Kfl_cqQ15DgtPKDP1RwwdNNV51DTkpXoPnEwuAZrwoN21cD-dJGEQFFZiQr3WvA-LdiTuun-vQhiHSRDxwlI2kW5xX8GWHqcNlerhCBumxkUAVgN7fjwGTj4JO5KCUrcJdZl9ZQvSn4UdeWR7ydvUDs6NLDSlSJn4pHq9Em-1v_pxkgL72byOIlOkMRaYIkA3P73eCvLQft0gYxza7FTiGMvL5tL-A"/>
+</div>
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full mb-2">Speech Therapist</span>
+<h4 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Julian Carter, SLP</h4>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-container/30 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-tertiary-container">4.7</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-6">Innovative communication strategies using AAC and sensory-aware techniques for non-verbal development.</p>
+<div class="mt-auto flex gap-3">
+<button class="flex-grow bg-primary text-on-primary py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dim transition-colors">Book Now</button>
+<button class="px-4 border border-primary text-primary rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-xl align-middle">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="bg-surface-container-low rounded-lg p-6 flex gap-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 group">
+<div class="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A portrait of a serene female specialist in her 50s, wearing elegant glasses and a structured dark teal blazer. The lighting is editorial and sophisticated, utilizing a soft glow from one side to create depth. The background is a minimalist studio setting with soft curves, aligning with the brand's 'tactile sanctuary' creative direction and high-end aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZi7AteqPH5AZlxbm8taoefPCjitA76DQ1GqpmKcrhFOyFl_tzfM4gVdoxOATihSUTD6s5-97dHcDfsb9fM7AIgcrAnan_VkAkPbfaU6nRwi0kDR6AGbATF7Op3JN3rIx8r3_zOCIJYA8eMUcUrvIkR9URwnLu7TmOFGPkicKHgEsTn27sAKJo8f2E4xNPxvuRxQPfboSIlsud1N-3xvGm7dl3YCeqYM1-6WYQmsQm1s6BwFgwuMmL0bMewbQygrbPl4TWyBuqWRY"/>
+</div>
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full mb-2">Sensory Expert</span>
+<h4 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Dr. Linda Chaves</h4>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-container/30 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-tertiary-container">4.9</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-6">Designing tailored sensory environments and home plans for families navigating ASD and ADHD.</p>
+<div class="mt-auto flex gap-3">
+<button class="flex-grow bg-primary text-on-primary py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dim transition-colors">Book Now</button>
+<button class="px-4 border border-primary text-primary rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-xl align-middle">mail</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="bg-surface-container-low rounded-lg p-6 flex gap-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 group">
+<div class="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0 border-4 border-surface-container-highest shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A young male pediatrician with an approachable, empathetic gaze, wearing a light gray linen shirt. He is set in a modern medical office filled with plants and natural light, creating a biophilic, calming environment. The image uses a soft focus on the background to make the subject stand out, emphasizing a gentle and professional approach to healthcare." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA21CEhV_qYO9FOmNgHSqkI8R09P5OmeGmos2L7-37pi-Vawefp1wSLgOuKXHxzGWa45EUdBaM0hb7mDzEf9Tzxi9Y9hzkJ6FpyYrg0CFmdq32sUB0NWMjlxyfFXsYM-698ySCWrrl9uebtLcG3jXXCZeDzNK1td-hl48l71kd3ShTXLd8ix2g0gY_01649NP4JWOQjaEPqO1FTm11WKo_5eiqH359CaTF-NZS5nzW5IDCFhRPhPysVrZeVSFzB4X-qfqSeU3NvvM"/>
+</div>
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full mb-2">Pediatrician</span>
+<h4 class="font-headline font-bold text-lg text-on-surface group-hover:text-primary transition-colors">Dr. Kevin Wu</h4>
+</div>
+<div class="flex items-center gap-1 bg-tertiary-container/30 px-2 py-1 rounded-lg">
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold text-on-tertiary-container">4.8</span>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant line-clamp-2 mb-6">Focusing on early intervention and integrative health for neurodiverse children through gentle assessment.</p>
+<div class="mt-auto flex gap-3">
+<button class="flex-grow bg-primary text-on-primary py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dim transition-colors">Book Now</button>
+<button class="px-4 border border-primary text-primary rounded-full hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-xl align-middle">mail</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="mt-12 flex items-center justify-center gap-2">
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-on-primary font-bold">1</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors font-medium">2</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors font-medium">3</button>
+<span class="mx-2 text-on-surface-variant">...</span>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors font-medium">8</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Visible only on mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#fbf9f5]/80 dark:bg-[#1a1c18]/80 backdrop-blur-xl rounded-t-[3rem] shadow-[0_-4px_32px_rgba(49,51,47,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#404944] dark:text-[#bfc9c2] px-5 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Lexend'] text-xs font-medium uppercase">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#404944] dark:text-[#bfc9c2] px-5 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="extension">extension</span>
+<span class="font-['Lexend'] text-xs font-medium uppercase">Assess</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#404944] dark:text-[#bfc9c2] px-5 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-['Lexend'] text-xs font-medium uppercase">Results</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#d1e8eb] dark:bg-[#204d54] text-[#176876] dark:text-[#ace8f3] rounded-full px-5 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="diversity_1">diversity_1</span>
+<span class="font-['Lexend'] text-xs font-medium uppercase">Experts</span>
+</a>
+</nav>
+</body></html>

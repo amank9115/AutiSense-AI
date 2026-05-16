@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from "react"
+"use client";
+import { useState } from "react"
 import type { SessionRecording } from "../../context/ScreeningContext"
 
 type SessionReviewPanelProps = {
@@ -6,20 +7,13 @@ type SessionReviewPanelProps = {
   onSaveNotes?: (recordingId: string, notes: string) => void
 }
 
-const SessionReviewPanel = ({ recording, onSaveNotes }: SessionReviewPanelProps) => {
-  const [notes, setNotes] = useState("")
+type ActiveSessionReviewProps = {
+  recording: SessionRecording
+  onSaveNotes?: (recordingId: string, notes: string) => void
+}
 
-  useEffect(() => {
-    setNotes(recording?.doctorReviewNotes ?? "")
-  }, [recording])
-
-  if (!recording) {
-    return (
-      <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/65 dark:text-slate-300">
-        Select a recording to open Session Review.
-      </div>
-    )
-  }
+const ActiveSessionReview = ({ recording, onSaveNotes }: ActiveSessionReviewProps) => {
+  const [notes, setNotes] = useState(recording.doctorReviewNotes)
 
   return (
     <div className="space-y-3 rounded-2xl border border-slate-200/70 bg-white/80 p-4 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/65">
@@ -46,6 +40,18 @@ const SessionReviewPanel = ({ recording, onSaveNotes }: SessionReviewPanelProps)
       )}
     </div>
   )
+}
+
+const SessionReviewPanel = ({ recording, onSaveNotes }: SessionReviewPanelProps) => {
+  if (!recording) {
+    return (
+      <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/65 dark:text-slate-300">
+        Select a recording to open Session Review.
+      </div>
+    )
+  }
+
+  return <ActiveSessionReview key={recording.id} recording={recording} onSaveNotes={onSaveNotes} />
 }
 
 export default SessionReviewPanel

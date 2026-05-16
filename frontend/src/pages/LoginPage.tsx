@@ -1,6 +1,7 @@
+"use client";
 import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion"
 import { useEffect, useState, type FormEvent } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useRouter, useSearchParams } from "next/navigation";
 import ToastStack, { type ToastItem } from "../components/ui/ToastStack"
 import { useAuth } from "../context/AuthContext"
 import { authApi, type AuthRole } from "../services/authApi"
@@ -50,10 +51,11 @@ const EyeFace = ({
 )
 
 const LoginPage = () => {
-  const navigate = useNavigate()
+  const router = useRouter()
+  const navigate = (path: string) => router.push(path)
+  const searchParams = useSearchParams()
   const { login } = useAuth()
-  const [searchParams] = useSearchParams()
-  const initialMode: Mode = searchParams.get("mode") === "register" ? "register" : "login"
+  const initialMode: Mode = searchParams?.get("mode") === "register" ? "register" : "login"
 
   const [mode, setMode] = useState<Mode>(initialMode)
   const [role, setRole] = useState<AuthRole>("parent")

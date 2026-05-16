@@ -1,42 +1,58 @@
 import { fetchJson } from "../api/client"
+import { User, UserRole } from "../store"
 
-export type AuthRole = "parent" | "doctor"
-
-type AuthUser = {
-  id: string
-  name: string
-  role: AuthRole
-  email: string
+export type AuthResponse = {
+  access_token?: string;
+  user?: User;
+  message?: string;
+  verificationToken?: string;
 }
 
 export const authApi = {
-  loginWithPassword: async (email: string, password: string, role: AuthRole, name?: string) => {
-    return fetchJson<{ success: boolean; user: AuthUser }>("/auth/login", {
+  login: async (email: string, pass: string) => {
+    return fetchJson<AuthResponse>("/api/v1/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password, role, name }),
+      body: JSON.stringify({ email, password: pass }),
     })
   },
-  loginWithGoogle: async (payload: { email: string; name?: string; role: AuthRole }) => {
-    return fetchJson<{ success: boolean; user: AuthUser }>("/auth/google", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    })
-  },
-  registerUser: async (payload: {
-    name: string
-    email: string
-    phone: string
-    password: string
-    confirmPassword: string
-    role: AuthRole
+
+  register: async (payload: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role?: UserRole;
   }) => {
-    return fetchJson<{ success: boolean; user: AuthUser }>("/auth/register", {
+    return fetchJson<AuthResponse>("/api/v1/auth/register", {
       method: "POST",
       body: JSON.stringify(payload),
     })
   },
-  forgotPassword: async (payload: { email: string; role: AuthRole; newPassword: string; confirmPassword: string }) => {
-    return fetchJson<{ success: boolean; message: string }>("/auth/forgot-password", {
+
+  resendVerification: async (email: string) => {
+    return fetchJson<{ message: string; verificationToken?: string }>("/api/v1/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    })
+  },
+
+  // Note: These would need backend implementation to match exactly
+  loginWithGoogle: async (payload: { email: string; name?: string; role: UserRole }) => {
+    return fetchJson<AuthResponse>("/api/v1/auth/google", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+  },
+
+  forgotPassword: async (email: string) => {
+    return fetchJson<{ message: string }>("/api/v1/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    })
+  },
+
+  resetPassword: async (payload: { token: string; newPassword: string }) => {
+    return fetchJson<{ message: string }>("/api/v1/auth/reset-password", {
       method: "POST",
       body: JSON.stringify(payload),
     })

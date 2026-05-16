@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Gentle Navigator - Explore Support</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&amp;family=Plus+Jakarta+Sans:wght@500;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ac3434",
+                    "on-secondary-fixed-variant": "#406a4c",
+                    "on-tertiary": "#fff8ed",
+                    "on-surface": "#31332f",
+                    "tertiary-fixed-dim": "#edcd58",
+                    "outline": "#7a7b76",
+                    "surface-dim": "#dadad4",
+                    "error-dim": "#70030f",
+                    "on-tertiary-fixed-variant": "#6a5600",
+                    "primary-container": "#a7eefe",
+                    "primary-fixed": "#a7eefe",
+                    "inverse-surface": "#0e0e0d",
+                    "on-primary-container": "#005a68",
+                    "secondary-container": "#c7f7d0",
+                    "on-error": "#fff7f6",
+                    "secondary-fixed": "#c7f7d0",
+                    "on-secondary-fixed": "#234d31",
+                    "on-primary": "#eefbff",
+                    "surface-container": "#efeee9",
+                    "secondary-dim": "#325c3f",
+                    "error-container": "#f56965",
+                    "secondary": "#3e684a",
+                    "on-secondary-container": "#365f42",
+                    "surface-container-highest": "#e3e3dd",
+                    "outline-variant": "#b2b2ad",
+                    "inverse-primary": "#a7eefe",
+                    "surface-container-low": "#f5f3ef",
+                    "on-error-container": "#65000b",
+                    "background": "#fbf9f5",
+                    "tertiary-dim": "#645100",
+                    "secondary-fixed-dim": "#b9e8c3",
+                    "tertiary": "#725d00",
+                    "surface-variant": "#e3e3dd",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-dim": "#005c69",
+                    "on-surface-variant": "#5e605b",
+                    "inverse-on-surface": "#9e9d99",
+                    "surface-container-high": "#e9e8e3",
+                    "primary-fixed-dim": "#99dfef",
+                    "tertiary-fixed": "#fcdb65",
+                    "surface": "#fbf9f5",
+                    "on-tertiary-container": "#5e4d00",
+                    "on-background": "#31332f",
+                    "tertiary-container": "#fcdb65",
+                    "surface-bright": "#fbf9f5",
+                    "on-primary-fixed-variant": "#116472",
+                    "surface-tint": "#176876",
+                    "primary": "#176876",
+                    "on-tertiary-fixed": "#483a00",
+                    "on-secondary": "#e8ffe9",
+                    "on-primary-fixed": "#004651"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body": ["Lexend"],
+                    "label": ["Lexend"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #fbf9f5;
+      }
+      .glass-nav {
+        background: rgba(251, 249, 245, 0.8);
+        backdrop-filter: blur(20px);
+      }
+    </style>
+</head>
+<body class="font-body text-on-surface selection:bg-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl">
+<div class="flex justify-between items-center px-6 md:px-12 py-4 max-w-full mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-headline font-bold text-primary dark:text-primary-fixed text-xl tracking-tight cursor-pointer active:scale-95 transition-transform">The Gentle Navigator</span>
+<div class="hidden md:flex gap-6">
+<a class="text-on-surface-variant dark:text-on-surface-variant/80 font-medium hover:text-primary-dim transition-colors duration-300" href="#">Home</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary transition-colors duration-300" href="#">Support</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant/80 font-medium hover:text-primary-dim transition-colors duration-300" href="#">Library</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden md:block text-on-surface-variant font-medium hover:text-primary transition-colors">Help</button>
+<div class="cursor-pointer active:scale-95 transition-transform p-2 bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+</div>
+</div>
+</div>
+</nav>
+<main class="pt-24 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
+<!-- Hero Section: Calm Awareness -->
+<header class="mb-16">
+<div class="max-w-3xl">
+<h1 class="font-headline font-extrabold text-5xl md:text-6xl text-primary tracking-tight mb-6">Explore Support</h1>
+<p class="text-xl text-on-surface-variant leading-relaxed font-light">A peaceful corner for caregivers and children. Find sensory resources, urgent guidance, and tools designed for your comfort.</p>
+</div>
+</header>
+<!-- Bento Grid: Main Resources -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-16">
+<!-- Sensory-Friendly Library -->
+<section class="md:col-span-8 bg-surface-container-low rounded-lg p-10 flex flex-col justify-between min-h-[400px] overflow-hidden relative group">
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6">
+<span class="p-3 bg-secondary-container rounded-full text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="library_books">library_books</span>
+</span>
+<h2 class="font-headline font-bold text-2xl text-on-surface">Sensory-Friendly Library</h2>
+</div>
+<p class="text-on-surface-variant text-lg max-w-md mb-8">Curated videos, audio soundscapes, and visual guides tailored for low-arousal learning and regulation.</p>
+<div class="flex flex-wrap gap-3">
+<button class="bg-primary text-on-primary px-8 py-3 rounded-xl font-medium transition-transform active:scale-95 flex items-center gap-2">
+                            Browse Collection
+                            <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="absolute bottom-0 right-0 w-1/2 h-full hidden lg:block opacity-80 group-hover:scale-105 transition-transform duration-700">
+<img class="w-full h-full object-contain object-bottom" data-alt="A soft, digital illustration of a cozy reading nook with floating, glowing book icons and abstract organic shapes in sage green and muted yellow. The lighting is diffused and warm, evoking a sense of safety and quiet exploration within a calm, sanctuary-like environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNxN30eoktIixLq8gX4bf6VToReVg_qIhd-K8oqHD5CZD-JOfi3DLgjjN30-CxrmLGKVF10u_ODmFIhvqZlw9xLrJPftPbn2LR8wpKbozfuslHMXMPf1xoaXVTTymdLzK4evxBAyaq5aFkz0NTCUUSWQFTUpzU5Z5HXLljt35t3OD2xjy9MgQm7JFJdHmz4dJDocXhqHphTNWhccd0gqSkNAwnq3rH-YcTHZn05W7GkCF90Bg_IZO8heUhKTl-OZd_uq_gXzT2ICE"/>
+</div>
+</section>
+<!-- Quick Navigation Tools -->
+<aside class="md:col-span-4 space-y-6">
+<div class="bg-tertiary-container/30 rounded-lg p-8 flex flex-col h-full border border-tertiary-container/20">
+<h3 class="font-headline font-bold text-xl text-on-surface mb-4">Resource Tools</h3>
+<ul class="space-y-4">
+<li class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-tertiary" data-icon="filter_list">filter_list</span>
+<span class="font-medium">Filter by Need</span>
+<span class="material-symbols-outlined ml-auto text-outline group-hover:text-tertiary transition-colors" data-icon="chevron_right">chevron_right</span>
+</li>
+<li class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-tertiary" data-icon="map">map</span>
+<span class="font-medium">Local Services</span>
+<span class="material-symbols-outlined ml-auto text-outline group-hover:text-tertiary transition-colors" data-icon="chevron_right">chevron_right</span>
+</li>
+<li class="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-tertiary" data-icon="download">download</span>
+<span class="font-medium">Printable Aids</span>
+<span class="material-symbols-outlined ml-auto text-outline group-hover:text-tertiary transition-colors" data-icon="chevron_right">chevron_right</span>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+<!-- Care-First Emergency Contacts -->
+<section class="bg-error-container/10 rounded-lg p-8 md:p-12 mb-16 border border-error-container/20">
+<div class="flex flex-col md:flex-row gap-8 items-start">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-error text-3xl" data-icon="emergency">emergency</span>
+<h2 class="font-headline font-bold text-3xl text-on-surface">Immediate Assistance</h2>
+</div>
+<p class="text-on-surface-variant text-lg leading-relaxed max-w-2xl">If you are in a crisis or need urgent sensory intervention advice, these vetted contacts are available 24/7. We approach emergency support with gentle, non-judgmental care.</p>
+</div>
+<div class="w-full md:w-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-2 shadow-sm border border-outline-variant/10">
+<span class="text-sm font-label text-on-surface-variant uppercase tracking-wider">Sensory Crisis Line</span>
+<span class="text-2xl font-bold text-primary">1-800-CALM-NOW</span>
+<button class="mt-2 text-primary font-bold flex items-center gap-2 hover:underline">
+                            Call Now <span class="material-symbols-outlined" data-icon="call">call</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-2 shadow-sm border border-outline-variant/10">
+<span class="text-sm font-label text-on-surface-variant uppercase tracking-wider">Text Support</span>
+<span class="text-2xl font-bold text-primary">TEXT "GENTLE"</span>
+<button class="mt-2 text-primary font-bold flex items-center gap-2 hover:underline">
+                            Open SMS <span class="material-symbols-outlined" data-icon="chat">chat</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Topic Categories: Asymmetric Layout -->
+<section class="mb-16">
+<h2 class="font-headline font-bold text-3xl text-on-surface mb-10">Common Support Areas</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Card 1 -->
+<div class="group cursor-pointer">
+<div class="h-64 rounded-lg bg-secondary-container/20 overflow-hidden mb-6 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A minimalist digital painting of a child sitting in a soft light-filled tent, surrounded by soft-edged geometric shapes. The color palette uses calming sage green and muted sea blue. The lighting is low-arousal and soft, emphasizing a safe, quiet space for emotional regulation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmPloZYtEjdSnb7937LLm0sG1xXtQKhJmepDUa995GNBoBvVxmO72S8H_XvW22YY1hMpPqUg1SqVAnd5fgNl8XqRTXKyYSa8-cokApgHBMQdzGI2IBHxqtK4clkp3sT0Gcpr737MvL2m03UIehjp95VQI2F-rZeJFlQqkII2sgHynpkbF1TbE6iChBt-6s3WDtAo2c_F06hUAFzq8UEvGA7W_Tkwz1oBpy5yP5jCQt67VNib5ZwtyBJ2BbgRO7VYniPbn7Mrsyk_o"/>
+</div>
+<h3 class="font-headline font-bold text-xl mb-2 group-hover:text-primary transition-colors">Managing Meltdowns</h3>
+<p class="text-on-surface-variant leading-relaxed">Step-by-step low-arousal techniques for de-escalation and recovery.</p>
+</div>
+<!-- Card 2 -->
+<div class="group cursor-pointer">
+<div class="h-64 rounded-lg bg-tertiary-container/20 overflow-hidden mb-6 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A clean, flat-style digital illustration of a school building with rounded corners and oversized friendly trees. The colors are earthy ochre and deep sea blue. The scene is bright but not overwhelming, styled as an editorial piece for a parenting resource." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcuNy0jQ8L-2xQLJGStZ6cTFLTP99Wc95v9vH6329rdsHERbQIwXs-ohvzsM00Qi765kOUbzYXFz3aorlEPmmNuLEhcZHIEq9PRnqwnYA89czIZxivipYLzugs_mcxWWDhU5W9Oq-yL9t7U8Wl9U98taYxbyC0-jZrGueBJeL9o0rO_epnMa50kxfVIff7iVC6IVMDlV3PGYcsrgOlxzsAa_qkVFnE_CkM6RMlwtJneTAo0JzvbFWiYuAbAlWfYPOYEOjKOgQ7l4Q"/>
+</div>
+<h3 class="font-headline font-bold text-xl mb-2 group-hover:text-primary transition-colors">School Advocacy</h3>
+<p class="text-on-surface-variant leading-relaxed">Templates and scripts for communicating your child's sensory needs to teachers.</p>
+</div>
+<!-- Card 3 -->
+<div class="group cursor-pointer">
+<div class="h-64 rounded-lg bg-primary-container/20 overflow-hidden mb-6 relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A serene digital illustration of a pair of hands holding a warm cup of tea, with soft floral patterns in the background. The style is hand-crafted and organic, utilizing deep primary blues and soft primary-container teals. The mood is tranquil and restorative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGtqLCs0GO2GAvcb0qib-QSQmcyDQ0c2CMdaQbv0nszFYZ8489eIF62hnzmKCmiQzXwiL2rz4DCWuTnAK95SdVcxUk9Des8Q214BQ9lyk1dh50UYDhz_7_LvRHTJ01wccSNAv2cslptzPOTnaxFhBLCKUbs7Qg3QZ6L7dCbab1TS9_tn95_tdCAaLD5OlI0hu2BIWSdq3t9TjeIkcvva1GqCHvwJuBYUf6pfsMj_H0vBj4295UNRHDYulU1V2EtyFWF_6lwbhcwPY"/>
+</div>
+<h3 class="font-headline font-bold text-xl mb-2 group-hover:text-primary transition-colors">Caregiver Respite</h3>
+<p class="text-on-surface-variant leading-relaxed">Micro-self-care practices that fit into your busy, demanding schedule.</p>
+</div>
+</div>
+</section>
+<!-- Search & Filter Bar: Tactical Shell -->
+<section class="max-w-4xl mx-auto bg-surface-container-highest rounded-full p-2 flex items-center shadow-lg mb-24">
+<div class="flex-1 px-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-lg font-body placeholder:text-outline-variant" placeholder="Search for a specific resource or topic..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary px-10 py-4 rounded-full font-bold transition-transform active:scale-95 shadow-md">Search</button>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container dark:bg-surface-container-highest w-full py-12">
+<div class="flex flex-col md:flex-row justify-between items-center px-12 gap-6 w-full">
+<div class="flex flex-col gap-2">
+<span class="font-headline font-semibold text-secondary dark:text-secondary-fixed">The Gentle Navigator</span>
+<p class="font-body text-label-md text-on-surface-variant dark:text-outline">© 2024 The Gentle Navigator. All rights reserved. Built for sensory comfort.</p>
+</div>
+<div class="flex gap-8">
+<a class="font-body text-label-md text-on-surface-variant dark:text-outline hover:text-primary transition-colors duration-300" href="#">Privacy Policy</a>
+<a class="font-body text-label-md text-on-surface-variant dark:text-outline hover:text-primary transition-colors duration-300" href="#">Terms of Service</a>
+<a class="font-body text-label-md text-on-surface-variant dark:text-outline hover:text-primary transition-colors duration-300" href="#">Accessibility Support</a>
+</div>
+</div>
+</footer>
+<!-- Mobile Bottom Navigation Shell (Suppressed on Web) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-nav border-t border-surface-container-high py-3 flex justify-around items-center z-50">
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" data-icon="support" data-weight="fill" style="font-variation-settings: 'FILL' 1;">support</span>
+<span class="text-[10px] font-bold">Support</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="text-[10px] font-medium">Explore</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</div>
+</nav>
+</body></html>

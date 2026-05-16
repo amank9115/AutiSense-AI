@@ -1,5 +1,5 @@
 import { motion } from "framer-motion"
-import { Link } from "react-router-dom"
+import Link from "next/link";
 import Button from "../ui/Button"
 
 const pulse = {
@@ -25,13 +25,13 @@ const HeroSection = () => {
           Secure, explainable AI workflows for parents and clinicians: capture behavior signals, track development, and collaborate faster with medically responsible guardrails.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/live-screening">
+          <Link href="/live-screening">
             <Button>Start Screening</Button>
           </Link>
-          <Link to="/doctor">
+          <Link href="/doctor">
             <Button variant="secondary">For Doctors</Button>
           </Link>
-          <Link to="/parent">
+          <Link href="/parent">
             <Button variant="secondary">For Parents</Button>
           </Link>
         </div>

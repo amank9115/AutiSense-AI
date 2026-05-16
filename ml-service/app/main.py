@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 try:
@@ -54,6 +55,15 @@ except Exception as _pdf_err:
     print(f"[PDF] PDF generator unavailable: {_pdf_err}")
 
 app = FastAPI(title="ManasSaathi Python ML", version="1.0.0")
+
+# CORS middleware for frontend connection
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # In-memory session store (lives for duration of service process)
 SESSION_WINDOWS: Dict[str, List["FrameInput"]] = {}

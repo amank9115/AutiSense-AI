@@ -81,7 +81,14 @@ type ScreeningContextValue = {
   }) => SessionRecording | null
   updateRecordingNotes: (recordingId: string, notes: string) => void
   updateDoctorNotes: (caseId: string, notes: string) => void
-  addSessionForActiveProfile: (payload: { riskScore: number; riskLabel: string; featureAverages: any; recommendations?: string[] }) => string | null
+  addSessionForActiveProfile: (payload: { riskScore: number; riskLabel: string; featureAverages: ScreeningFeatureAverages; recommendations?: string[] }) => string | null
+}
+
+type ScreeningFeatureAverages = {
+  eyeContact?: number
+  attentionSpan?: number
+  emotionSignals?: number
+  gestureAnalysis?: number
 }
 
 const initialCases: ChildCaseRecord[] = []

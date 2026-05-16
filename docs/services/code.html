@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Services | The Gentle Navigator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Lexend:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ac3434",
+                      "on-secondary-fixed-variant": "#406a4c",
+                      "on-tertiary": "#fff8ed",
+                      "on-surface": "#31332f",
+                      "tertiary-fixed-dim": "#edcd58",
+                      "outline": "#7a7b76",
+                      "surface-dim": "#dadad4",
+                      "error-dim": "#70030f",
+                      "on-tertiary-fixed-variant": "#6a5600",
+                      "primary-container": "#a7eefe",
+                      "primary-fixed": "#a7eefe",
+                      "inverse-surface": "#0e0e0d",
+                      "on-primary-container": "#005a68",
+                      "secondary-container": "#c7f7d0",
+                      "on-error": "#fff7f6",
+                      "secondary-fixed": "#c7f7d0",
+                      "on-secondary-fixed": "#234d31",
+                      "on-primary": "#eefbff",
+                      "surface-container": "#efeee9",
+                      "secondary-dim": "#325c3f",
+                      "error-container": "#f56965",
+                      "secondary": "#3e684a",
+                      "on-secondary-container": "#365f42",
+                      "surface-container-highest": "#e3e3dd",
+                      "outline-variant": "#b2b2ad",
+                      "inverse-primary": "#a7eefe",
+                      "surface-container-low": "#f5f3ef",
+                      "on-error-container": "#65000b",
+                      "background": "#fbf9f5",
+                      "tertiary-dim": "#645100",
+                      "secondary-fixed-dim": "#b9e8c3",
+                      "tertiary": "#725d00",
+                      "surface-variant": "#e3e3dd",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-dim": "#005c69",
+                      "on-surface-variant": "#5e605b",
+                      "inverse-on-surface": "#9e9d99",
+                      "surface-container-high": "#e9e8e3",
+                      "primary-fixed-dim": "#99dfef",
+                      "tertiary-fixed": "#fcdb65",
+                      "surface": "#fbf9f5",
+                      "on-tertiary-container": "#5e4d00",
+                      "on-background": "#31332f",
+                      "tertiary-container": "#fcdb65",
+                      "surface-bright": "#fbf9f5",
+                      "on-primary-fixed-variant": "#116472",
+                      "surface-tint": "#176876",
+                      "primary": "#176876",
+                      "on-tertiary-fixed": "#483a00",
+                      "on-secondary": "#e8ffe9",
+                      "on-primary-fixed": "#004651"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "display": ["Plus Jakarta Sans"],
+                      "body": ["Lexend"],
+                      "label": ["Lexend"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .watercolor-blob {
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl">
+<nav class="flex justify-between items-center px-6 md:px-12 py-4 max-w-full mx-auto">
+<div class="font-headline font-bold text-primary text-xl tracking-tight cursor-pointer active:scale-95 transition-transform">
+                The Gentle Navigator
+            </div>
+<div class="hidden md:flex items-center space-gap gap-8">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300" href="#">Home</a>
+<a class="text-primary font-bold border-b-2 border-primary transition-colors duration-300" href="#">Services</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300" href="#">Assessments</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300" href="#">About</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-on-surface-variant font-medium cursor-pointer hover:text-primary transition-colors duration-300">Help</span>
+<button class="material-symbols-outlined text-on-surface-variant cursor-pointer active:scale-95 transition-transform">settings</button>
+</div>
+</nav>
+</header>
+<main class="pt-24 pb-12 overflow-x-hidden">
+<!-- Hero Section -->
+<section class="relative px-6 md:px-12 py-16 md:py-24 text-center">
+<div class="watercolor-blob absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full"></div>
+<div class="watercolor-blob absolute bottom-0 right-1/4 w-80 h-80 bg-secondary rounded-full"></div>
+<div class="max-w-4xl mx-auto">
+<h1 class="font-headline text-display-lg font-extrabold text-primary tracking-tight mb-6 text-4xl md:text-6xl">
+                    Pathways to Peaceful Progress
+                </h1>
+<p class="font-body text-on-surface-variant text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                    Designed for sensory comfort and professional precision, our services support neurodivergent individuals and their families through a low-arousal, tactile sanctuary.
+                </p>
+</div>
+</section>
+<!-- Services Bento Grid -->
+<section class="px-6 md:px-12 py-12">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 max-w-7xl mx-auto">
+<!-- Clinical Assessments -->
+<div class="md:col-span-8 bg-surface-container-low rounded-xl p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center group transition-all duration-300">
+<div class="w-full md:w-1/2">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">psychology</span>
+<h2 class="font-headline text-title-md font-bold text-primary text-2xl">Clinical Assessments</h2>
+</div>
+<p class="text-on-surface-variant leading-relaxed mb-6">
+                            A comprehensive, multi-disciplinary approach to understanding unique neuro-types. We prioritize a calm environment to ensure accurate, stress-free observations for both children and adults.
+                        </p>
+<ul class="space-y-3 mb-8">
+<li class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Sensory Profile Analysis
+                            </li>
+<li class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Diagnostic Clarity Reports
+                            </li>
+</ul>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95">Explore Assessment Journey</button>
+</div>
+<div class="w-full md:w-1/2 aspect-square rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A serene, professional therapy room with soft sage green walls, a comfortable cream-colored armchair, and large windows letting in diffused morning light. The floor features a natural woven rug. The atmosphere is quiet, minimalist, and designed for sensory safety, using a palette of deep sea blues and warm off-whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArelEYUXUTAmi9C60GxgPh2jEgLRHK1JamPEJ8H1quceOopigHw5lqZUgoq4ZOO40oltuP2VOhn-BxKXIjREd8P1N6pQdc4qcqzRVrP8l6e9fJeUwKlUt8TdJekGJ7WuvU7upheH98pTFqMlkIUoPLo7VbwFlqIJxcCdGiu3uJaiKgbwNTR-w5P4Ln3ULioq07bro_P3ogjWwwsSRNrGxut7A6p2ldWTDAqH23l5P1zvzlCRrQN-Yo3dy-RDcGPvF7E2RgoMYwAwU"/>
+</div>
+</div>
+<!-- Family Counseling -->
+<div class="md:col-span-4 bg-secondary-container rounded-xl p-8 flex flex-col justify-between">
+<div>
+<span class="material-symbols-outlined text-on-secondary-container text-4xl mb-4">family_restroom</span>
+<h2 class="font-headline text-2xl font-bold text-on-secondary-container mb-4">Family Counseling</h2>
+<p class="text-on-secondary-fixed-variant leading-relaxed">
+                            Support systems for the whole family. We focus on communication strategies that respect sensory needs and emotional bandwidth.
+                        </p>
+</div>
+<div class="mt-8">
+<div class="w-full h-32 rounded-lg bg-surface/40 backdrop-blur-sm p-4 flex flex-col justify-center">
+<p class="text-sm font-bold text-on-secondary-container">Next Available Session</p>
+<p class="text-lg text-secondary">Tuesday, Oct 24th</p>
+</div>
+<button class="w-full mt-4 text-on-secondary-container font-bold underline text-left hover:text-primary transition-colors">Book a consultation</button>
+</div>
+</div>
+<!-- Art Therapy -->
+<div class="md:col-span-5 bg-surface-container-high rounded-xl p-8 md:p-10">
+<div class="aspect-video w-full rounded-lg overflow-hidden mb-6">
+<img class="w-full h-full object-cover" data-alt="Hands gently working with watercolor paints on high-quality textured paper. The colors are soft muted yellows, earthy greens, and deep sea blues. The scene is lit with warm, overhead studio lighting that highlights the tactile quality of the paper and the fluidity of the paint. The mood is creative, calm, and focused." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0UPgMr4Ur-sHJfMybhQEYjmur58-Wi4ixXqFcGr96w6YkyHc4RxFct2O3Rc-TFbAXYYOi813zwG7eX5F-cmngtjWSKAFMoxxOnuOCWnffEiqmvb-BrUfyr0uPndlTvJu6OrXh95jjspLR69eyXQbX6MMgkemMI2bRjlIptaKq9fPqSuHc0ILABQR23-_lrs8jXVnrGfolPtBIVRbFVGDhMed-EsdWKo-pNh7uCMCEOe39qcr2t1t3bo5AHf4h1NVnVwT7g1GXVwk"/>
+</div>
+<h2 class="font-headline text-2xl font-bold text-tertiary mb-3">Art Therapy Workshops</h2>
+<p class="text-on-surface-variant leading-relaxed mb-6">
+                        Non-verbal expression through tactile mediums. Explore clay, watercolors, and textiles in a low-stimulation studio setting.
+                    </p>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-1 bg-surface-container-lowest text-on-surface-variant text-sm rounded-full">Saturdays</span>
+<span class="px-4 py-1 bg-surface-container-lowest text-on-surface-variant text-sm rounded-full">All Ages</span>
+<span class="px-4 py-1 bg-surface-container-lowest text-on-surface-variant text-sm rounded-full">Sensory-Friendly</span>
+</div>
+</div>
+<!-- Safety & Care -->
+<div class="md:col-span-7 bg-white rounded-xl p-8 md:p-12 border-2 border-surface-container flex flex-col justify-center relative overflow-hidden">
+<div class="watercolor-blob absolute -right-20 -top-20 w-64 h-64 bg-tertiary-container rounded-full"></div>
+<div class="max-w-md relative z-10">
+<h2 class="font-headline text-3xl font-extrabold text-primary mb-4">Our Commitment to Care</h2>
+<p class="text-on-surface-variant text-lg mb-8">
+                            Every session is held in a "Tactile Sanctuary"—where lighting is adjustable, noise is minimized, and textures are curated for maximum comfort.
+                        </p>
+<div class="grid grid-cols-2 gap-6">
+<div class="flex flex-col gap-1">
+<span class="font-bold text-primary">100%</span>
+<span class="text-sm text-on-surface-variant">Low-Arousal Spaces</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-bold text-primary">Trauma</span>
+<span class="text-sm text-on-surface-variant">Informed Approach</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Low Stimulation FAQ/Process -->
+<section class="px-6 md:px-12 py-16 bg-surface-container-low">
+<div class="max-w-4xl mx-auto">
+<h2 class="font-headline text-3xl font-bold text-center text-primary mb-12">How We Work</h2>
+<div class="space-y-6">
+<div class="bg-surface rounded-lg p-6 flex gap-6 items-start">
+<div class="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</div>
+<div>
+<h3 class="font-bold text-primary text-lg mb-1">Introductory Intake</h3>
+<p class="text-on-surface-variant">A brief, low-pressure conversation to identify your needs and sensory preferences before you ever step foot in our center.</p>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-6 flex gap-6 items-start">
+<div class="bg-secondary text-on-secondary w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</div>
+<div>
+<h3 class="font-bold text-secondary text-lg mb-1">Tailored Session Design</h3>
+<p class="text-on-surface-variant">We adjust the physical environment—lighting, weighted blankets, or quiet zones—specifically for your visit.</p>
+</div>
+</div>
+<div class="bg-surface rounded-lg p-6 flex gap-6 items-start">
+<div class="bg-tertiary text-on-tertiary w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</div>
+<div>
+<h3 class="font-bold text-tertiary text-lg mb-1">Ongoing Collaboration</h3>
+<p class="text-on-surface-variant">Regular check-ins to ensure our strategies evolve with your family's needs and energy levels.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container w-full py-12">
+<div class="flex flex-col md:flex-row justify-between items-center px-12 gap-6 w-full">
+<div class="flex flex-col gap-2">
+<div class="font-headline font-semibold text-secondary text-xl">The Gentle Navigator</div>
+<p class="font-body text-label-md text-on-surface-variant">© 2024 The Gentle Navigator. All rights reserved. Built for sensory comfort.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300" href="#">Terms of Service</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-300" href="#">Accessibility Support</a>
+</div>
+</div>
+</footer>
+</body></html>

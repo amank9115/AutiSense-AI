@@ -1,14 +1,14 @@
-import { Outlet } from "react-router-dom"
+
 
 import Footer from "./MainFooter"
 import Navbar from "./Navbar"
 
-const RootLayout = () => {
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-[#0b1220] text-slate-100">
       <Navbar />
       <main className="pt-24">
-        <Outlet />
+        {children}
       </main>
       <Footer />
     </div>

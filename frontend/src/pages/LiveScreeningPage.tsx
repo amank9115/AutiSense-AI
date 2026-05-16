@@ -1,5 +1,7 @@
+"use client";
 import { useMemo, useRef, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import AnalysisOverlay from "../components/ai/AnalysisOverlay"
 import LiveMlPanel from "../components/ai/LiveMlPanel"
 import CameraPreview, { type CameraLiveMetrics } from "../components/camera/CameraPreview"
@@ -12,7 +14,8 @@ const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
 
 const LiveScreeningPage = () => {
   const { activeProfile, addSessionForActiveProfile, addRecordingForActiveProfile, raiseEmergencyAlert } = useScreening()
-  const navigate = useNavigate()
+  const router = useRouter()
+  const navigate = (path: string) => router.push(path)
 
   const [metrics, setMetrics] = useState<CameraLiveMetrics>({
     eyeContact: 70,
@@ -56,7 +59,7 @@ const LiveScreeningPage = () => {
         <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-6 dark:border-slate-700 dark:bg-slate-900/60">
           <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Child profile required</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Please complete the child profile form before starting live screening.</p>
-          <Link to="/child-profile" className="mt-4 inline-block rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white">Go to Child Profile</Link>
+          <Link href="/child-profile" className="mt-4 inline-block rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white">Go to Child Profile</Link>
         </div>
       </section>
     )

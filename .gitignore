@@ -32,6 +32,7 @@ run-logs/
 
 # ── Python ───────────────────────────────────────────────────────────────────
 .venv/
+venv/
 __pycache__/
 **/__pycache__/
 *.pyc
@@ -41,7 +42,6 @@ __pycache__/
 # ── Trained model artifacts (large binaries — regenerate with train_model.py)
 ml-service/models/*.pkl
 ml-service/app/*.pkl
-*.pkl
 
 # ── Database files ───────────────────────────────────────────────────────────
 *.db
@@ -57,16 +57,18 @@ uploads/
 # ── OS / Editor junk ─────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
-.idea/
-.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# ── Package lock files (only root + service-level are committed) ─────────────
-# package-lock.json is committed — do not ignore
+# ── Claude / AI agent memory ────────────────────────────────────────────────
+.claude/
+
+# ── Old/experimental project dirs (do not commit) ────────────────────────────
+backend-express/
+frontend-vite/
 
 # ── Docker volumes ───────────────────────────────────────────────────────────
 mongo_data/

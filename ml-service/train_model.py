@@ -50,18 +50,18 @@ METADATA_OUTPUT = os.path.join(os.path.dirname(__file__), "app", "asd_metadata.p
 
 def download_dataset() -> tuple[pd.DataFrame, pd.Series]:
     """
-    Loads the provided Autism Data from the backend/ml-data directory.
+    Loads the provided Autism Data from the backend-express/ml-data directory.
     """
     print("\n[1/5] Loading provided ASD Dataset...")
-    local_path = os.path.join(os.path.dirname(__file__), "..", "backend", "ml-data", "Autism_Data.arff")
+    local_path = os.path.join(os.path.dirname(__file__), "..", "backend-express", "ml-data", "Autism_Data.arff")
     print(f"      Source: {local_path}")
 
     try:
         df = pd.read_csv(local_path, na_values="?")
         X = df.drop(columns=["Class/ASD"])
         y = df[["Class/ASD"]]
-        print(f"      ✓ Dataset loaded: {X.shape[0]} rows × {X.shape[1]} features")
-        print(f"      ✓ Target column: {y.columns.tolist()}")
+        print(f"      [OK] Dataset loaded: {X.shape[0]} rows x {X.shape[1]} features")
+        print(f"      [OK] Target column: {y.columns.tolist()}")
         return X, y
     except Exception as e:
         print(f"[WARN] Could not load local data ({e}). Using embedded fallback dataset...")
@@ -124,7 +124,7 @@ def _generate_fallback_dataset() -> tuple[pd.DataFrame, pd.Series]:
     X = X.iloc[idx].reset_index(drop=True)
     y = y.iloc[idx].reset_index(drop=True)
 
-    print(f"      ✓ Synthetic dataset: {n} samples ({n_asd} ASD, {n_no_asd} non-ASD)")
+    print(f"      [OK] Synthetic dataset: {n} samples ({n_asd} ASD, {n_no_asd} non-ASD)")
     return X, y
 
 
@@ -181,8 +181,8 @@ def engineer_features(X: pd.DataFrame, y: pd.Series) -> tuple[np.ndarray, np.nda
 
     labels = np.array([1 if str(v).upper() in ("YES", "1", "ASD") else 0 for v in raw_labels])
 
-    print(f"      ✓ Features: {len(feature_names)} columns")
-    print(f"      ✓ Label distribution: ASD={labels.sum()} | Non-ASD={len(labels)-labels.sum()}")
+    print(f"      [OK] Features: {len(feature_names)} columns")
+    print(f"      [OK] Label distribution: ASD={labels.sum()} | Non-ASD={len(labels)-labels.sum()}")
 
     return df_feat.values, labels, feature_names
 
@@ -246,7 +246,7 @@ def train_and_evaluate(
     top_features = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)[:10]
     print("  Top Predictive Features:")
     for fname, importance in top_features:
-        bar = "█" * int(importance * 50)
+        bar = "=" * int(importance * 50)
         print(f"    {fname:<18} {bar} {importance:.3f}")
 
     return pipeline, {"accuracy": accuracy, "roc_auc": roc_auc, "cv_auc_mean": float(cv_scores.mean())}
@@ -261,8 +261,8 @@ def save_model(pipeline: object, metadata: dict, feature_names: list[str]) -> No
     joblib.dump(pipeline, MODEL_OUTPUT)
     joblib.dump({"feature_names": feature_names, **metadata}, METADATA_OUTPUT)
 
-    print(f"      ✓ Model saved    → {MODEL_OUTPUT}")
-    print(f"      ✓ Metadata saved → {METADATA_OUTPUT}")
+    print(f"      [OK] Model saved    -> {MODEL_OUTPUT}")
+    print(f"      [OK] Metadata saved -> {METADATA_OUTPUT}")
 
 
 def main() -> None:
@@ -276,7 +276,7 @@ def main() -> None:
     pipeline, metadata = train_and_evaluate(X, y, feature_names)
     save_model(pipeline, metadata, feature_names)
 
-    print("\n[5/5] DONE! ✓")
+    print("\n[5/5] DONE! [OK]")
     print("      Model is ready. Now start the ML service:")
     print("      uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload")
     print("=" * 60)

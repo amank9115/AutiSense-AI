@@ -1,10 +1,13 @@
-﻿import { useMemo, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+"use client";
+import { useMemo, useState } from "react"
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import GlassCard from "../components/ui/GlassCard"
 import { useScreening } from "../context/ScreeningContext"
 
 const ChildCaseDetailsPage = () => {
-  const { caseId = "" } = useParams()
+  const params = useParams()
+  const caseId = typeof params?.caseId === "string" ? params.caseId : ""
   const { caseRecords, updateDoctorNotes } = useScreening()
 
   const record = useMemo(() => caseRecords.find((item) => item.id === caseId), [caseRecords, caseId])
@@ -15,7 +18,7 @@ const ChildCaseDetailsPage = () => {
       <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 dark:border-slate-700 dark:bg-slate-900/60">
           <p className="text-sm text-slate-600 dark:text-slate-300">Case not found.</p>
-          <Link to="/doctor-dashboard" className="mt-3 inline-block text-sm font-semibold text-sky-600 dark:text-sky-300">Back to dashboard</Link>
+          <Link href="/doctor-dashboard" className="mt-3 inline-block text-sm font-semibold text-sky-600 dark:text-sky-300">Back to dashboard</Link>
         </div>
       </section>
     )
@@ -31,7 +34,7 @@ const ChildCaseDetailsPage = () => {
           <h1 className="text-3xl font-semibold text-slate-800 dark:text-slate-100">{record.profile.childName} ({record.id})</h1>
           <p className="text-sm text-slate-500 dark:text-slate-300">Parent: {record.profile.parentName} | Risk Score: {record.riskScore}%</p>
         </div>
-        <Link to="/doctor-dashboard" className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:text-slate-200">Back to Dashboard</Link>
+        <Link href="/doctor-dashboard" className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-600 dark:text-slate-200">Back to Dashboard</Link>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-3">

@@ -1,6 +1,6 @@
+"use client";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation";
 import GuestDemoButton from "../components/guest/GuestDemoButton"
 import { useAuth } from "../context/AuthContext"
 
@@ -24,8 +24,9 @@ const steps = [
 ]
 
 const LandingPage = () => {
-  const { user, enterGuestMode } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
+  const router = useRouter()
+  const navigate = (path: string) => router.push(path)
   const cursorX = useMotionValue(0)
   const cursorY = useMotionValue(0)
   const smoothX = useSpring(cursorX, { stiffness: 120, damping: 20 })
@@ -45,8 +46,8 @@ const LandingPage = () => {
   }
 
   const startGuestDemo = () => {
-    enterGuestMode()
-    navigate("/demo")
+    // Redirect to signup/login - guest mode is disabled
+    navigate("/signup")
   }
 
   return (

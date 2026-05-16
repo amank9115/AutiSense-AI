@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react"
+"use client";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useCameraStream } from "../../hooks/useCameraStream"
 import { runCameraMlScreening, type CameraMlFrame } from "../../services/aiService"
@@ -202,7 +203,7 @@ const CameraAnalysisPanel = () => {
     return last?.confidence ?? 0
   }, [cameraFrames])
 
-  const handleRunMl = async () => {
+  const handleRunMl = useCallback(async () => {
     if (!cameraFrames.length) {
       setAnalysisError("No camera frames captured yet. Start camera and wait 3-4 seconds.")
       return
@@ -225,7 +226,7 @@ const CameraAnalysisPanel = () => {
     } finally {
       setIsAnalyzing(false)
     }
-  }
+  }, [cameraFrames])
 
   useEffect(() => {
     if (!autoMlEnabled || !isActive) {
@@ -242,7 +243,7 @@ const CameraAnalysisPanel = () => {
     return () => {
       window.clearInterval(interval)
     }
-  }, [autoMlEnabled, cameraFrames.length, isActive, isAnalyzing])
+  }, [autoMlEnabled, cameraFrames.length, handleRunMl, isActive, isAnalyzing])
 
   return (
     <div className="rounded-[2rem] border border-white/20 bg-slate-950/70 p-4 shadow-2xl shadow-cyan-950/35 backdrop-blur sm:p-6">

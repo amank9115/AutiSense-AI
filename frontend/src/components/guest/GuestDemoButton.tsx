@@ -1,3 +1,4 @@
+"use client";
 ﻿import { motion } from "framer-motion"
 
 type GuestDemoButtonProps = {
@@ -13,7 +14,7 @@ const GuestDemoButton = ({ onClick, className = "" }: GuestDemoButtonProps) => {
       onClick={onClick}
       className={`rounded-xl border border-emerald-300/70 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/20 dark:border-emerald-400/40 dark:text-emerald-300 ${className}`}
     >
-      Try Demo as Guest
+      Sign Up to Try
     </motion.button>
   )
 }

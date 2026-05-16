@@ -1,5 +1,6 @@
+"use client";
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion"
 import { type ChildProfileForm, useScreening } from "../context/ScreeningContext"
 import { screeningApi } from "../services/api/screeningApi"
@@ -21,7 +22,8 @@ const defaultProfile: ChildProfileForm = {
 }
 
 const ChildProfilePage = () => {
-  const navigate = useNavigate()
+  const router = useRouter()
+  const navigate = (path: string) => router.push(path)
   const { activeProfile, saveProfile } = useScreening()
   const [form, setForm] = useState<ChildProfileForm>(activeProfile ?? defaultProfile)
   const [locating, setLocating] = useState(false)

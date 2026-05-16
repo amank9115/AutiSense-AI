@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+}
+
+enum Role {
+  parent
+  doctor
+}
+
+model User {
+  id                     String        @id @default(uuid())
+  name                   String
+  email                  String        @unique
+  phone                  String
+  passwordHash           String
+  role                   Role          @default(parent)
+  provider               String        @default("local")
+  emailVerified          Boolean       @default(false)
+  emailVerificationToken String?
+  tokenExpiresAt         DateTime?
+  resetPasswordToken     String?
+  resetPasswordExpiresAt DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  // Platform relations
+  children               Child[]       @relation("ParentChildren")
+}
+
+model Child {
+  id          String   @id @default(uuid())
+  name        String
+  age         String
+  lastSession String?
+  riskLevel   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parentId    String?
+  parent      User?    @relation("ParentChildren", fields: [parentId], references: [id])
+}
+
+model ScreeningSession {
+  id              String   @id @default(uuid())
+  userId          String?
+  source          String
+  modelVersion    String
+  riskScore       Float
+  riskLabel       String
+  summary         Json     // Stores eyeContact, attentionSpan, etc.
+  recommendations String[]
+  metrics         Json[]   // Array of frame metrics
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SessionHistory {
+  id               String   @id @default(uuid())
+  childName        String
+  date             String
+  duration         String
+  attentionAverage Float
+  riskScore        Float
+  status           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  from      Role
+  name      String
+  message   String
+  at        String
+  createdAt DateTime @default(now())
+}
+
+model PreScreeningProfile {
+  id               String   @id @default(uuid())
+  childName        String
+  age              String
+  dateOfBirth      String
+  gender           String
+  parentName       String
+  parentPhone      String
+  parentEmail      String
+  homeAddress      String
+  city             String
+  state            String
+  emergencyContact String
+  medicalNotes     String   @default("")
+  location         Json?    // lat, lng, capturedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      String   // 'user' or 'assistant'
+  content   String
+  createdAt DateTime @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id])
+}

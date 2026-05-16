@@ -1,63 +1,64 @@
+"use client";
 import { useMemo, useState } from "react"
 
 import Container from "../components/common/Container"
 import FeatureCard from "../components/common/FeatureCard"
 import SectionHeader from "../components/common/SectionHeader"
 
+const filters = [
+  { id: "all", label: "All" },
+  { id: "clinicians", label: "Clinicians" },
+  { id: "caregivers", label: "Caregivers" },
+  { id: "operations", label: "Operations" },
+  { id: "ai", label: "AI & Trust" },
+]
+
+const features = [
+  {
+    title: "Behavioral intelligence",
+    description:
+      "Multi-signal engine to detect attention, engagement, and sensory regulation markers.",
+    accent: "sky",
+    tags: ["ai", "clinicians"],
+  },
+  {
+    title: "Emotion & attention analysis",
+    description:
+      "Context-aware analysis for emotional regulation and co-regulation patterns.",
+    accent: "indigo",
+    tags: ["ai", "clinicians"],
+  },
+  {
+    title: "Explainable AI insights",
+    description:
+      "Plain-language summaries and evidence trails clinicians can audit.",
+    accent: "emerald",
+    tags: ["ai", "clinicians"],
+  },
+  {
+    title: "Caregiver dashboards",
+    description:
+      "Progress tracking, routines, and supportive guidance without jargon.",
+    accent: "violet",
+    tags: ["caregivers"],
+  },
+  {
+    title: "Clinician workbench",
+    description:
+      "Objective markers, confidence indicators, and cohort comparisons.",
+    accent: "sky",
+    tags: ["clinicians"],
+  },
+  {
+    title: "Offline & low-bandwidth support",
+    description:
+      "Lightweight capture kits and sync pipelines for remote clinics.",
+    accent: "indigo",
+    tags: ["operations", "caregivers"],
+  },
+]
+
 const FeaturesPage = () => {
-  const filters = [
-    { id: "all", label: "All" },
-    { id: "clinicians", label: "Clinicians" },
-    { id: "caregivers", label: "Caregivers" },
-    { id: "operations", label: "Operations" },
-    { id: "ai", label: "AI & Trust" },
-  ]
-
-  const features = [
-    {
-      title: "Behavioral intelligence",
-      description:
-        "Multi-signal engine to detect attention, engagement, and sensory regulation markers.",
-      accent: "sky",
-      tags: ["ai", "clinicians"],
-    },
-    {
-      title: "Emotion & attention analysis",
-      description:
-        "Context-aware analysis for emotional regulation and co-regulation patterns.",
-      accent: "indigo",
-      tags: ["ai", "clinicians"],
-    },
-    {
-      title: "Explainable AI insights",
-      description:
-        "Plain-language summaries and evidence trails clinicians can audit.",
-      accent: "emerald",
-      tags: ["ai", "clinicians"],
-    },
-    {
-      title: "Caregiver dashboards",
-      description:
-        "Progress tracking, routines, and supportive guidance without jargon.",
-      accent: "violet",
-      tags: ["caregivers"],
-    },
-    {
-      title: "Clinician workbench",
-      description:
-        "Objective markers, confidence indicators, and cohort comparisons.",
-      accent: "sky",
-      tags: ["clinicians"],
-    },
-    {
-      title: "Offline & low-bandwidth support",
-      description:
-        "Lightweight capture kits and sync pipelines for remote clinics.",
-      accent: "indigo",
-      tags: ["operations", "caregivers"],
-    },
-  ]
-
   const [activeFilter, setActiveFilter] = useState("all")
 
   const filteredFeatures = useMemo(() => {

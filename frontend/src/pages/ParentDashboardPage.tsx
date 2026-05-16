@@ -1,3 +1,4 @@
+"use client";
 ﻿import { useMemo, useState } from "react"
 import AIAgentChat from "../components/chat/AIAgentChat"
 import BehaviorRadarChart from "../components/charts/BehaviorRadarChart"

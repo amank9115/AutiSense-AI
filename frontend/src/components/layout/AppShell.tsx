@@ -1,4 +1,6 @@
-import { Outlet } from "react-router-dom"
+"use client";
+
+import React from "react"
 import DemoBanner from "../demo/DemoBanner"
 import AnimatedBackground from "../effects/AnimatedBackground"
 import CustomCursor from "../effects/CustomCursor"
@@ -6,7 +8,7 @@ import Footer from "./Footer"
 import GlassNavbar from "./GlassNavbar"
 import { useAuth } from "../../context/AuthContext"
 
-const AppShell = () => {
+const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { isGuest } = useAuth()
 
   return (
@@ -16,7 +18,7 @@ const AppShell = () => {
       <GlassNavbar />
       {isGuest && <DemoBanner />}
       <main className="pt-4">
-        <Outlet />
+        {children}
       </main>
       <Footer />
     </div>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Screening Results - The Gentle Navigator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Lexend:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#edcd58",
+                        "tertiary-fixed": "#fcdb65",
+                        "on-surface-variant": "#5e605b",
+                        "secondary-dim": "#325c3f",
+                        "secondary-container": "#c7f7d0",
+                        "tertiary-dim": "#645100",
+                        "inverse-primary": "#a7eefe",
+                        "on-error": "#fff7f6",
+                        "tertiary-container": "#fcdb65",
+                        "primary-dim": "#005c69",
+                        "on-tertiary": "#fff8ed",
+                        "inverse-on-surface": "#9e9d99",
+                        "primary": "#176876",
+                        "secondary-fixed-dim": "#b9e8c3",
+                        "primary-fixed": "#a7eefe",
+                        "on-error-container": "#65000b",
+                        "on-secondary-fixed-variant": "#406a4c",
+                        "on-tertiary-fixed": "#483a00",
+                        "on-surface": "#31332f",
+                        "error": "#ac3434",
+                        "surface-container-low": "#f5f3ef",
+                        "outline-variant": "#b2b2ad",
+                        "on-tertiary-fixed-variant": "#6a5600",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#a7eefe",
+                        "on-primary-fixed": "#004651",
+                        "on-secondary": "#e8ffe9",
+                        "surface-tint": "#176876",
+                        "secondary-fixed": "#c7f7d0",
+                        "surface-container-highest": "#e3e3dd",
+                        "secondary": "#3e684a",
+                        "surface-container-high": "#e9e8e3",
+                        "on-secondary-fixed": "#234d31",
+                        "surface-container": "#efeee9",
+                        "surface": "#fbf9f5",
+                        "on-primary-fixed-variant": "#116472",
+                        "surface-bright": "#fbf9f5",
+                        "surface-variant": "#e3e3dd",
+                        "inverse-surface": "#0e0e0d",
+                        "on-primary-container": "#005a68",
+                        "error-dim": "#70030f",
+                        "on-primary": "#eefbff",
+                        "outline": "#7a7b76",
+                        "on-background": "#31332f",
+                        "surface-dim": "#dadad4",
+                        "primary-fixed-dim": "#99dfef",
+                        "on-secondary-container": "#365f42",
+                        "tertiary": "#725d00",
+                        "on-tertiary-container": "#5e4d00",
+                        "error-container": "#f56965",
+                        "background": "#fbf9f5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; background-color: #fbf9f5; color: #31332f; }
+        .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .tonal-layering-1 { background-color: #f5f3ef; }
+        .tonal-layering-2 { background-color: #efeee9; }
+        .glass-effect { backdrop-filter: blur(20px); background: rgba(251, 249, 245, 0.8); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#fbf9f5] dark:bg-[#1a1c18] flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#176876] dark:text-[#5BA1B0]" style="font-size: 2rem;">spa</span>
+<h1 class="font-['Plus_Jakarta_Sans'] font-bold text-lg text-[#176876] dark:text-[#5BA1B0] tracking-tight">The Gentle Navigator</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#404944] hover:bg-[#f1efe9] px-4 py-2 rounded-full transition-colors font-medium" href="#">Home</a>
+<a class="text-[#404944] hover:bg-[#f1efe9] px-4 py-2 rounded-full transition-colors font-medium" href="#">Assess</a>
+<a class="text-[#176876] dark:text-[#5BA1B0] font-bold px-4 py-2 rounded-full bg-[#d1e8eb]" href="#">Results</a>
+<a class="text-[#404944] hover:bg-[#f1efe9] px-4 py-2 rounded-full transition-colors font-medium" href="#">Experts</a>
+</nav>
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-high rounded-full transition-colors">account_circle</button>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-12 lg:py-20">
+<!-- Hero Title Section -->
+<div class="mb-16">
+<h2 class="font-display font-extrabold text-5xl lg:text-7xl text-primary leading-tight mb-4">Discovery Results</h2>
+<p class="text-on-surface-variant text-xl max-w-2xl leading-relaxed">A detailed overview of your child's sensory profile and developmental milestones, designed to help you navigate their unique world with confidence.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Profile & Summary -->
+<div class="lg:col-span-8 space-y-8">
+<!-- Unique Explorer Profile Card (Bento Style) -->
+<div class="bg-surface-container-low rounded-lg p-10 flex flex-col md:flex-row gap-10 items-center overflow-hidden relative">
+<div class="w-full md:w-1/3 aspect-square rounded-full bg-secondary-container flex items-center justify-center overflow-hidden shadow-sm">
+<img alt="Unique Explorer Profile" class="w-full h-full object-cover" data-alt="A soft-focus, heartwarming portrait of a young child with a curious expression, surrounded by gentle, abstract floating botanical shapes in sage green and golden yellow. The lighting is warm and golden, reminiscent of a peaceful late afternoon indoors. The overall aesthetic is painterly and soothing, matching a low-arousal, sanctuary-like design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXpxb1GGff2XImHpeE_qhQOQYmphYx5QGdsv84MkBrdPmyORFbp5wPn81q_f79U1Y1e6XIsKHgzndTok7PPZMRNgl4FyZt-7TRRo-Ci_-ROYtGIuMX3pv_Qf0XIofxQSUG3fVRHMRMPl48_B0CklL5S42S9PlyAjnO8FvhLo8xf4Ke1G_MJqojEY993MdA8XSnO44bdTYfHBFTVfAR_hYoeNgkBymfO0HRI0a6rH4Wd5YTJTkBJnvvYztSBYWVnh6wZ_frlGhOvF0"/>
+</div>
+<div class="md:w-2/3">
+<span class="bg-tertiary-container text-on-tertiary-container px-4 py-1.5 rounded-full text-sm font-semibold mb-4 inline-block">Profile Identified</span>
+<h3 class="font-display font-bold text-4xl text-on-surface mb-3 tracking-tight">The Thoughtful Observer</h3>
+<p class="text-lg leading-relaxed text-on-surface-variant italic">"Your child finds deep meaning in quiet details and prefers structured environments where they can process sensations at their own gentle pace."</p>
+</div>
+<!-- Decorative Element -->
+<div class="absolute -top-12 -right-12 w-48 h-48 bg-secondary-container opacity-20 rounded-full blur-3xl"></div>
+</div>
+<!-- Assessment Summary: Progress Bars -->
+<div class="bg-surface-container-lowest rounded-lg p-10 shadow-sm border-l-8 border-primary">
+<h4 class="font-display font-bold text-2xl mb-8">Developmental Milestones</h4>
+<div class="space-y-10">
+<!-- Progress Item -->
+<div>
+<div class="flex justify-between mb-3 items-end">
+<label class="font-label font-medium text-lg text-on-surface">Sensory Modulation</label>
+<span class="text-primary font-bold">High Focus</span>
+</div>
+<div class="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-secondary to-secondary-fixed-dim h-full w-[82%] rounded-full"></div>
+</div>
+<p class="text-sm text-on-surface-variant mt-2">Strong ability to focus on specific sensory inputs while filtering distractions.</p>
+</div>
+<!-- Progress Item -->
+<div>
+<div class="flex justify-between mb-3 items-end">
+<label class="font-label font-medium text-lg text-on-surface">Social Communication</label>
+<span class="text-primary font-bold">Developing</span>
+</div>
+<div class="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-secondary to-secondary-fixed-dim h-full w-[65%] rounded-full"></div>
+</div>
+<p class="text-sm text-on-surface-variant mt-2">Actively engaging with peers through parallel play and observation.</p>
+</div>
+<!-- Progress Item -->
+<div>
+<div class="flex justify-between mb-3 items-end">
+<label class="font-label font-medium text-lg text-on-surface">Motor Planning</label>
+<span class="text-primary font-bold">Emergent</span>
+</div>
+<div class="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-secondary to-secondary-fixed-dim h-full w-[45%] rounded-full"></div>
+</div>
+<p class="text-sm text-on-surface-variant mt-2">Refining coordination for complex physical tasks and sequencing.</p>
+</div>
+</div>
+</div>
+<!-- What This Means Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-secondary-container rounded-lg p-8">
+<span class="material-symbols-outlined text-secondary mb-4" style="font-size: 2.5rem;">lightbulb</span>
+<h5 class="font-display font-bold text-xl mb-3 text-on-secondary-fixed">Key Strengths</h5>
+<ul class="space-y-3 text-on-secondary-container">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1">check_circle</span>
+                                Exceptional attention to visual detail
+                            </li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1">check_circle</span>
+                                Strong memory for patterns and routines
+                            </li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1">check_circle</span>
+                                Calm temperament in predictable settings
+                            </li>
+</ul>
+</div>
+<div class="bg-tertiary-container rounded-lg p-8">
+<span class="material-symbols-outlined text-tertiary mb-4" style="font-size: 2.5rem;">support_agent</span>
+<h5 class="font-display font-bold text-xl mb-3 text-on-tertiary-fixed">Support Areas</h5>
+<ul class="space-y-3 text-on-tertiary-container">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1">error_outline</span>
+                                Transitioning between high-energy activities
+                            </li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1">error_outline</span>
+                                Managing unexpected auditory stimuli
+                            </li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1">error_outline</span>
+                                Initiating social interactions in new groups
+                            </li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar Actions & Context -->
+<aside class="lg:col-span-4 space-y-8">
+<!-- Action Card -->
+<div class="bg-primary text-on-primary rounded-lg p-8 shadow-xl sticky top-28">
+<h4 class="font-display font-bold text-2xl mb-6">Next Steps</h4>
+<p class="mb-8 opacity-90 leading-relaxed font-light">Discuss these results with a certified child development specialist to create a personalized growth plan.</p>
+<div class="flex flex-col gap-4">
+<button class="bg-surface text-primary font-bold py-5 rounded-full flex items-center justify-center gap-3 hover:bg-surface-bright transition-all transform active:scale-95 shadow-md">
+<span class="material-symbols-outlined">calendar_month</span>
+                            Book a Consultation
+                        </button>
+<button class="bg-primary-dim text-white font-bold py-5 rounded-full flex items-center justify-center gap-3 hover:bg-opacity-80 transition-all transform active:scale-95 border border-primary-fixed/20">
+<span class="material-symbols-outlined">download</span>
+                            Download Full Report (PDF)
+                        </button>
+</div>
+<hr class="my-8 border-on-primary/10"/>
+<div class="flex items-center gap-4 bg-on-primary/5 p-4 rounded-xl">
+<span class="material-symbols-outlined text-tertiary-fixed">shield_with_heart</span>
+<span class="text-sm font-medium">Your data is secure and encrypted.</span>
+</div>
+</div>
+<!-- Expert Recommendation Preview -->
+<div class="bg-surface-container-high rounded-lg p-8">
+<h5 class="font-display font-bold text-lg mb-4 text-on-surface">Recommended Expert</h5>
+<div class="flex items-center gap-4 mb-4">
+<div class="w-16 h-16 rounded-full overflow-hidden">
+<img alt="Dr. Sarah Chen" class="w-full h-full object-cover" data-alt="A professional headshot of a friendly female pediatric specialist with a warm smile, wearing a professional but soft-textured sage green blazer. She is set against a clean, softly lit background of a modern therapist's office featuring a bookshelf with colorful toys and greenery. The photography is high-key and welcoming, reinforcing a sense of trust and gentle care." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALVyW70yo3izlVQ2BQGcBonXRFLBz5II35OWUchu1yeKTTJQSBDUVqPrkvK4a76ZoTfYx4wzpQKlxat9cm-0r6nl1wSuNyZpWgfGC_he_CurbkloHDrmz1xLHL61tGgkvMdtwxcex5Afr5RHG3g2LI7wVKr1uH41uFKFeQ5X1PIWrlUrTlKYI00_KinP3bYSIkpYwPmwanDGnZojt8stGuPngHO5cdu21vISS7uVLzQCnZl-VM9q-DV-qn0igql71PljXeruLR50E"/>
+</div>
+<div>
+<h6 class="font-bold text-on-surface">Dr. Sarah Chen</h6>
+<p class="text-xs text-on-surface-variant">Pediatric Occupational Therapist</p>
+</div>
+</div>
+<p class="text-sm text-on-surface-variant mb-4">Specializes in "Thoughtful Observer" profiles and sensory processing support.</p>
+<a class="text-primary font-bold text-sm flex items-center gap-1 hover:underline" href="#">
+                        View Profile 
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</aside>
+</div>
+<!-- Resources Section -->
+<div class="mt-20">
+<h3 class="font-display font-bold text-3xl mb-10">Curated Resources</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="group cursor-pointer">
+<div class="aspect-video rounded-lg overflow-hidden mb-4 bg-surface-container-highest relative">
+<img alt="Home Sensory Room Guide" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A serene and cozy interior of a children's sensory room featuring soft beanbag chairs, a warm glowing floor lamp, and a wall of tactile wooden toys in earthy tones. The lighting is low and amber-hued, creating a tranquil environment. The style is clean and modern, following the tactile sanctuary creative vision with soft textures and no harsh edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfFGuSXR_iodvByMIVAU1pCXe7mLfrsVNd_IV42vtLskk_amT6u70Y3A-P-Ev_BR5ZQoFd_doA4lgiEVzeuRBjLeuYvKyAln4uAewDH5rmBgBYwRpYuLxrao52Befg5p-qcKaHP_pyoLSDCIsYYtYb_3FcdXhmkMPiucpQbDnfBRdWvtQOeqlcyanIOCivtPKH8ygmlNTvCc2g4Gf_-HgNETCd-ctufHlZx1244Frp_y2xw9ArXrvi9cPzjIDDVQLPtXD5sMh9aRo"/>
+</div>
+<h4 class="font-bold text-lg group-hover:text-primary transition-colors">Building a Home Sensory Haven</h4>
+<p class="text-sm text-on-surface-variant">Simple adjustments to create a low-arousal environment at home.</p>
+</div>
+<div class="group cursor-pointer">
+<div class="aspect-video rounded-lg overflow-hidden mb-4 bg-surface-container-highest relative">
+<img alt="Communication Strategies" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Abstract digital illustration representing gentle communication, showing soft overlapping shapes of blue and green that form a symbolic link between two friendly figures. The art style uses organic, blob-like silhouettes with rounded caps and a watercolor-like texture, maintaining a calm and nurturing mood consistent with the design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6EFi9Bpyxu63kdK5PwQ949MoUtkGp7tKfWv70kLvDS2whfK3H-HK5Gd1_007MjK_-eIfYL0lm1NesG3KE--Y3OgcYuSTJHTC9fRyPE6kIjY-20Og2ic8dSIaC3Ydo3PoWzEf5CB4NkYXCb8vV9Ft6k54PYmkXehQyxuo2MU3OnwHwaE3xuSOKJjsD3QKfhAs5tjlpLkOK7P1erCdDkkQh-_nq54ijRTnxOGMN1LxCfM5zdyovjNlXyn_vdE_mFv5UWQ9rf7asMrQ"/>
+</div>
+<h4 class="font-bold text-lg group-hover:text-primary transition-colors">The Art of Gentle Transitions</h4>
+<p class="text-sm text-on-surface-variant">Strategies for moving between activities without overwhelm.</p>
+</div>
+<div class="group cursor-pointer">
+<div class="aspect-video rounded-lg overflow-hidden mb-4 bg-surface-container-highest relative">
+<img alt="Sensory Diet Tips" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A minimalist flat-lay photograph of natural sensory objects like smooth river stones, a soft wool blanket swatch, and a small wooden spinning top on a light sand-colored surface. The composition is asymmetrical and editorial, with soft shadows and high-quality textures that emphasize a tactile, earthy feeling in line with the brand's primary color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBK0ZEi9DyHphi1q5F44iV4PvSQgenqKrKEBP_wrl037m3EvRRZ7NiWcGgRnzfKC4BC3wvtlgRjrBP0BObCg1UjaeAkkCC4r1P42ZwlwtCX_TDmTI0H_-RyWmfy_erxK6nriviCatR9YaJbjSMUN-Sb-CIuKkFV8eOOvJ7XCbtbUI__E8m_4r9XcpS373qFI5m0cOMN625Py0-YAANAd8crI3WzmLV2BB0XpoenBYmbmwoawyAQ2oolv8k_PhjCaCmQZ8mjSVi0QLY"/>
+</div>
+<h4 class="font-bold text-lg group-hover:text-primary transition-colors">Sensory 'Snacks' for Daily Life</h4>
+<p class="text-sm text-on-surface-variant">Quick activities to regulate and focus throughout the day.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile only, Hidden on Desktop as requested) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#fbf9f5]/80 backdrop-blur-xl shadow-[0_-4px_32px_rgba(49,51,47,0.04)] rounded-t-[3rem]">
+<div class="flex flex-col items-center justify-center text-[#404944] px-5 py-2">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Lexend'] text-xs font-medium">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#404944] px-5 py-2">
+<span class="material-symbols-outlined">extension</span>
+<span class="font-['Lexend'] text-xs font-medium">Assess</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#d1e8eb] text-[#176876] rounded-full px-5 py-2">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-['Lexend'] text-xs font-medium">Results</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#404944] px-5 py-2">
+<span class="material-symbols-outlined">diversity_1</span>
+<span class="font-['Lexend'] text-xs font-medium">Experts</span>
+</div>
+</nav>
+<!-- Footer -->
+<footer class="bg-surface-container-highest mt-20 py-12 px-6">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">spa</span>
+<span class="font-display font-bold text-primary tracking-tight">The Gentle Navigator</span>
+</div>
+<div class="flex gap-8 text-sm text-on-surface-variant font-medium">
+<a class="hover:text-primary" href="#">Privacy Policy</a>
+<a class="hover:text-primary" href="#">Terms of Service</a>
+<a class="hover:text-primary" href="#">Support</a>
+</div>
+<div class="text-xs text-outline font-body">© 2024 The Gentle Navigator. All rights reserved.</div>
+</div>
+</footer>
+</body></html>

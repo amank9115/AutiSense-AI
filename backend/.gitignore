@@ -1,0 +1,13 @@
+# Environment secrets
+.env
+.env.local
+
+# Build output
+dist/
+
+# Prisma
+prisma/migrations/
+
+# OS
+.DS_Store
+Thumbs.db

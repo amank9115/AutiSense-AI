@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Gentle Navigator - Emotional Assessment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Lexend:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#efeee9",
+                        "on-error": "#fff7f6",
+                        "on-secondary": "#e8ffe9",
+                        "error": "#ac3434",
+                        "on-primary-container": "#005a68",
+                        "on-primary-fixed-variant": "#116472",
+                        "primary-fixed-dim": "#99dfef",
+                        "outline-variant": "#b2b2ad",
+                        "on-surface-variant": "#5e605b",
+                        "on-background": "#31332f",
+                        "tertiary-fixed": "#fcdb65",
+                        "on-tertiary-fixed": "#483a00",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-dim": "#645100",
+                        "inverse-primary": "#a7eefe",
+                        "secondary-container": "#c7f7d0",
+                        "inverse-on-surface": "#9e9d99",
+                        "primary-container": "#a7eefe",
+                        "secondary": "#3e684a",
+                        "on-tertiary-container": "#5e4d00",
+                        "secondary-dim": "#325c3f",
+                        "on-secondary-fixed": "#234d31",
+                        "primary": "#176876",
+                        "background": "#fbf9f5",
+                        "error-dim": "#70030f",
+                        "surface": "#fbf9f5",
+                        "surface-variant": "#e3e3dd",
+                        "on-tertiary-fixed-variant": "#6a5600",
+                        "tertiary-container": "#fcdb65",
+                        "surface-container-highest": "#e3e3dd",
+                        "surface-bright": "#fbf9f5",
+                        "on-secondary-fixed-variant": "#406a4c",
+                        "tertiary-fixed-dim": "#edcd58",
+                        "inverse-surface": "#0e0e0d",
+                        "on-tertiary": "#fff8ed",
+                        "secondary-fixed": "#c7f7d0",
+                        "on-surface": "#31332f",
+                        "tertiary": "#725d00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fbf9f5;
+            color: #31332f;
+        }
+        .tonal-gradient-primary {
+            background: linear-gradient(135deg, #176876 0%, #116472 100%);
+        }
+        .soft-shadow {
+            box-shadow: 0 4px 32px rgba(49, 51, 47, 0.04);
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Anchor -->
+<header class="w-full top-0 sticky z-50 bg-[#fbf9f5] dark:bg-[#1a1c18] flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#176876] dark:text-[#5BA1B0] text-2xl">spa</span>
+<span class="text-[#176876] dark:text-[#5BA1B0] font-headline font-bold text-lg tracking-tight">The Gentle Navigator</span>
+</div>
+<button class="flex items-center gap-2 px-5 py-2 rounded-full text-[#31332f] font-medium hover:bg-[#f1efe9] transition-all duration-300 active:scale-95">
+<span class="material-symbols-outlined text-xl">logout</span>
+<span class="text-sm">Save &amp; Exit</span>
+</button>
+</header>
+<main class="max-w-6xl mx-auto px-6 pt-8 pb-32">
+<!-- Progress Section -->
+<div class="mb-12">
+<div class="flex justify-between items-end mb-4">
+<div>
+<p class="text-on-surface-variant font-medium text-sm mb-1 uppercase tracking-wider">Emotional Awareness</p>
+<h1 class="font-headline font-extrabold text-4xl text-primary">Step 2 of 5</h1>
+</div>
+<div class="text-right">
+<span class="text-on-surface-variant font-medium">40% Complete</span>
+</div>
+</div>
+<!-- Large Rounded Progress Tracker -->
+<div class="h-4 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full w-[40%] tonal-gradient-primary rounded-full transition-all duration-500"></div>
+</div>
+</div>
+<!-- Main Content Shell -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<!-- Focal Point: Character Illustration -->
+<div class="lg:col-span-5 flex flex-col items-center justify-center p-8">
+<div class="relative w-full aspect-square max-w-sm rounded-full bg-surface-container-highest overflow-hidden border-4 border-secondary-container/50 soft-shadow">
+<!-- Simulated Camera Feed -->
+<div class="absolute inset-0 bg-on-surface-variant/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-on-surface-variant/20">videocam</span>
+</div>
+<!-- AI Engagement Monitoring Overlay -->
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<!-- Scanning Effect -->
+<div class="w-full h-1 bg-primary/30 absolute top-1/2 animate-pulse"></div>
+<div class="z-20 bg-primary/80 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 border border-primary-container/30">
+<span class="material-symbols-outlined text-white text-sm animate-spin" style="font-variation-settings: 'wght' 700">progress_activity</span>
+<span class="text-white text-xs font-bold uppercase tracking-widest font-label">AI Engagement Monitoring</span>
+</div>
+</div>
+<!-- Camera Status Indicator -->
+<div class="absolute top-6 left-1/2 -translate-x-1/2 z-20">
+<div class="bg-surface/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-2 border border-outline-variant shadow-sm">
+<div class="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse"></div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">Camera Active</span>
+</div>
+</div>
+</div>
+<div class="mt-8 text-center">
+<h2 class="font-headline text-2xl font-bold text-on-surface mb-2">Sensing your feelings...</h2>
+<p class="text-on-surface-variant text-lg">Our AI is gently monitoring your engagement to help guide the journey.</p>
+</div>
+</div>
+<!-- Emotion Cards Grid -->
+<div class="lg:col-span-7">
+<div class="grid grid-cols-2 gap-6">
+<!-- Happy Card -->
+<button class="group flex flex-col items-center p-8 bg-surface-container-low hover:bg-primary-container transition-all duration-300 rounded-lg soft-shadow border-2 border-transparent hover:border-primary/20 active:scale-95 text-left">
+<div class="w-20 h-20 rounded-full bg-tertiary-container flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">sentiment_satisfied</span>
+</div>
+<span class="font-headline text-xl font-bold text-on-surface">Happy</span>
+<p class="text-sm text-on-surface-variant text-center mt-2 opacity-0 group-hover:opacity-100 transition-opacity">I feel energetic and bright</p>
+</button>
+<!-- Calm Card -->
+<button class="group flex flex-col items-center p-8 bg-surface-container-low hover:bg-secondary-container transition-all duration-300 rounded-lg soft-shadow border-2 border-transparent hover:border-secondary/20 active:scale-95">
+<div class="w-20 h-20 rounded-full bg-secondary-fixed-dim flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">self_improvement</span>
+</div>
+<span class="font-headline text-xl font-bold text-on-surface">Calm</span>
+<p class="text-sm text-on-surface-variant text-center mt-2 opacity-0 group-hover:opacity-100 transition-opacity">I feel peaceful and quiet</p>
+</button>
+<!-- Sad Card -->
+<button class="group flex flex-col items-center p-8 bg-surface-container-low hover:bg-[#d1e8eb] transition-all duration-300 rounded-lg soft-shadow border-2 border-transparent hover:border-primary/20 active:scale-95">
+<div class="w-20 h-20 rounded-full bg-primary-fixed-dim flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl text-on-primary-container" style="font-variation-settings: 'FILL' 1;">sentiment_dissatisfied</span>
+</div>
+<span class="font-headline text-xl font-bold text-on-surface">Sad</span>
+<p class="text-sm text-on-surface-variant text-center mt-2 opacity-0 group-hover:opacity-100 transition-opacity">I feel a little heavy or blue</p>
+</button>
+<!-- Scared Card -->
+<button class="group flex flex-col items-center p-8 bg-surface-container-low hover:bg-surface-variant transition-all duration-300 rounded-lg soft-shadow border-2 border-transparent hover:border-outline/20 active:scale-95">
+<div class="w-20 h-20 rounded-full bg-surface-container-highest flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl text-on-surface" style="font-variation-settings: 'FILL' 1;">potted_plant</span>
+</div>
+<span class="font-headline text-xl font-bold text-on-surface">Scared</span>
+<p class="text-sm text-on-surface-variant text-center mt-2 opacity-0 group-hover:opacity-100 transition-opacity">I feel shaky or worried</p>
+</button>
+</div>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="fixed bottom-0 left-0 w-full bg-surface/80 backdrop-blur-xl px-6 py-6 z-40 flex justify-center items-center">
+<div class="max-w-6xl w-full flex justify-end">
+<button class="tonal-gradient-primary text-on-primary px-12 py-5 rounded-xl font-headline font-bold text-lg soft-shadow active:scale-95 transition-all duration-300 hover:brightness-110 flex items-center gap-3">
+                    Next Step
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Hidden Platform Indicator for Responsive Design System Requirements -->
+<div class="md:hidden fixed inset-0 bg-surface z-[100] flex flex-col items-center justify-center p-12 text-center">
+<span class="material-symbols-outlined text-6xl text-primary mb-6">desktop_windows</span>
+<h2 class="font-headline text-2xl font-bold text-on-surface mb-4">Please use a larger screen</h2>
+<p class="text-on-surface-variant">The Gentle Navigator assessment is best experienced on a tablet or desktop to provide the most focused environment for your child.</p>
+</div>
+</body></html>

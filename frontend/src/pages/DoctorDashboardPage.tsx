@@ -1,5 +1,6 @@
+"use client";
 ﻿import { useEffect, useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useRouter } from "next/navigation";
 import AIAgentChat from "../components/chat/AIAgentChat"
 import AttentionHeatmap from "../components/charts/AttentionHeatmap"
 import SessionComparisonChart from "../components/charts/SessionComparisonChart"
@@ -28,7 +29,8 @@ type LiveMonitorItem = {
 
 const DoctorDashboardPage = () => {
   const { caseRecords, emergencyAlerts, recordings, updateRecordingNotes } = useScreening()
-  const navigate = useNavigate()
+  const router = useRouter()
+  const navigate = (path: string) => router.push(path)
   const [selectedRecording, setSelectedRecording] = useState<SessionRecording | null>(null)
   const [liveMonitor, setLiveMonitor] = useState<LiveMonitorItem[]>([])
 

@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react"
 import GlassCard from "../components/ui/GlassCard"
 import { analysisApi } from "../services/api/analysisApi"

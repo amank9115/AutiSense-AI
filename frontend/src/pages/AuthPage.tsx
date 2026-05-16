@@ -1,6 +1,7 @@
+"use client";
 import { AnimatePresence, motion } from "framer-motion"
 import { useMemo, useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, type UserRole } from "../context/AuthContext"
 
 type Mode = "login" | "register"
@@ -11,20 +12,20 @@ const roleCopy: Record<UserRole, string> = {
 }
 
 const AuthPage = () => {
-  const [searchParams] = useSearchParams()
-  const initialMode = searchParams.get("mode") === "register" ? "register" : "login"
+  const searchParams = useSearchParams()
+  const initialMode = searchParams?.get("mode") === "register" ? "register" : "login"
   const [mode, setMode] = useState<Mode>(initialMode)
   const [role, setRole] = useState<UserRole>("parent")
   const [name, setName] = useState("")
   const { login } = useAuth()
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const title = useMemo(() => `${mode === "login" ? "Login" : "Register"} as ${role === "parent" ? "Parent" : "Doctor"}`, [mode, role])
 
   const submit = () => {
     const finalName = name.trim() || (role === "parent" ? "Parent User" : "Doctor User")
     login(finalName, role)
-    navigate(role === "parent" ? "/parent-dashboard" : "/doctor-dashboard")
+    router.push(role === "parent" ? "/parent-dashboard" : "/doctor-dashboard")
   }
 
   return (

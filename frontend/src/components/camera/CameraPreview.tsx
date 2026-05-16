@@ -1,5 +1,6 @@
-import { motion } from "framer-motion"
-import { useEffect, useMemo, useRef, useState } from "react"
+"use client";
+﻿import { motion } from "framer-motion"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Button from "../ui/Button"
 
 export type CameraLiveMetrics = {
@@ -65,7 +66,7 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
     [metrics],
   )
 
-  const runAnalysis = async () => {
+  const runAnalysis = useCallback(async () => {
     if (isAnalyzingRef.current) return
 
     const video = videoRef.current
@@ -154,7 +155,7 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
     } finally {
       isAnalyzingRef.current = false
     }
-  }
+  }, [onLiveMetrics])
 
   const startCamera = async () => {
     try {
@@ -214,11 +215,12 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
     }, 900)
 
     return () => window.clearInterval(timer)
-  }, [isStreaming])
+  }, [isStreaming, runAnalysis])
 
   useEffect(() => {
+    const video = videoRef.current
     return () => {
-      const stream = videoRef.current?.srcObject as MediaStream | null
+      const stream = video?.srcObject as MediaStream | null
       stream?.getTracks().forEach((track) => track.stop())
       if (recordingUrl) URL.revokeObjectURL(recordingUrl)
     }

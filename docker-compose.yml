@@ -2,7 +2,7 @@
 # AutiSense-AI — Local Development Stack
 # ──────────────────────────────────────────────────────────────────────────────
 # Usage:
-#   docker compose up -d          → Start MongoDB
+#   docker compose up -d          → Start PostgreSQL, Redis, Ollama
 #   docker compose down           → Stop everything
 #   docker compose down -v        → Stop + delete volumes (wipes DB)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -10,18 +10,58 @@
 version: "3.9"
 
 services:
-  # ── MongoDB (local dev) ────────────────────────────────────────────────────
-  mongo:
-    image: mongo:7
-    container_name: autisense-mongo
+  # ── PostgreSQL with pgvector ───────────────────────────────────────────────
+  postgres:
+    image: ankane/pgvector:v0.5.1
+    container_name: autisense-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: autisense
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (for BullMQ) ─────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: autisense-redis
     restart: unless-stopped
     ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: autisense
+      - "6379:6379"
     volumes:
-      - mongo_data:/data/db
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Ollama (Local AI Models — optional) ────────────────────────────────────
+  # Only needed if using local LLM instead of Groq API
+  # Start with: docker compose up ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: autisense-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles:
+      - local-ai
 
 volumes:
-  mongo_data:
+  pgdata:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
     driver: local

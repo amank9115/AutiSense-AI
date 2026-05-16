@@ -47,6 +47,19 @@ export type CameraMlFrame = {
   imageBase64?: string
 }
 
+export type CameraMlChildInfo = {
+  childName?: string
+  age?: string
+  dateOfBirth?: string
+  gender?: string
+  parentName?: string
+  parentEmail?: string
+  parentPhone?: string
+  city?: string
+  state?: string
+  medicalNotes?: string
+}
+
 export type CameraMlResult = {
   success: boolean
   sessionId: string
@@ -92,7 +105,7 @@ export type LiveCameraMlResult = {
   policy: string
 }
 
-export const runCameraMlScreening = async (frames: CameraMlFrame[], userId?: string, childInfo?: any) => {
+export const runCameraMlScreening = async (frames: CameraMlFrame[], userId?: string, childInfo?: CameraMlChildInfo) => {
   return fetchJson<CameraMlResult>("/ml/camera-screening", {
     method: "POST",
     body: JSON.stringify({ frames, userId, childInfo }),

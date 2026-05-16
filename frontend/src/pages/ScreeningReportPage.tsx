@@ -1,5 +1,7 @@
+"use client";
 import { useEffect, useRef, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useScreening } from "../context/ScreeningContext"
 import { getApiBaseUrl } from "../api/client"
 
@@ -108,7 +110,8 @@ function RiskGauge({ score, label }: { score: number; label: "low" | "moderate" 
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 const ScreeningReportPage = () => {
-  const { sessionId } = useParams<{ sessionId: string }>()
+  const params = useParams()
+  const sessionId = typeof params?.sessionId === "string" ? params.sessionId : ""
   const { activeProfile } = useScreening()
 
   const [reportData, setReportData] = useState<SessionReportData | null>(null)
@@ -205,7 +208,7 @@ const ScreeningReportPage = () => {
             <code className="rounded bg-rose-100 px-1 dark:bg-rose-900">uvicorn app.main:app --port 8001</code>
           </p>
           <Link
-            to="/live-screening"
+            href="/live-screening"
             className="mt-4 inline-block rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white"
           >
             ← Back to Screening
@@ -247,7 +250,7 @@ const ScreeningReportPage = () => {
             )}
           </button>
           {pdfError && <p className="text-xs text-rose-500">{pdfError}</p>}
-          <Link to="/doctor-dashboard" className="text-xs text-sky-600 underline dark:text-sky-300">
+          <Link href="/doctor-dashboard" className="text-xs text-sky-600 underline dark:text-sky-300">
             Send to Doctor →
           </Link>
         </div>
@@ -374,7 +377,7 @@ const ScreeningReportPage = () => {
             something may need attention — but a doctor makes the diagnosis.
           </p>
           <p>
-            The AI analyzed your child's <strong>eye contact, attention, facial expressions, and hand movements</strong>{" "}
+            The AI analyzed your child&apos;s <strong>eye contact, attention, facial expressions, and hand movements</strong>{" "}
             through the camera using Google MediaPipe technology. It compared these patterns against the{" "}
             <strong>UCI ASD research dataset (292 children)</strong>.
           </p>
@@ -395,13 +398,13 @@ const ScreeningReportPage = () => {
       {/* ── Actions ── */}
       <div className="flex flex-wrap justify-center gap-3">
         <Link
-          to="/live-screening"
+          href="/live-screening"
           className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         >
           ← New Screening
         </Link>
         <Link
-          to="/doctor-dashboard"
+          href="/doctor-dashboard"
           className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5"
         >
           Send to Doctor Queue →
