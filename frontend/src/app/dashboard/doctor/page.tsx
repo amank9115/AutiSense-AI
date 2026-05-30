@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card, Input } from "@/components/ui/StitchUI";
@@ -60,7 +60,14 @@ export default function DoctorDashboard() {
   }, [user, router]);
 
   if (!user) {
-    return null;
+    return (
+      <div className="bg-surface min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-on-surface-variant text-sm font-medium animate-pulse">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   const getGreeting = () => {
@@ -73,7 +80,7 @@ export default function DoctorDashboard() {
   return (
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex">
       {/* Sidebar */}
-      <aside className="w-80 h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 p-8 flex flex-col z-50">
+      <aside className="w-80 h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 p-8 flex flex-col z-50 hidden lg:flex">
         <div className="mb-12 px-2">
           <h1 className="font-headline font-bold text-primary text-2xl tracking-tight leading-none mb-1">MannSaathi</h1>
           <p className="text-[10px] font-extrabold text-primary uppercase tracking-[0.3em] opacity-40">Provider Portal</p>
@@ -84,21 +91,24 @@ export default function DoctorDashboard() {
             { icon: "dashboard", label: "Overview", active: true, href: "/dashboard/doctor" },
             { icon: "group", label: "Patient List", href: "/dashboard/doctor/patients" },
             { icon: "calendar_month", label: "Appointments", href: "/dashboard/doctor/appointments" },
-            { icon: "analytics", label: "Clinical Insights", href: "/dashboard/doctor/insights" },
+            { icon: "analytics", label: "Clinical Insights", href: "/dashboard/doctor/analytics" },
             { icon: "folder_shared", label: "Archive", href: "/dashboard/doctor/archive" },
           ].map((item, i) => (
             <button
               key={i}
-              onClick={() => router.push(item.href)}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${item.active ? "bg-primary text-on-primary shadow-2xl shadow-primary/20 font-bold" : "text-on-surface-variant hover:bg-surface-container-high"}`}
+              onClick={() => item.href ? router.push(item.href) : null}
+              disabled={!item.href}
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${item.active ? "bg-primary text-on-primary shadow-2xl shadow-primary/20 font-bold" : !item.href ? "text-on-surface-variant/40 cursor-not-allowed" : "text-on-surface-variant hover:bg-surface-container-high"}`}
+              title={!item.href ? "Coming soon" : undefined}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
               <span className="font-extrabold text-[10px] uppercase tracking-widest">{item.label}</span>
+              {!item.href && <span className="ml-auto text-[8px] font-bold uppercase tracking-widest text-on-surface-variant/30 bg-surface-container-highest px-2 py-0.5 rounded-full">Soon</span>}
             </button>
           ))}
         </nav>
 
-        <div className="mt-auto pt-8 border-t border-outline-variant/10">
+        <div className="mt-auto pt-8 border-t border-outline-variant/10 space-y-4">
           <button
             onClick={() => router.push("/dashboard/doctor/profile")}
             className="w-full bg-surface-container p-4 rounded-3xl flex items-center gap-4 shadow-inner hover:bg-surface-container-high transition-all"
@@ -110,11 +120,18 @@ export default function DoctorDashboard() {
               <p className="text-sm font-extrabold text-on-surface truncate">{user.name}</p>
               <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">Healthcare Provider</p>
             </div>
-                      </button>
+          </button>
+          <button
+            onClick={() => { logout(); router.push('/'); }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-error/20 bg-error/5 text-error text-xs font-bold uppercase tracking-widest hover:bg-error/10 transition-all"
+          >
+            <span className="material-symbols-outlined text-sm">logout</span>
+            Sign Out
+          </button>
         </div>
       </aside>
 
-      <main className="flex-1 ml-80 p-10 lg:p-16">
+      <main className="flex-1 lg:ml-80 p-6 lg:p-10 xl:p-16">
         <header className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 animate-in fade-in slide-in-from-top-4 duration-1000">
           <div>
             <h2 className="font-headline font-extrabold text-5xl text-on-surface tracking-tighter mb-2">{getGreeting()}, {user.name?.split(' ')[0]}.</h2>
@@ -125,7 +142,10 @@ export default function DoctorDashboard() {
               <Input className="w-72 pl-12 bg-surface-container-low border-none rounded-full shadow-inner" placeholder="Search patients..." />
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
             </div>
-            <button className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant shadow-sm border border-outline-variant/5"><span className="material-symbols-outlined">notifications</span></button>
+            <button onClick={() => alert("You have 4 pending screenings requiring your review.")} className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant shadow-sm border border-outline-variant/5 hover:bg-surface-container-high transition-colors cursor-pointer relative" title="Notifications">
+              <span className="material-symbols-outlined">notifications</span>
+              <span className="absolute top-1 right-1 w-3 h-3 bg-error rounded-full border-2 border-surface"></span>
+            </button>
           </div>
         </header>
 
@@ -151,7 +171,7 @@ export default function DoctorDashboard() {
             </div>
             <div className="space-y-4">
               <PatientRow name="Leo Harrington" id="PID-8291" age="4y 2m" status="Report Generated" date="Oct 24, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuC4hA10WbTxc8TNA9o1o7cke0TvhBXlZtjUF31PmM8oEswZND8L8mm8Hm4mnbgBk5p0CZrO3Zm03fez2ChRd-gLjNrN8OKyL8HJQsroHnTqkKj5H9GJ-iHXWcLrxHEaRyFiSzEb2bWia5qdUunacS6Dwhuw_LeqPSwXtAHyWLF5-_A5uUrd9Ffsrq_pWT_SjUfRHgG65LfbdmqUgcjEOxi6EG1vM3n7ycosgyD2Dm41Vf3Jd0W4neKTdPBo3_EPorSsUSf7XIrMKYI" />
-              <PatientRow name="Maya Sterling" id="PID-7734" age="3y 8m" status="Pending Analysis" date="Oct 23, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuAy8o_u0vA5I1O3v0_u-0y-v0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0" />
+              <PatientRow name="Maya Sterling" id="PID-7734" age="3y 8m" status="Pending Analysis" date="Oct 23, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJEdQeHDL-E7ePoYImpgB1mJrH1zyYce9iLrcCsy15qCyGmsfFrOSlulTr2XVEcWGz0kwtRFFrHCwPw1jcZPRLTlSzM8l26DAOJ2Ssx6ovP4k0wBvjNlryGeMwqdbRJpvP5IzlWRH2nr9athKecMvgDQiRl7BorHxZGRklr_TibkN4SvHLFl6_cEVm25FDEY7j6-JXjtust5fiTKfca0VDsa7S4dJi6enzwOG35Edkp0L17dHb1kCuxinOMrxV2Ev1pgw-TTPhOc" />
               <PatientRow name="Ethan Brooks" id="PID-9012" age="5y 1m" status="In Progress" date="Oct 23, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJEdQeHDL-E7ePoYImpgB1mJrH1zyYce9iLrcCsy15qCyGmsfFrOSlulTr2XVEcWGz0kwtRFFrHCwPw1jcZPRLTlSzM8l26DAOJ2Ssx6ovP4k0wBvjNlryGeMwqdbRJpvP5IzlWRH2nr9athKecMvgDQiRl7BorHxZGRklr_TibkN4SvHLFl6_cEVm25FDEY7j6-JXjtust5fiTKfca0VDsa7S4dJi6enzwOG35Edkp0L17dHb1kCuxinOMrxV2Ev1pgw-TTPhOc" />
             </div>
           </Card>

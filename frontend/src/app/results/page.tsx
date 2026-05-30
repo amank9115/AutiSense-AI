@@ -1,26 +1,41 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import { Card, Button } from "@/components/ui/StitchUI";
 import Image from "next/image";
 
 import { useAppStore } from "@/store";
 
-const MilestoneProgress = ({ label, status, progress, color }: { label: string, status: string, progress: string, color: string }) => (
-  <div className="space-y-4">
-    <div className="flex justify-between mb-1 items-end">
-      <label className="font-headline font-bold text-lg text-on-surface">{label}</label>
-      <span className="text-primary font-extrabold text-xs uppercase tracking-widest">{status}</span>
-    </div>
-    <div className="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden shadow-inner">
-      <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: progress }}></div>
-    </div>
-  </div>
-);
-
 export default function ResultsPage() {
+  const router = useRouter();
   const mlResults = useAppStore((state) => state.mlResults);
+
+  const handleBookConsultation = () => {
+    router.push("/professionals");
+  };
+
+  const handleDownloadReport = () => {
+    alert("Download feature coming soon! Your report will be available as a PDF for you to share with healthcare providers.");
+  };
+
+  const handleViewProfile = () => {
+    router.push("/professionals");
+  };
+
+  const MilestoneProgress = ({ label, status, progress, color }: { label: string, status: string, progress: string, color: string }) => (
+    <div className="space-y-4">
+      <div className="flex justify-between mb-1 items-end">
+        <label className="font-headline font-bold text-lg text-on-surface">{label}</label>
+        <span className="text-primary font-extrabold text-xs uppercase tracking-widest">{status}</span>
+      </div>
+      <div className="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden shadow-inner">
+        <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: progress }}></div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased">
@@ -129,11 +144,11 @@ export default function ResultsPage() {
               <h4 className="font-headline font-bold text-2xl sm:text-3xl mb-4 sm:mb-6 tracking-tight">Next Steps</h4>
               <p className="mb-8 sm:mb-10 opacity-80 leading-relaxed font-medium text-sm sm:text-base lg:text-lg">Discuss these results with a certified child development specialist.</p>
               <div className="flex flex-col gap-3 sm:gap-4">
-                <button className="bg-white text-primary font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-surface-bright transition-all shadow-lg active:scale-95 text-xs uppercase tracking-widest">
+                <button onClick={handleBookConsultation} className="bg-white text-primary font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-surface-bright transition-all shadow-lg active:scale-95 text-xs uppercase tracking-widest cursor-pointer">
                   <span className="material-symbols-outlined text-lg sm:text-xl">calendar_month</span>
                   Book Consultation
                 </button>
-                <button className="bg-primary-dim text-white font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-black/20 transition-all border border-white/20 active:scale-95 text-xs uppercase tracking-widest">
+                <button onClick={handleDownloadReport} className="bg-primary-dim text-white font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-black/20 transition-all border border-white/20 active:scale-95 text-xs uppercase tracking-widest cursor-pointer">
                   <span className="material-symbols-outlined text-lg sm:text-xl">download</span>
                   Download Report
                 </button>
@@ -158,7 +173,7 @@ export default function ResultsPage() {
               </div>
               <p className="text-xs sm:text-sm text-on-surface-variant mb-4 sm:mb-6 font-medium leading-relaxed opacity-60">Specializes in sensory processing support.</p>
               <button
-              onClick={() => window.print()}
+              onClick={handleViewProfile}
               className="text-primary font-extrabold text-[10px] flex items-center gap-2 hover:underline uppercase tracking-widest bg-transparent border-none cursor-pointer"
             >
                 View Profile

@@ -1,76 +1,143 @@
 "use client";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
-import { useEffect } from "react"
 
-const interactiveSelector = "a,button,input,textarea,select,[data-cursor='interactive']"
+import React, { useEffect, useRef, useState } from "react";
+import { gsap } from "@/lib/gsap";
 
-const CustomCursor = () => {
-  const x = useMotionValue(-100)
-  const y = useMotionValue(-100)
-  const scale = useMotionValue(1)
-  const opacity = useMotionValue(0)
-
-  const smoothX = useSpring(x, { stiffness: 500, damping: 32, mass: 0.25 })
-  const smoothY = useSpring(y, { stiffness: 500, damping: 32, mass: 0.25 })
-  const smoothScale = useSpring(scale, { stiffness: 360, damping: 24 })
-  const smoothOpacity = useSpring(opacity, { stiffness: 260, damping: 26 })
-  const ringOpacity = useTransform(smoothScale, [1, 1.8], [0.25, 0.42])
+/**
+ * CustomCursor — Premium cursor replacement with magnetic and spotlight effects.
+ *
+ * Features:
+ * - Inner dot (8px, solid primary)
+ * - Outer ring (40px, outline, follows with spring delay)
+ * - Scales up on [data-cursor="pointer"] elements
+ * - Becomes a text bar on [data-cursor="text"]
+ * - Hidden on touch devices
+ * - Respects prefers-reduced-motion
+ */
+export default function CustomCursor() {
+  const dotRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [cursorState, setCursorState] = useState<"default" | "pointer" | "text" | "hidden">("default");
 
   useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return
+    // Don't show on touch devices or if reduced motion preferred
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if ("ontouchstart" in window || navigator.maxTouchPoints > 0) return;
 
-    let raf = 0
-    let nx = -100
-    let ny = -100
+    const dot = dotRef.current;
+    const ring = ringRef.current;
+    if (!dot || !ring) return;
 
-    const flush = () => {
-      x.set(nx)
-      y.set(ny)
-      raf = 0
-    }
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isVisible) setIsVisible(true);
 
-    const onMove = (event: MouseEvent) => {
-      nx = event.clientX - 11
-      ny = event.clientY - 11
-      opacity.set(1)
-      if (!raf) raf = requestAnimationFrame(flush)
-    }
+      // Dot follows instantly
+      gsap.to(dot, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.1,
+        ease: "power2.out",
+      });
 
-    const onMouseOver = (event: MouseEvent) => {
-      const target = event.target as Element | null
-      scale.set(target?.closest(interactiveSelector) ? 1.8 : 1)
-    }
+      // Ring follows with spring delay
+      gsap.to(ring, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.35,
+        ease: "power3.out",
+      });
+    };
 
-    const onLeave = () => opacity.set(0)
+    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => setIsVisible(false);
 
-    window.addEventListener("mousemove", onMove, { passive: true })
-    document.addEventListener("mouseover", onMouseOver, { passive: true })
-    document.addEventListener("mouseleave", onLeave)
+    // Detect cursor type from data attributes
+    const handleElementHover = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const cursorEl = target.closest("[data-cursor]") as HTMLElement | null;
+
+      if (cursorEl) {
+        const type = cursorEl.getAttribute("data-cursor");
+        if (type === "pointer" || type === "text" || type === "hidden") {
+          setCursorState(type);
+        }
+      } else if (
+        target.closest("a, button, [role='button'], input, textarea, select, label")
+      ) {
+        setCursorState("pointer");
+      } else {
+        setCursorState("default");
+      }
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseenter", handleMouseEnter);
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseover", handleElementHover);
+
+    // Hide default cursor globally
+    document.documentElement.style.cursor = "none";
+    const styleEl = document.createElement("style");
+    styleEl.id = "custom-cursor-style";
+    styleEl.textContent = "*, *::before, *::after { cursor: none !important; }";
+    document.head.appendChild(styleEl);
 
     return () => {
-      window.removeEventListener("mousemove", onMove)
-      document.removeEventListener("mouseover", onMouseOver)
-      document.removeEventListener("mouseleave", onLeave)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [opacity, scale, x, y])
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseover", handleElementHover);
+      document.documentElement.style.cursor = "";
+      const existingStyle = document.getElementById("custom-cursor-style");
+      if (existingStyle) existingStyle.remove();
+    };
+  }, [isVisible]);
 
-  if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) return null
+  // Cursor state-based sizing
+  const dotSize = cursorState === "pointer" ? 14 : cursorState === "text" ? 3 : 8;
+  const dotHeight = cursorState === "text" ? 28 : dotSize;
+  const ringSize = cursorState === "pointer" ? 50 : cursorState === "default" ? 40 : 0;
+
+  if (!isVisible) return null;
 
   return (
-    <motion.div
-      className="pointer-events-none fixed top-0 left-0 z-[100] h-[22px] w-[22px] rounded-full border border-sky-400/70 bg-sky-300/20 will-change-transform dark:border-cyan-300/70 dark:bg-cyan-300/20"
-      style={{
-        x: smoothX,
-        y: smoothY,
-        scale: smoothScale,
-        opacity: smoothOpacity,
-        boxShadow: "0 0 24px rgba(56,189,248,0.35)",
-      }}
-    >
-      <motion.div className="absolute inset-0 rounded-full bg-sky-400 dark:bg-cyan-300" style={{ opacity: ringOpacity }} />
-    </motion.div>
-  )
+    <>
+      <div
+        ref={dotRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: dotSize,
+          height: dotHeight,
+          background: "rgba(91,161,176,1)",
+          borderRadius: cursorState === "text" ? 2 : "50%",
+          pointerEvents: "none",
+          zIndex: 99999,
+          transform: "translate(-50%, -50%)",
+          mixBlendMode: "difference",
+          transition: "width 0.3s, height 0.3s, border-radius 0.3s",
+        }}
+      />
+      <div
+        ref={ringRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: ringSize,
+          height: ringSize,
+          border: `1.5px solid rgba(91,161,176,${cursorState === "pointer" ? 0.6 : 0.35})`,
+          borderRadius: "50%",
+          pointerEvents: "none",
+          zIndex: 99998,
+          transform: "translate(-50%, -50%)",
+          transition: "width 0.3s, height 0.3s, opacity 0.3s, border-color 0.3s",
+          opacity: ringSize > 0 ? 1 : 0,
+        }}
+      />
+    </>
+  );
 }
-
-export default CustomCursor

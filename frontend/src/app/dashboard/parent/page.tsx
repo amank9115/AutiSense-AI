@@ -48,7 +48,14 @@ export default function ParentDashboard() {
   }, [user, router]);
 
   if (!user) {
-    return null;
+    return (
+      <div className="bg-surface min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-on-surface-variant text-sm font-medium animate-pulse">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   const getGreeting = () => {
@@ -93,17 +100,27 @@ export default function ParentDashboard() {
               ))}
             </nav>
 
-            {/* User Profile Button */}
-            <button
-              onClick={() => router.push("/dashboard/parent/profile")}
-              className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-100"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" />
-                <path d="M5 19C6.4 15.8 9 14.4 12 14.4C15 14.4 17.6 15.8 19 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              {user.name}
-                          </button>
+            {/* User Profile & Sign Out */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push("/dashboard/parent/profile")}
+                className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white/70 px-4 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-100"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M5 19C6.4 15.8 9 14.4 12 14.4C15 14.4 17.6 15.8 19 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                {user.name}
+              </button>
+              <button
+                onClick={() => { logout(); router.push('/'); }}
+                className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/70 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 hover:border-red-300"
+                title="Sign Out"
+              >
+                <span className="material-symbols-outlined text-sm">logout</span>
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -159,7 +176,7 @@ export default function ParentDashboard() {
         <section className="space-y-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <h3 className="font-headline font-extrabold text-4xl text-on-surface tracking-tighter">Developmental Progress</h3>
-            <button className="text-xs font-extrabold text-primary uppercase tracking-widest hover:underline flex items-center gap-2">View Detail Roadmap <span className="material-symbols-outlined text-sm">arrow_forward</span></button>
+            <button onClick={() => router.push("/dashboard/parent/history")} className="text-xs font-extrabold text-primary uppercase tracking-widest hover:underline flex items-center gap-2">View Detail Roadmap <span className="material-symbols-outlined text-sm">arrow_forward</span></button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <MilestoneCard title="Communication" progress="68%" color="bg-primary-container text-on-primary-container" icon="record_voice_over" />
@@ -190,8 +207,8 @@ export default function ParentDashboard() {
             <p className="text-on-secondary/80 font-medium text-lg">Thursday at 10:30 AM with Dr. Julianne Smith. Would you like to pre-fill the intake form?</p>
           </div>
           <div className="relative z-10 flex gap-4 w-full lg:w-auto">
-            <Button variant="primary" className="bg-white text-secondary hover:bg-surface-bright flex-1 lg:flex-none px-12 py-6 rounded-[2rem] font-extrabold uppercase tracking-widest shadow-2xl transition-all">Start Form</Button>
-            <button className="bg-secondary-dim text-white border border-white/20 px-8 py-6 rounded-[2rem] font-extrabold uppercase tracking-widest hover:bg-black/10 transition-all">Reschedule</button>
+            <Button variant="primary" onClick={() => router.push("/dashboard/parent/appointments")} className="bg-white text-secondary hover:bg-surface-bright flex-1 lg:flex-none px-12 py-6 rounded-[2rem] font-extrabold uppercase tracking-widest shadow-2xl transition-all">Start Form</Button>
+            <button onClick={() => router.push("/dashboard/parent/appointments")} className="bg-secondary-dim text-white border border-white/20 px-8 py-6 rounded-[2rem] font-extrabold uppercase tracking-widest hover:bg-black/10 transition-all cursor-pointer">Reschedule</button>
           </div>
           <div className="absolute -top-12 -left-12 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
         </section>

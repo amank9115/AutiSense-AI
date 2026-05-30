@@ -41,11 +41,17 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({
+export const Card: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void }> = ({
   children,
   className = "",
+  onClick,
 }) => (
-  <div className={`bg-surface-container-lowest rounded-lg p-6 md:p-8 login-card border-none ${className}`}>
+  <div
+    className={`bg-surface-container-lowest rounded-lg p-6 md:p-8 login-card border-none ${className}`}
+    onClick={onClick}
+    role={onClick ? "button" : undefined}
+    tabIndex={onClick ? 0 : undefined}
+  >
     {children}
   </div>
 );

@@ -2,19 +2,31 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
+import {
+  useFadeInOnScroll,
+  useStaggerChildren,
+  useSpotlight,
+} from "@/hooks/useGsap";
 
 const CommunityPage = () => {
+  const router = useRouter();
+
+  const handleJoinCircle = () => {
+    alert("Circle joining feature coming soon! For now, explore our forums to connect with other parents.");
+  };
+
+  const handleViewForums = () => {
+    alert("Our forums feature is coming soon. Connect with specialists through our Professionals page.");
+  };
   return (
-    <div className="bg-background min-h-screen text-on-surface font-body antialiased flex flex-col selection:bg-primary-container selection:text-on-primary-container">
+    <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col selection:bg-primary-container selection:text-on-primary-container">
       <Navbar />
 
       <main className="pt-24 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
         {/* Hero Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <section
           className="mb-20"
         >
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 to-secondary/5 p-12 md:p-20 flex flex-col items-center text-center">
@@ -27,23 +39,20 @@ const CommunityPage = () => {
               Connect with a moderated community of parents and specialists dedicated to sensory-friendly growth and mutual support.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="bg-primary text-on-primary px-10 py-4 rounded-xl font-semibold shadow-lg hover:shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300">
+              <button onClick={handleJoinCircle} className="bg-primary text-on-primary px-10 py-4 rounded-xl font-semibold shadow-lg hover:shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300">
                 Join a Circle
               </button>
-              <button className="bg-secondary-container text-on-secondary-container px-10 py-4 rounded-xl font-semibold hover:bg-secondary-fixed-dim transition-all duration-300">
+              <button onClick={handleViewForums} className="bg-secondary-container text-on-secondary-container px-10 py-4 rounded-xl font-semibold hover:bg-secondary-fixed-dim transition-all duration-300">
                 View Forums
               </button>
             </div>
           </div>
-        </motion.section>
+        </section>
 
         {/* Bento Grid: Parent Circles & Quiet Forums */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-20">
           {/* Parent Circles */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+          <div
             className="md:col-span-7 bg-surface-container-low rounded-lg p-10 flex flex-col justify-between overflow-hidden relative group"
           >
             <div className="relative z-10">
@@ -70,18 +79,15 @@ const CommunityPage = () => {
               </ul>
             </div>
             <div className="relative z-10 mt-auto">
-              <button className="text-primary font-bold flex items-center gap-2 group-hover:translate-x-2 transition-transform">
+              <button onClick={handleJoinCircle} className="text-primary font-bold flex items-center gap-2 group-hover:translate-x-2 transition-transform cursor-pointer">
                 Explore all Circles <span className="material-symbols-outlined">arrow_forward</span>
               </button>
             </div>
             <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-secondary-container/40 rounded-full opacity-60 group-hover:scale-110 transition-transform duration-700" />
-          </motion.div>
+          </div>
 
           {/* Quiet Forums */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+          <div
             className="md:col-span-5 bg-surface-container-highest rounded-lg p-10 flex flex-col overflow-hidden relative group"
           >
             <div className="flex items-center gap-3 mb-6">
@@ -107,7 +113,7 @@ const CommunityPage = () => {
                 <span className="material-symbols-outlined text-outline">chevron_right</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Specialist Insights Section */}
@@ -118,16 +124,13 @@ const CommunityPage = () => {
                 <h2 className="font-headline text-3xl font-bold text-on-surface mb-4">Specialist Insights</h2>
                 <p className="text-on-surface-variant text-lg">Verified occupational therapists, speech pathologists, and psychologists share gentle guidance in a non-clinical, supportive format.</p>
               </div>
-              <button className="bg-white text-secondary border border-secondary/20 px-6 py-3 rounded-full font-semibold hover:bg-secondary-container transition-all">
+              <button onClick={() => router.push("/professionals")} className="bg-white text-secondary border border-secondary/20 px-6 py-3 rounded-full font-semibold hover:bg-secondary-container transition-all cursor-pointer">
                 Meet Our Specialists
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Specialist Card 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+              <div
                 className="bg-surface-container-lowest rounded-lg overflow-hidden group"
               >
                 <div className="h-48 overflow-hidden">
@@ -146,14 +149,10 @@ const CommunityPage = () => {
                     <span className="text-xs font-medium text-on-surface">Dr. Elena Brooks</span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Specialist Card 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
+              <div
                 className="bg-surface-container-lowest rounded-lg overflow-hidden group"
               >
                 <div className="h-48 overflow-hidden">
@@ -172,14 +171,10 @@ const CommunityPage = () => {
                     <span className="text-xs font-medium text-on-surface">Marcus Sterling, M.A.</span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Specialist Card 3 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
+              <div
                 className="bg-surface-container-lowest rounded-lg overflow-hidden group"
               >
                 <div className="h-48 overflow-hidden">
@@ -198,16 +193,13 @@ const CommunityPage = () => {
                     <span className="text-xs font-medium text-on-surface">Amina Lowery, SLP</span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Moderation Pledge */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+        <section
           className="max-w-4xl mx-auto text-center py-16 px-8 border-2 border-dashed border-outline-variant/30 rounded-xl bg-surface-container-low"
         >
           <span className="material-symbols-outlined text-5xl text-secondary mb-6" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
@@ -219,7 +211,7 @@ const CommunityPage = () => {
             <span className="flex items-center gap-2"><span className="material-symbols-outlined text-lg">lock</span> Encrypted &amp; Private</span>
             <span className="flex items-center gap-2"><span className="material-symbols-outlined text-lg">person_check</span> Human Moderated</span>
           </div>
-        </motion.section>
+        </section>
       </main>
 
       <Footer />
@@ -228,3 +220,4 @@ const CommunityPage = () => {
 };
 
 export default CommunityPage;
+

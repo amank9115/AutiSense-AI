@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Lexend } from "next/font/google";
 import "./globals.css";
+import ClientProviders from "@/components/effects/ClientProviders";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -35,7 +36,9 @@ export default function RootLayout({
       <body
         className={`${plusJakartaSans.variable} ${lexend.variable} antialiased min-h-screen flex flex-col`}
       >
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

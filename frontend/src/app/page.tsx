@@ -3,8 +3,39 @@
 import React from "react";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import Link from "next/link";
+import {
+  useHeroTimeline,
+  useFadeInOnScroll,
+  useStaggerChildren,
+  useCountUp,
+  useSpotlight,
+  useMagneticHover,
+  useParallax,
+} from "@/hooks/useGsap";
 
 export default function LandingPage() {
+  // Animation hooks
+  const heroRef = useHeroTimeline();
+  const bloomLeftRef = useFadeInOnScroll({ x: -80, y: 0 });
+  const bloomRightRef = useFadeInOnScroll({ x: 80, y: 0, delay: 0.2 });
+  const communityRef = useFadeInOnScroll({ y: 60 });
+  const bentoRef = useStaggerChildren({ stagger: 0.1, y: 40 });
+  const ctaRef = useFadeInOnScroll({ y: 50 });
+  const ctaBtnRef = useMagneticHover(0.25);
+
+  // Count-up refs for stats
+  const familyCountRef = useCountUp(12000, { suffix: "+", duration: 2.5 });
+  const specialistCountRef = useCountUp(50, { suffix: "+", duration: 2 });
+
+  // Spotlight for bento cards
+  const spotlightRef1 = useSpotlight();
+  const spotlightRef2 = useSpotlight();
+  const spotlightRef3 = useSpotlight();
+  const spotlightRef4 = useSpotlight();
+
+  // Parallax for background orb
+  const orbRef = useParallax(-0.3);
+
   return (
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col selection:bg-primary-container selection:text-on-primary-container relative">
       {/* Texture Overlay */}
@@ -15,44 +46,74 @@ export default function LandingPage() {
       <Navbar />
 
       <main className="pt-24 overflow-x-hidden flex-grow">
-        {/* Hero Section: The Sprout */}
-        <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 text-center max-w-7xl mx-auto">
+        {/* ═══════════════════════════════════════════════════════════
+            Hero Section: The Sprout — Full GSAP Timeline
+        ═══════════════════════════════════════════════════════════ */}
+        <section ref={heroRef} className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 text-center max-w-7xl mx-auto">
+          {/* Background orb with parallax */}
           <div className="absolute inset-0 -z-10 flex justify-center items-center">
-            <div className="organic-shape bg-secondary-container/20 w-[700px] h-[700px] blur-3xl opacity-40 animate-pulse" style={{ animationDuration: "8s" }} />
+            <div
+              ref={orbRef}
+              className="organic-shape bg-secondary-container/20 w-[700px] h-[700px] blur-3xl opacity-40"
+              style={{ animationDuration: "8s" }}
+            />
           </div>
-          <h1 className="font-display font-extrabold text-primary text-5xl md:text-7xl lg:text-8xl tracking-tighter mb-8 max-w-5xl leading-[1.1]">
-            Early Signs. <span className="text-secondary italic">Clearer Path.</span>
+
+          <h1
+            data-hero="heading"
+            className="font-display font-extrabold text-primary text-5xl md:text-7xl lg:text-8xl tracking-tighter mb-8 max-w-5xl leading-[1.1]"
+          >
+            Early Signs.{" "}
+            <span className="bg-gradient-to-r from-secondary via-primary-accent to-primary bg-clip-text text-transparent italic">
+              Clearer Path.
+            </span>
           </h1>
-          <div className="max-w-2xl mb-14">
+
+          <div data-hero="subtitle" className="max-w-2xl mb-14">
             <p className="font-body text-on-surface-variant text-xl md:text-2xl leading-relaxed tracking-wide">
               AI-powered autism screening for children and teens with compassionate support.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-6">
+
+          <div data-hero="cta" className="flex flex-col sm:flex-row gap-6">
             <Link href="/begin-the-journey">
-              <button className="bg-primary-accent text-on-primary px-10 py-5 rounded-xl font-headline font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary-accent/10">
+              <button className="bg-primary-accent text-on-primary px-10 py-5 rounded-xl font-headline font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary-accent/10 hover:shadow-xl hover:shadow-primary-accent/20">
                 Begin the Journey
               </button>
             </Link>
-            <Link href="/signup">
+            <Link href="/assessment">
               <button className="bg-secondary-container/50 text-on-secondary-container px-10 py-5 rounded-xl font-headline font-bold text-lg hover:bg-secondary-fixed-dim active:scale-95 transition-all backdrop-blur-sm">
-                Try a Demo
+                Try Assessment
               </button>
             </Link>
           </div>
-          {/* Central Visual Anchor */}
-          <div className="mt-20 w-px h-64 bg-gradient-to-b from-secondary/40 via-secondary/10 to-transparent" />
+
+          {/* Social Proof Bar */}
+          <div data-hero="proof" className="mt-16 flex flex-col items-center gap-4">
+            <p className="text-xs font-bold text-on-surface-variant/40 uppercase tracking-[0.25em]">Trusted by families & clinicians</p>
+            <div className="flex items-center gap-8 opacity-40">
+              {["neurology", "psychology", "cardiology", "pediatrics", "local_hospital"].map((icon) => (
+                <span key={icon} className="material-symbols-outlined text-3xl text-on-surface-variant/60 hover:text-primary transition-colors duration-300">{icon}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Central Visual Anchor — animated stem */}
+          <div data-hero="stem" className="mt-12 w-px h-48 bg-gradient-to-b from-secondary/40 via-secondary/10 to-transparent" />
         </section>
 
-        {/* The Bloom Experience: Service Reveal */}
+        {/* ═══════════════════════════════════════════════════════════
+            The Bloom Experience: Service Reveal — Scroll Triggered
+        ═══════════════════════════════════════════════════════════ */}
         <section className="relative py-32 px-6 md:px-12 bg-gradient-to-b from-surface to-surface-container-low">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
-              {/* Left Branch: Clinical Rigor */}
-              <div className="md:col-span-5 group">
-                <div className="bloom-card bg-surface-container-lowest p-10 rounded-lg shadow-sm border-l-8 border-primary-accent relative overflow-hidden cursor-default">
+
+              {/* Left Branch: Clinical Rigor — slides from left */}
+              <div ref={bloomLeftRef} className="md:col-span-5 group">
+                <div className="spotlight-card bloom-card bg-surface-container-lowest p-10 rounded-lg shadow-sm border-l-8 border-primary-accent relative overflow-hidden cursor-default">
                   <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-primary-container/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                  <span className="material-symbols-outlined text-primary-accent text-4xl mb-6 block">clinical_notes</span>
+                  <span className="material-symbols-outlined text-primary-accent text-4xl mb-6 block group-hover:rotate-12 transition-transform duration-500">clinical_notes</span>
                   <h3 className="font-headline font-bold text-3xl text-on-background mb-4">Clinical Rigor</h3>
                   <p className="font-body text-on-surface-variant text-lg leading-relaxed mb-8">
                     Evidence-based assessments delivered through a low-aroused interface that respects sensory processing needs.
@@ -72,11 +133,11 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Branch: AI Insights */}
-              <div className="md:col-span-5 group md:mt-48">
-                <div className="bloom-card bg-surface-container-lowest p-10 rounded-lg shadow-sm border-r-8 border-secondary-dim relative overflow-hidden cursor-default">
+              {/* Right Branch: AI Insights — slides from right */}
+              <div ref={bloomRightRef} className="md:col-span-5 group md:mt-48">
+                <div className="spotlight-card bloom-card bg-surface-container-lowest p-10 rounded-lg shadow-sm border-r-8 border-secondary-dim relative overflow-hidden cursor-default">
                   <div className="absolute -left-12 -top-12 w-48 h-48 bg-secondary-container/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                  <span className="material-symbols-outlined text-secondary text-4xl mb-6 block">psychology</span>
+                  <span className="material-symbols-outlined text-secondary text-4xl mb-6 block group-hover:rotate-12 transition-transform duration-500">psychology</span>
                   <h3 className="font-headline font-bold text-3xl text-on-background mb-4">AI Insights</h3>
                   <p className="font-body text-on-surface-variant text-lg leading-relaxed mb-8">
                     Gentle machine learning that maps progress patterns without the noise of traditional diagnostic tools.
@@ -88,8 +149,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Community Roots: Bottom Span */}
-            <div className="mt-32 max-w-4xl mx-auto">
+            {/* Community Roots: Bottom Span — fade up on scroll */}
+            <div ref={communityRef} className="mt-32 max-w-4xl mx-auto">
               <div className="community-shape bg-gradient-to-br from-tertiary-container/40 to-surface-container-high/60 p-16 text-center relative overflow-hidden group shadow-inner border border-tertiary-container/30">
                 <div className="relative z-10">
                   <div className="animate-float inline-block">
@@ -101,12 +162,12 @@ export default function LandingPage() {
                   </p>
                   <div className="flex justify-center gap-12">
                     <div className="flex flex-col items-center">
-                      <span className="font-headline font-extrabold text-3xl text-tertiary">12k+</span>
+                      <span ref={familyCountRef} className="font-headline font-extrabold text-3xl text-tertiary">12,000+</span>
                       <span className="text-on-surface-variant font-medium text-sm uppercase tracking-widest">Families</span>
                     </div>
                     <div className="w-px h-12 bg-tertiary/20" />
                     <div className="flex flex-col items-center">
-                      <span className="font-headline font-extrabold text-3xl text-tertiary">50+</span>
+                      <span ref={specialistCountRef} className="font-headline font-extrabold text-3xl text-tertiary">50+</span>
                       <span className="text-on-surface-variant font-medium text-sm uppercase tracking-widest">Specialists</span>
                     </div>
                   </div>
@@ -119,12 +180,15 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Bento Spotlight: Sensory Features */}
+        {/* ═══════════════════════════════════════════════════════════
+            Bento Spotlight: Sensory Features — Stagger + Spotlight
+        ═══════════════════════════════════════════════════════════ */}
         <section className="py-32 px-6 md:px-12 bg-surface">
-          <div className="max-w-7xl mx-auto">
+          <div ref={bentoRef} className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
               {/* Quiet Mode Interface */}
-              <div className="md:col-span-2 bg-gradient-to-br from-surface-container-high to-surface-container rounded-lg p-12 flex flex-col justify-between overflow-hidden relative group border border-outline-variant/30">
+              <div ref={spotlightRef1} className="spotlight-card md:col-span-2 bg-gradient-to-br from-surface-container-high to-surface-container rounded-lg p-12 flex flex-col justify-between overflow-hidden relative group border border-outline-variant/30 hover:border-primary/20 transition-colors duration-500">
                 <div className="relative z-10">
                   <h4 className="font-display font-bold text-3xl mb-4 text-primary">Quiet Mode Interface</h4>
                   <p className="text-on-surface-variant text-lg max-w-md leading-relaxed">Every screen is tested for visual vibration and cognitive load, ensuring a &quot;Tactile Sanctuary&quot; for users.</p>
@@ -135,23 +199,23 @@ export default function LandingPage() {
               </div>
 
               {/* Safety First */}
-              <div className="bg-secondary text-on-secondary rounded-lg p-12 flex flex-col justify-center items-center text-center shadow-lg shadow-secondary/10">
-                <span className="material-symbols-outlined text-6xl mb-6">verified_user</span>
+              <div ref={spotlightRef2} className="spotlight-card bg-secondary text-on-secondary rounded-lg p-12 flex flex-col justify-center items-center text-center shadow-lg shadow-secondary/10 hover:shadow-2xl hover:shadow-secondary/20 transition-shadow duration-500">
+                <span className="material-symbols-outlined text-6xl mb-6 group-hover:scale-110 transition-transform">verified_user</span>
                 <h4 className="font-display font-bold text-2xl mb-4">Safety First</h4>
                 <p className="text-on-secondary/80 leading-relaxed">Data privacy that exceeds clinical standards, handled with care.</p>
               </div>
 
               {/* Sleep Support */}
-              <div className="bg-surface-container-highest rounded-lg p-12 group hover:bg-primary-container/20 transition-colors border border-outline-variant/20">
-                <span className="material-symbols-outlined text-primary-accent text-4xl mb-4 block">bedtime</span>
+              <div ref={spotlightRef3} className="spotlight-card bg-surface-container-highest rounded-lg p-12 group hover:bg-primary-container/20 transition-colors border border-outline-variant/20 hover:border-primary/20 duration-500">
+                <span className="material-symbols-outlined text-primary-accent text-4xl mb-4 block group-hover:rotate-12 transition-transform duration-500">bedtime</span>
                 <h4 className="font-display font-bold text-2xl mb-2">Sleep Support</h4>
                 <p className="text-on-surface-variant leading-relaxed">Resources for sensory-informed nighttime routines.</p>
               </div>
 
               {/* Sustainable Support */}
-              <div className="md:col-span-2 bg-gradient-to-r from-surface-container-low to-surface rounded-lg p-12 flex items-center gap-8 group border border-outline-variant/20">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
-                  <span className="material-symbols-outlined text-tertiary text-4xl">nest_eco_leaf</span>
+              <div ref={spotlightRef4} className="spotlight-card md:col-span-2 bg-gradient-to-r from-surface-container-low to-surface rounded-lg p-12 flex items-center gap-8 group border border-outline-variant/20 hover:border-primary/20 transition-colors duration-500">
+                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:shadow-lg transition-all duration-500 shrink-0">
+                  <span className="material-symbols-outlined text-tertiary text-4xl group-hover:rotate-[20deg] transition-transform duration-700">nest_eco_leaf</span>
                 </div>
                 <div>
                   <h4 className="font-display font-bold text-2xl mb-2 text-primary">Sustainable Support</h4>
@@ -162,15 +226,22 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="py-32 px-6 text-center max-w-4xl mx-auto relative">
+        {/* ═══════════════════════════════════════════════════════════
+            Final CTA — Magnetic Button + Parallax
+        ═══════════════════════════════════════════════════════════ */}
+        <section ref={ctaRef} className="py-32 px-6 text-center max-w-4xl mx-auto relative">
           <div className="absolute inset-0 -z-10 flex justify-center items-center opacity-30">
             <div className="organic-shape bg-primary-accent/10 w-full h-full blur-3xl" />
           </div>
-          <h2 className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl text-on-background mb-8 leading-tight tracking-tight">Ready to let your journey <span className="text-primary-accent">bloom</span>?</h2>
+          <h2 className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl text-on-background mb-8 leading-tight tracking-tight">
+            Ready to let your journey <span className="text-primary-accent">bloom</span>?
+          </h2>
           <p className="text-on-surface-variant text-xl mb-12 max-w-2xl mx-auto">Join thousands of families who have found peace through our sensory-first navigator.</p>
           <Link href="/signup">
-            <button className="bg-primary-accent text-on-primary px-14 py-6 rounded-full font-headline font-extrabold text-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary-accent/20">
+            <button
+              ref={ctaBtnRef as React.RefObject<HTMLButtonElement>}
+              className="bg-primary-accent text-on-primary px-14 py-6 rounded-full font-headline font-extrabold text-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-primary-accent/20 hover:shadow-2xl hover:shadow-primary-accent/30"
+            >
               Create Free Account
             </button>
           </Link>
@@ -178,30 +249,6 @@ export default function LandingPage() {
       </main>
 
       <Footer />
-
-      <style jsx>{`
-        .organic-shape {
-          border-radius: 63% 37% 54% 46% / 45% 48% 52% 55%;
-        }
-        .community-shape {
-          border-radius: 40% 60% 70% 30% / 40% 50% 60% 70%;
-        }
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
-        }
-        .bloom-card {
-          transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .bloom-card:hover {
-          transform: translateY(-8px) scale(1.02);
-          box-shadow: 0 20px 40px -15px rgba(0,0,0,0.05);
-        }
-      `}</style>
     </div>
   );
 }

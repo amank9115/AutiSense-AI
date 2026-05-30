@@ -1,13 +1,31 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 
 const SupportPage = () => {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      alert(`Search functionality for "${searchQuery}" coming soon! You can explore our resources below or contact support.`);
+    }
+  };
+
+  const handleBrowseCollection = () => {
+    alert("Our sensory-friendly library with curated videos, soundscapes, and guides is coming soon!");
+  };
+
+  const handleResourceTools = (tool: string) => {
+    alert(`${tool} feature is coming soon! We'll notify you when it's available.`);
+  };
   return (
-    <div className="bg-background min-h-screen text-on-surface font-body antialiased flex flex-col selection:bg-primary-container">
+    <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col selection:bg-primary-container">
       <Navbar />
 
       <main className="pt-24 pb-20 px-6 md:px-12 max-w-7xl mx-auto">
@@ -45,7 +63,7 @@ const SupportPage = () => {
               </div>
               <p className="text-on-surface-variant text-lg max-w-md mb-8">Curated videos, audio soundscapes, and visual guides tailored for low-arousal learning and regulation.</p>
               <div className="flex flex-wrap gap-3">
-                <button className="bg-primary text-on-primary px-8 py-3 rounded-xl font-medium transition-transform active:scale-95 flex items-center gap-2">
+                <button onClick={handleBrowseCollection} className="bg-primary text-on-primary px-8 py-3 rounded-xl font-medium transition-transform active:scale-95 flex items-center gap-2 cursor-pointer">
                   Browse Collection
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </button>
@@ -65,17 +83,17 @@ const SupportPage = () => {
             <div className="bg-tertiary-container/30 rounded-lg p-8 flex flex-col h-full border border-tertiary-container/20">
               <h3 className="font-headline font-bold text-xl text-on-surface mb-4">Resource Tools</h3>
               <ul className="space-y-4">
-                <li className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
+                <li onClick={() => handleResourceTools("Filter by Need")} className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
                   <span className="material-symbols-outlined text-tertiary">filter_list</span>
                   <span className="font-medium">Filter by Need</span>
                   <span className="material-symbols-outlined ml-auto text-outline group-hover:text-tertiary transition-colors">chevron_right</span>
                 </li>
-                <li className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
+                <li onClick={() => handleResourceTools("Local Services")} className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
                   <span className="material-symbols-outlined text-tertiary">map</span>
                   <span className="font-medium">Local Services</span>
                   <span className="material-symbols-outlined ml-auto text-outline group-hover:text-tertiary transition-colors">chevron_right</span>
                 </li>
-                <li className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
+                <li onClick={() => handleResourceTools("Printable Aids")} className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-bright transition-colors cursor-pointer group">
                   <span className="material-symbols-outlined text-tertiary">download</span>
                   <span className="font-medium">Printable Aids</span>
                   <span className="material-symbols-outlined ml-auto text-outline group-hover:text-tertiary transition-colors">chevron_right</span>
@@ -101,16 +119,16 @@ const SupportPage = () => {
               <div className="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-2 shadow-sm border border-outline-variant/10">
                 <span className="text-sm font-label text-on-surface-variant uppercase tracking-wider">Sensory Crisis Line</span>
                 <span className="text-2xl font-bold text-primary">1-800-CALM-NOW</span>
-                <button className="mt-2 text-primary font-bold flex items-center gap-2 hover:underline">
+                <a href="tel:1-800-225-6669" className="mt-2 text-primary font-bold flex items-center gap-2 hover:underline">
                   Call Now <span className="material-symbols-outlined">call</span>
-                </button>
+                </a>
               </div>
               <div className="bg-surface-container-lowest p-6 rounded-xl flex flex-col gap-2 shadow-sm border border-outline-variant/10">
                 <span className="text-sm font-label text-on-surface-variant uppercase tracking-wider">Text Support</span>
                 <span className="text-2xl font-bold text-primary">TEXT &quot;GENTLE&quot;</span>
-                <button className="mt-2 text-primary font-bold flex items-center gap-2 hover:underline">
+                <a href="sms:?body=GENTLE" className="mt-2 text-primary font-bold flex items-center gap-2 hover:underline">
                   Open SMS <span className="material-symbols-outlined">chat</span>
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -179,18 +197,22 @@ const SupportPage = () => {
         </section>
 
         {/* Search & Filter Bar */}
-        <section className="max-w-4xl mx-auto bg-surface-container-highest rounded-full p-2 flex items-center shadow-lg mb-24">
-          <div className="flex-1 px-6 flex items-center gap-3">
-            <span className="material-symbols-outlined text-outline">search</span>
-            <input
-              className="bg-transparent border-none focus:ring-0 w-full text-lg font-body placeholder:text-outline-variant"
-              placeholder="Search for a specific resource or topic..."
-              type="text"
-            />
-          </div>
-          <button className="bg-primary text-on-primary px-10 py-4 rounded-full font-bold transition-transform active:scale-95 shadow-md">
-            Search
-          </button>
+        <section className="max-w-4xl mx-auto mb-24">
+          <form onSubmit={handleSearch} className="bg-surface-container-highest rounded-full p-2 flex items-center shadow-lg">
+            <div className="flex-1 px-6 flex items-center gap-3">
+              <span className="material-symbols-outlined text-outline">search</span>
+              <input
+                className="bg-transparent border-none focus:ring-0 w-full text-lg font-body placeholder:text-outline-variant"
+                placeholder="Search for a specific resource or topic..."
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="bg-primary text-on-primary px-10 py-4 rounded-full font-bold transition-transform active:scale-95 shadow-md hover:bg-primary-dim">
+              Search
+            </button>
+          </form>
         </section>
       </main>
 

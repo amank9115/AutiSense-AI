@@ -28,10 +28,10 @@ const HeroSection = () => {
           <Link href="/live-screening">
             <Button>Start Screening</Button>
           </Link>
-          <Link href="/doctor">
+          <Link href="/dashboard/doctor">
             <Button variant="secondary">For Doctors</Button>
           </Link>
-          <Link href="/parent">
+          <Link href="/dashboard/parent">
             <Button variant="secondary">For Parents</Button>
           </Link>
         </div>

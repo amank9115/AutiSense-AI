@@ -398,7 +398,7 @@ export default function ScreeningPage() {
           {isCompleted && (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-surface/95 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-surface/95 backdrop-blur-sm overflow-hidden"
             >
               {/* Confetti effect (simulated with CSS) */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
