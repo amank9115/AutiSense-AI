@@ -6,8 +6,6 @@ import {
   Request,
   Query,
   Get,
-  HttpException,
-  HttpStatus,
   Res,
   Req,
 } from '@nestjs/common';
@@ -20,9 +18,16 @@ import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { AuthException } from '../common/exceptions';
 
 interface RequestWithUser extends Request {
   user: User;
+}
+
+interface AuthenticatedRequest extends Request {
+  user: { userId: string; email: string; role: string };
+  cookies?: Record<string, string>;
 }
 
 @Controller('api/v1/auth')
@@ -38,31 +43,30 @@ export class AuthController {
     });
   }
 
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(ThrottlerGuard, AuthGuard('local'))
   @Post('login')
-  login(
+  async login(
     @Request() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
   ) {
     try {
-      const result = this.authService.login(req.user);
+      const result = await this.authService.login(req.user);
       if (result.refresh_token) {
         this.setRefreshTokenCookie(res, result.refresh_token);
       }
       return { access_token: result.access_token, user: result.user };
-    } catch (error: unknown) {
-      const status =
-        error instanceof Error && error.message.includes('verify')
-          ? HttpStatus.FORBIDDEN
-          : HttpStatus.UNAUTHORIZED;
-      throw new HttpException(
+    } catch (error) {
+      if (error instanceof AuthException) {
+        throw error;
+      }
+      throw new AuthException(
         error instanceof Error ? error.message : 'Login failed',
-        status,
       );
     }
   }
 
   @Post('register')
+  @UseGuards(ThrottlerGuard)
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
@@ -84,6 +88,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @UseGuards(ThrottlerGuard)
   async refresh(
     @Req() req: ExpressRequest,
     @Res({ passthrough: true }) res: Response,
@@ -91,10 +96,7 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const refreshToken: string | undefined = req.cookies['refresh_token'];
     if (!refreshToken) {
-      throw new HttpException(
-        'No refresh token found',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new AuthException('No refresh token found');
     }
     try {
       const result = await this.authService.refreshSession(refreshToken);
@@ -102,16 +104,36 @@ export class AuthController {
         this.setRefreshTokenCookie(res, result.refresh_token);
       }
       return { access_token: result.access_token };
-    } catch {
+    } catch (error) {
       res.clearCookie('refresh_token');
-      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+      if (error instanceof AuthException) {
+        throw error;
+      }
+      throw new AuthException('Invalid refresh token');
     }
   }
 
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
+  @UseGuards(JwtAuthGuard)
+  async logout(
+    @Request() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = (req.cookies as Record<string, string>)?.refresh_token;
+    await this.authService.logout(refreshToken);
     res.clearCookie('refresh_token');
     return { message: 'Logged out successfully' };
+  }
+
+  @Post('logout-all')
+  @UseGuards(JwtAuthGuard)
+  async logoutAll(
+    @Request() req: AuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.logoutAllSessions(req.user.userId);
+    res.clearCookie('refresh_token');
+    return result;
   }
 
   @Post('resend-verification')
@@ -133,17 +155,18 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @UseGuards(ThrottlerGuard)
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     try {
       return await this.authService.resetPassword(
         resetPasswordDto.token,
         resetPasswordDto.newPassword,
       );
-    } catch (error: unknown) {
-      throw new HttpException(
-        error instanceof Error ? error.message : 'Reset failed',
-        HttpStatus.BAD_REQUEST,
-      );
+    } catch (error) {
+      if (error instanceof AuthException) {
+        throw error;
+      }
+      throw error;
     }
   }
 

@@ -2,65 +2,264 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────────────────────────────────────
 
 enum Role {
   parent
   doctor
+  clinician
 }
 
+enum ScreeningStatus {
+  pending
+  in_progress
+  completed
+  archived
+  failed
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+  very_high
+}
+
+enum ReportFormat {
+  pdf
+  csv
+  json
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Core User Models
+// ──────────────────────────────────────────────────────────────────────────────
+
 model User {
-  id                     String        @id @default(uuid())
+  id                     String                @id @default(uuid())
   name                   String
-  email                  String        @unique
+  email                  String                @unique
   phone                  String
   passwordHash           String
-  role                   Role          @default(parent)
-  provider               String        @default("local")
-  emailVerified          Boolean       @default(false)
+  role                   Role                  @default(parent)
+  provider               String                @default("local")
+  emailVerified          Boolean               @default(false)
   emailVerificationToken String?
   tokenExpiresAt         DateTime?
   resetPasswordToken     String?
   resetPasswordExpiresAt DateTime?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
 
-  // Platform relations
-  children               Child[]       @relation("ParentChildren")
+  // Relations
+  children               Child[]               @relation("ParentChildren")
+  screeningSessions     ScreeningSession[]    @relation("UserScreeningSessions")
+  chatSessions          ChatSession[]         @relation("UserChatSessions")
+  refreshTokens          RefreshToken[]        @relation("UserRefreshTokens")
+
+  @@index([email])
+  @@index([role])
+}
+
+// Refresh Token for session management
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique // SHA-256 hash of the refresh token
+  familyId    String    // Token family for rotation tracking
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User      @relation("UserRefreshTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([familyId])
 }
 
 model Child {
-  id          String   @id @default(uuid())
-  name        String
-  age         String
-  lastSession String?
-  riskLevel   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String              @id @default(uuid())
+  parentId           String
+  name               String
+  dateOfBirth        DateTime
+  gender             String?
+  medicalNotes       String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
-  parentId    String?
-  parent      User?    @relation("ParentChildren", fields: [parentId], references: [id])
+  // Relations
+  parent             User                @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  screeningSessions  ScreeningSession[]  @relation("ChildScreeningSessions")
+
+  @@index([parentId])
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Screening Models
+// ──────────────────────────────────────────────────────────────────────────────
 
 model ScreeningSession {
-  id              String   @id @default(uuid())
-  userId          String?
-  source          String
-  modelVersion    String
-  riskScore       Float
-  riskLabel       String
-  summary         Json     // Stores eyeContact, attentionSpan, etc.
-  recommendations String[]
-  metrics         Json[]   // Array of frame metrics
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                 String              @id @default(uuid())
+  userId             String
+  childId            String
+  status             ScreeningStatus     @default(pending)
+  
+  // Metadata
+  duration           Int?                // in seconds
+  frameCount         Int?                // total frames analyzed
+  
+  // Results
+  riskScore          Float?              // 0-100
+  riskLevel          RiskLevel?
+  summary            String?
+  
+  // Additional data
+  metadata           Json?               // Camera settings, quality metrics, etc.
+  
+  startedAt          DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  user               User                @relation("UserScreeningSessions", fields: [userId], references: [id], onDelete: Cascade)
+  child              Child               @relation("ChildScreeningSessions", fields: [childId], references: [id], onDelete: Cascade)
+  analysisData       AnalysisData?       @relation("SessionAnalysisData")
+  results            ScreeningResult?    @relation("SessionResults")
+  report             Report?             @relation("SessionReport")
+
+  @@index([userId])
+  @@index([childId])
+  @@index([status])
 }
+
+model ScreeningResult {
+  id                 String              @id @default(uuid())
+  sessionId          String              @unique
+  
+  // Risk Assessment
+  riskScore          Float               // 0-100
+  riskLevel          RiskLevel
+  confidence         Float?              // Model confidence 0-1
+  
+  // Behavioral Breakdown
+  behaviors          Json                // Array of detected behaviors with timestamps
+  emotionalPatterns  Json?               // Emotional analysis data
+  
+  // Clinical Summary
+  summary            String?
+  recommendations    Json?               // Store as JSON array instead
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  session            ScreeningSession    @relation("SessionResults", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model AnalysisData {
+  id                 String              @id @default(uuid())
+  sessionId          String              @unique
+  
+  // Frame metrics
+  frameCount         Int
+  averageConfidence  Float?              // Average detection confidence
+  
+  // Behavior timeline
+  behaviors          Json                // Array of detected behaviors with frame indices
+  
+  // Emotion timeline
+  emotions           Json?               // Emotion detection data with timestamps
+  
+  // Additional metrics
+  metadata           Json?
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  session            ScreeningSession    @relation("SessionAnalysisData", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model Report {
+  id                 String              @id @default(uuid())
+  sessionId          String              @unique
+  
+  format             ReportFormat        @default(pdf)
+  filePath           String              // S3 path or local path
+  
+  // Report lifecycle
+  generatedAt        DateTime            @default(now())
+  expiresAt          DateTime?           // For temporary download links
+  
+  // Metadata
+  metadata           Json?               // Report generation settings, etc.
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  session            ScreeningSession    @relation("SessionReport", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// AI & Chat Models
+// ──────────────────────────────────────────────────────────────────────────────
+
+model ChatSession {
+  id                 String              @id @default(uuid())
+  userId             String
+  title              String?
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  user               User                @relation("UserChatSessions", fields: [userId], references: [id], onDelete: Cascade)
+  messages           ChatMessage[]       @relation("SessionMessages")
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id                 String              @id @default(uuid())
+  sessionId          String
+  
+  role               String              // 'user' or 'assistant'
+  content            String
+  
+  // Optional metadata
+  metadata           Json?
+  
+  createdAt          DateTime            @default(now())
+
+  // Relations
+  session            ChatSession         @relation("SessionMessages", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Legacy Models (for backward compatibility - can be deprecated)
+// ──────────────────────────────────────────────────────────────────────────────
 
 model SessionHistory {
   id               String   @id @default(uuid())
@@ -72,15 +271,8 @@ model SessionHistory {
   status           String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-}
 
-model Message {
-  id        String   @id @default(uuid())
-  from      Role
-  name      String
-  message   String
-  at        String
-  createdAt DateTime @default(now())
+  // TODO: Deprecate - Use ScreeningSession, AnalysisData, and ScreeningResult instead
 }
 
 model PreScreeningProfile {
@@ -97,24 +289,21 @@ model PreScreeningProfile {
   state            String
   emergencyContact String
   medicalNotes     String   @default("")
-  location         Json?    // lat, lng, capturedAt
+  location         Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  // TODO: Deprecate - Use User and Child models instead
 }
 
-model ChatSession {
+model Message {
   id        String   @id @default(uuid())
-  userId    String
+  from      Role
+  name      String
+  message   String
+  at        String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  messages  ChatMessage[]
+
+  // TODO: Deprecate - Use ChatMessage instead
 }
 
-model ChatMessage {
-  id        String   @id @default(uuid())
-  sessionId String
-  role      String   // 'user' or 'assistant'
-  content   String
-  createdAt DateTime @default(now())
-  session   ChatSession @relation(fields: [sessionId], references: [id])
-}

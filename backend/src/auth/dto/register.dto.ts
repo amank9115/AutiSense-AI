@@ -8,6 +8,14 @@ import {
 } from 'class-validator';
 import { Role } from '@prisma/client';
 
+// Password must contain:
+// - At least 10 characters
+// - At least one uppercase letter
+// - At least one lowercase letter
+// - At least one number
+// - At least one special character (@$!%*?&)
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/;
+
 export class RegisterDto {
   @IsEmail()
   email: string;
@@ -17,10 +25,10 @@ export class RegisterDto {
   name: string;
 
   @IsString()
-  @MinLength(8, { message: 'Password must be at least 8 characters long' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/, {
+  @MinLength(10, { message: 'Password must be at least 10 characters long' })
+  @Matches(PASSWORD_REGEX, {
     message:
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+      'Password must contain at least: 10 characters, one uppercase, one lowercase, one number, and one special character (@$!%*?&)',
   })
   password: string;
 

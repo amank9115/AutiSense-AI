@@ -8,20 +8,28 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailModule } from '../email/email.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AppConfigService } from '../config/config.service';
+import { RedisModule } from '../redis/redis.module';
+import { LockoutService } from './lockout.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'dev-secret-key-super-secure',
-      signOptions: { expiresIn: '15m' },
+    JwtModule.registerAsync({
+      useFactory: (configService: AppConfigService) => ({
+        secret: configService.auth.jwtSecret,
+        signOptions: { expiresIn: configService.auth.jwtExpiry || '15m' },
+      }),
+      inject: [AppConfigService],
     }),
     EmailModule,
     PrismaModule,
+    RedisModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, LockoutService, RefreshTokenService],
+  exports: [AuthService, LockoutService, RefreshTokenService],
 })
 export class AuthModule {}
