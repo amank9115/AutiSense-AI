@@ -6,6 +6,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AppConfigService } from './config/config.service';
 import { LoggerService } from './common/logging';
 import { HttpLoggerMiddleware } from './common/logging/http-logger.middleware';
+import { CorrelationIdMiddleware, CORRELATION_ID_HEADER } from './common/middleware/correlation-id.middleware';
 import cookieParser from 'cookie-parser';
 
 // Security headers with Helmet (requires: npm install helmet @types/helmet)
@@ -15,6 +16,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(AppConfigService);
   const logger = app.get(LoggerService);
+
+  // Enable graceful shutdown hooks
+  app.enableShutdownHooks();
 
   // Security headers - uncomment after installing helmet:
   // app.use(helmet({
@@ -51,10 +55,14 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', CORRELATION_ID_HEADER, 'Accept'],
   });
 
   app.use(cookieParser());
+
+  // Apply correlation ID middleware (before other middlewares)
+  const correlationMiddleware = new CorrelationIdMiddleware();
+  app.use(correlationMiddleware.use.bind(correlationMiddleware));
 
   // Apply HTTP logger middleware
   const httpLoggerMiddleware = new HttpLoggerMiddleware(logger);
@@ -102,7 +110,7 @@ async function bootstrap() {
 
   const port = configService.server.port;
   await app.listen(port);
-  
+
   logger.log(
     `✨ Application running in ${configService.server.nodeEnv} mode on http://localhost:${port}`,
     'Bootstrap',
@@ -111,6 +119,36 @@ async function bootstrap() {
     `📚 API documentation available at http://localhost:${port}/api/docs`,
     'Bootstrap',
   );
+
+  // Graceful shutdown handlers
+  const gracefulShutdown = async (signal: string) => {
+    logger.log(`📤 Received ${signal}. Starting graceful shutdown...`, 'Bootstrap');
+
+    // Give time for load balancer health checks to detect shutdown
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    try {
+      await app.close();
+      logger.log('✅ Graceful shutdown complete', 'Bootstrap');
+      process.exit(0);
+    } catch (error) {
+      logger.error('❌ Error during graceful shutdown', error, 'Bootstrap');
+      process.exit(1);
+    }
+  };
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception', error, 'Bootstrap');
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection', { reason, promise }, 'Bootstrap');
+  });
 }
 
 bootstrap().catch((err) => {
