@@ -1,4 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { AppConfigService } from '../config/config.service';
+import { CircuitBreakerService, CircuitState } from '../common/circuit-breaker/circuit-breaker.service';
+import {
+  MLServiceUnavailableException,
+  MLAnalysisFailedException,
+} from '../common/exceptions';
 
 export interface MlHealthResponse {
   ok: boolean;
@@ -19,20 +25,42 @@ interface MlPredictResponse {
   aq_scores?: Record<string, number>;
 }
 
+const ML_CIRCUIT_NAME = 'ml-service';
+
 @Injectable()
 export class MlService {
   private readonly logger = new Logger(MlService.name);
   private readonly baseUrl: string;
   private readonly enabled: boolean;
   private readonly timeout: number;
+  private readonly maxRetries = 3;
+  private readonly retryDelay = 1000; // ms
 
-  constructor() {
-    this.enabled = process.env.PY_ML_ENABLED === 'true';
-    this.baseUrl = process.env.PY_ML_BASE_URL || 'http://127.0.0.1:8001';
-    this.timeout = parseInt(process.env.PY_ML_TIMEOUT_MS || '2500', 10);
+  constructor(
+    private config: AppConfigService,
+    private circuitBreaker: CircuitBreakerService,
+  ) {
+    this.enabled = this.config.mlService.enabled;
+    this.baseUrl = this.config.mlService.baseUrl;
+    this.timeout = this.config.mlService.timeoutMs;
+
+    // Initialize circuit breaker config
+    this.circuitBreaker.getCircuit(ML_CIRCUIT_NAME, {
+      failureThreshold: 5,
+      successThreshold: 2,
+      timeout: 60000, // 1 minute
+    });
   }
 
-  private async request<T>(path: string, options?: RequestInit): Promise<T> {
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async request<T>(
+    path: string,
+    options?: RequestInit,
+    retryCount = 0,
+  ): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -45,17 +73,77 @@ export class MlService {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`ML service error (${response.status}): ${text}`);
+        throw new MLServiceUnavailableException(
+          `ML service error (${response.status}): ${text}`,
+        );
       }
 
+      // Record success for circuit breaker
+      this.circuitBreaker.recordSuccess(ML_CIRCUIT_NAME);
+
       return (await response.json()) as T;
+    } catch (error) {
+      // Record failure for circuit breaker
+      this.circuitBreaker.recordFailure(ML_CIRCUIT_NAME);
+
+      if (retryCount < this.maxRetries) {
+        const delayMs = this.retryDelay * Math.pow(2, retryCount);
+        this.logger.warn(
+          `ML request failed, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${this.maxRetries})`,
+          error,
+        );
+        await this.sleep(delayMs);
+        return this.request<T>(path, options, retryCount + 1);
+      }
+
+      const errorMsg =
+        error instanceof Error ? error.message : 'Unknown error';
+      throw new MLServiceUnavailableException(
+        `ML service unavailable: ${errorMsg}`,
+      );
     } finally {
       clearTimeout(timeoutId);
     }
   }
 
   async health(): Promise<MlHealthResponse> {
-    return this.request<MlHealthResponse>('/health');
+    if (!this.enabled) {
+      return {
+        ok: false,
+        model_ready: false,
+        model_version: 'disabled',
+      };
+    }
+
+    // Check circuit breaker state
+    const circuitState = this.circuitBreaker.getState(ML_CIRCUIT_NAME);
+    if (circuitState === CircuitState.OPEN) {
+      this.logger.warn('ML circuit breaker is OPEN, health check indicates unavailable');
+      return {
+        ok: false,
+        model_ready: false,
+        model_version: 'circuit-open',
+      };
+    }
+
+    try {
+      return await this.circuitBreaker.execute<MlHealthResponse>(
+        ML_CIRCUIT_NAME,
+        () => this.request<MlHealthResponse>('/health'),
+        async () => ({
+          ok: false,
+          model_ready: false,
+          model_version: 'circuit-open',
+        }),
+      );
+    } catch (error) {
+      this.logger.error('ML health check failed', error);
+      return {
+        ok: false,
+        model_ready: false,
+        model_version: 'error',
+      };
+    }
   }
 
   async predictLive(
@@ -64,7 +152,17 @@ export class MlService {
     childInfo?: Record<string, string>,
   ): Promise<MlPredictResponse> {
     if (!this.enabled) {
-      throw new Error('Python ML service is disabled');
+      throw new MLServiceUnavailableException(
+        'Python ML service is disabled',
+      );
+    }
+
+    // Check circuit breaker before making request
+    if (!this.circuitBreaker.isCallAllowed(ML_CIRCUIT_NAME)) {
+      this.logger.warn('ML circuit breaker is OPEN, request blocked');
+      throw new MLServiceUnavailableException(
+        'ML service is temporarily unavailable. Please try again later.',
+      );
     }
 
     return this.request<MlPredictResponse>('/predict/live', {
@@ -83,7 +181,17 @@ export class MlService {
     childInfo?: Record<string, string>,
   ): Promise<MlPredictResponse> {
     if (!this.enabled) {
-      throw new Error('Python ML service is disabled');
+      throw new MLServiceUnavailableException(
+        'Python ML service is disabled',
+      );
+    }
+
+    // Check circuit breaker before making request
+    if (!this.circuitBreaker.isCallAllowed(ML_CIRCUIT_NAME)) {
+      this.logger.warn('ML circuit breaker is OPEN, request blocked');
+      throw new MLServiceUnavailableException(
+        'ML service is temporarily unavailable. Please try again later.',
+      );
     }
 
     return this.request<MlPredictResponse>('/predict/window', {
@@ -97,7 +205,17 @@ export class MlService {
     childInfo?: Record<string, string>,
   ): Promise<ArrayBuffer> {
     if (!this.enabled) {
-      throw new Error('Python ML service is disabled');
+      throw new MLServiceUnavailableException(
+        'Python ML service is disabled',
+      );
+    }
+
+    // Check circuit breaker before making request
+    if (!this.circuitBreaker.isCallAllowed(ML_CIRCUIT_NAME)) {
+      this.logger.warn('ML circuit breaker is OPEN, request blocked');
+      throw new MLAnalysisFailedException(
+        'Report generation is temporarily unavailable. Please try again later.',
+      );
     }
 
     const controller = new AbortController();
@@ -112,13 +230,26 @@ export class MlService {
       });
 
       if (!response.ok) {
+        this.circuitBreaker.recordFailure(ML_CIRCUIT_NAME);
         const text = await response.text();
-        throw new Error(
+        throw new MLAnalysisFailedException(
           `Report generation failed (${response.status}): ${text}`,
         );
       }
 
+      // Record success for circuit breaker
+      this.circuitBreaker.recordSuccess(ML_CIRCUIT_NAME);
+
       return await response.arrayBuffer();
+    } catch (error) {
+      if (!(error instanceof MLAnalysisFailedException)) {
+        this.circuitBreaker.recordFailure(ML_CIRCUIT_NAME);
+      }
+      throw new MLAnalysisFailedException(
+        error instanceof Error
+          ? error.message
+          : 'Report generation failed',
+      );
     } finally {
       clearTimeout(timeoutId);
     }
@@ -126,11 +257,28 @@ export class MlService {
 
   async getSessionData(sessionKey: string): Promise<Record<string, unknown>> {
     if (!this.enabled) {
-      throw new Error('Python ML service is disabled');
+      throw new MLServiceUnavailableException(
+        'Python ML service is disabled',
+      );
+    }
+
+    // Check circuit breaker before making request
+    if (!this.circuitBreaker.isCallAllowed(ML_CIRCUIT_NAME)) {
+      this.logger.warn('ML circuit breaker is OPEN, request blocked');
+      throw new MLServiceUnavailableException(
+        'ML service is temporarily unavailable. Please try again later.',
+      );
     }
 
     return this.request<Record<string, unknown>>(
       `/report/session/${sessionKey}`,
     );
+  }
+
+  /**
+   * Get ML service circuit breaker status
+   */
+  getCircuitStatus() {
+    return this.circuitBreaker.getStats(ML_CIRCUIT_NAME);
   }
 }
