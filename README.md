@@ -207,8 +207,8 @@ npm run dev:ml          # FastAPI ML service
 
 | Contributor | Role |
 |-------------|------|
-| **Aman Kumar** | Full-Stack Developer & ML Engineer |
-| Team Members | Contributing developers |
+| **Aman Kumar** | Backend Developer & ML Engineer Contribute |
+| **Aryan Kumar** | Frontend Developer & ML Engineer Contribute |
 
 ---
 
