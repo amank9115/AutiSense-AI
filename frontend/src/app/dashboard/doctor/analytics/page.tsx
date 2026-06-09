@@ -21,13 +21,14 @@ interface ScreeningTrend {
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const router = useRouter();
+  
+  // Move useState hook to the top - before any conditional logic
+  const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter">("month");
 
   if (!user) {
     router.push("/login");
     return null;
   }
-
-  const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter">("month");
 
   const insights: InsightMetric[] = [
     { label: "Total Screenings", value: "1,284", change: "+12%", trend: "up" },
