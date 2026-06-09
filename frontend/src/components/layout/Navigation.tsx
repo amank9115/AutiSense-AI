@@ -212,36 +212,80 @@ export const Navbar: React.FC = () => {
 };
 
 export const Footer: React.FC = () => {
+  const columns = [
+    {
+      heading: "Product",
+      links: [
+        { href: "/assessment", label: "Assessment" },
+        { href: "/screening", label: "Live Screening" },
+        { href: "/begin-the-journey", label: "Get Started" },
+        { href: "/services", label: "Services" },
+      ],
+    },
+    {
+      heading: "Community",
+      links: [
+        { href: "/community", label: "Community Hub" },
+        { href: "/professionals", label: "For Professionals" },
+        { href: "/support", label: "Support" },
+      ],
+    },
+    {
+      heading: "Legal",
+      links: [
+        { href: "/privacy", label: "Privacy Policy" },
+        { href: "/terms", label: "Terms of Service" },
+        { href: "/accessibility", label: "Accessibility" },
+      ],
+    },
+  ];
+
   return (
-    <footer className="w-full bg-surface-container-low border-t border-outline-variant/20">
-      {/* Brand gradient accent line */}
-      <div className="h-px bg-gradient-to-r from-transparent via-primary-accent/40 to-transparent" />
-      
+    <footer className="w-full bg-surface-container-low border-t border-outline-variant/15">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-16">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col gap-2 items-center md:items-start">
-            <span className="font-headline font-bold text-primary-accent text-xl tracking-tight">MannSaathi</span>
-            <p className="font-body text-sm text-on-surface-variant/60">
-              © 2026 MannSaathi. All rights reserved.
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1 space-y-4">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
+                M
+              </div>
+              <span className="font-headline font-bold text-primary text-base tracking-tight">MannSaathi</span>
+            </Link>
+            <p className="text-xs text-on-surface-muted leading-relaxed max-w-[200px]">
+              AI-powered autism screening built for sensory comfort and neurodivergent accessibility.
             </p>
-            <p className="font-body text-xs text-on-surface-variant/40">Built with care for sensory comfort.</p>
+            <div className="flex items-center gap-1.5 text-xs text-on-surface-muted">
+              <span className="material-symbols-outlined text-sm text-secondary">favorite</span>
+              <span>Built for sensory comfort</span>
+            </div>
           </div>
-          <nav className="flex gap-8 md:gap-10">
-            {[
-              { href: "/privacy", label: "Privacy Policy" },
-              { href: "/terms", label: "Terms of Service" },
-              { href: "/accessibility", label: "Accessibility" },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-on-surface-variant/70 font-medium text-sm hover:text-primary-accent transition-colors duration-300 relative group"
-              >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary-accent transition-all duration-300 group-hover:w-full" />
-              </Link>
-            ))}
-          </nav>
+
+          {/* Link columns */}
+          {columns.map((col) => (
+            <div key={col.heading}>
+              <h5 className="text-label-caps text-on-surface mb-4">{col.heading}</h5>
+              <ul className="space-y-2.5">
+                {col.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-on-surface-muted hover:text-on-surface transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 pt-6 border-t border-outline-variant/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-on-surface-muted">© 2026 MannSaathi. All rights reserved.</p>
+          <p className="text-xs text-on-surface-muted">
+            Supporting neurodivergent families worldwide.
+          </p>
         </div>
       </div>
     </footer>

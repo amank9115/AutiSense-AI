@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Button } from "@/components/ui/StitchUI";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface ArchivedRecord {
   id: string;
@@ -73,6 +73,7 @@ const mockArchives: ArchivedRecord[] = [
 export default function ArchivePage() {
   const { user } = useAuth();
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [archives] = useState<ArchivedRecord[]>(mockArchives);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | "Completed" | "Transferred" | "Inactive">("All");
@@ -104,14 +105,14 @@ export default function ArchivePage() {
   };
 
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased lg:ml-80 p-6 lg:p-10 xl:p-16">
+    <div className="text-on-surface font-body antialiased p-6 lg:p-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
           <h2 className="font-headline font-extrabold text-5xl text-on-surface tracking-tighter mb-2">
             Archive
           </h2>
-          <p className="text-on-surface-variant font-medium text-lg opacity-60">
+          <p className="text-on-surface-muted text-lg">
             {archives.length} archived patient records
           </p>
         </div>
@@ -168,15 +169,15 @@ export default function ArchivePage() {
                 {filteredArchives.map((record, i) => (
                   <motion.tr
                     key={record.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+                    animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+                    transition={shouldReduceMotion ? undefined : { delay: i * 0.05 }}
                     className="border-t border-outline-variant/10 hover:bg-surface-container-low transition-colors"
                   >
                     <td className="px-6 py-5">
                       <div>
                         <p className="font-headline font-extrabold text-on-surface">{record.patientName}</p>
-                        <p className="text-[10px] text-on-surface-variant opacity-60">{record.id}</p>
+                        <p className="text-[10px] text-on-surface-muted">{record.id}</p>
                       </div>
                     </td>
                     <td className="px-6 py-5 hidden md:table-cell">

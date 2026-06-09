@@ -1,8 +1,8 @@
-"use client";
-
 import React from "react";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import Link from "next/link";
+
+export const dynamic = "force-static";
 
 export default function NotFound() {
   return (

@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import React from "react";
+import { usePathname } from "next/navigation";
 
 const SmoothScroll = dynamic(
   () => import("@/components/effects/SmoothScroll"),
@@ -12,19 +13,20 @@ const CustomCursor = dynamic(
   { ssr: false }
 );
 
-/**
- * ClientProviders — Client-side wrapper for providers that need ssr:false.
- * Used in layout.tsx (Server Component) to wrap children with client-only effects.
- */
+const MARKETING_ROUTES = ["/", "/assessment", "/services", "/begin-the-journey", "/community", "/professionals"];
+
 export default function ClientProviders({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isMarketingPage = MARKETING_ROUTES.includes(pathname ?? "");
+
   return (
     <>
       <SmoothScroll>{children}</SmoothScroll>
-      <CustomCursor />
+      {isMarketingPage && <CustomCursor />}
     </>
   );
 }

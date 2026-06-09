@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card, Input } from "@/components/ui/StitchUI";
 import { authApi } from "@/services/authApi";
+import { fetchJson } from "@/api/client";
+import { screeningApi, ChildProfile } from "@/services/api/screeningApi";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,6 +16,8 @@ export default function ParentProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [children, setChildren] = useState<ChildProfile[]>([]);
+  const [loadingChildren, setLoadingChildren] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -26,7 +30,21 @@ export default function ParentProfilePage() {
   useEffect(() => {
     if (!user) {
       router.push("/login");
+      return;
     }
+
+    const fetchChildren = async () => {
+      try {
+        const data = await screeningApi.getChildren();
+        setChildren(data);
+      } catch (err) {
+        console.error("Failed to fetch children", err);
+      } finally {
+        setLoadingChildren(false);
+      }
+    };
+
+    fetchChildren();
   }, [user, router]);
 
   if (!user) {
@@ -44,11 +62,19 @@ export default function ParentProfilePage() {
     setSuccess(null);
 
     try {
+      const response = await fetchJson<{ name: string }>("/api/v1/users/me", {
+        method: "PUT",
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+        }),
+      });
       setSuccess("Profile updated successfully!");
-      updateUser({ ...user, name: formData.name });
+      if (user) updateUser({ ...user, name: response.name });
       setIsEditing(false);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update profile");
+      const message = err instanceof Error ? err.message : "Failed to update profile";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -154,7 +180,7 @@ export default function ParentProfilePage() {
           <form onSubmit={handleSave} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Full Name
                 </label>
                 <Input
@@ -166,7 +192,7 @@ export default function ParentProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Email Address
                 </label>
                 <Input
@@ -179,7 +205,7 @@ export default function ParentProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Phone Number
                 </label>
                 <Input
@@ -193,7 +219,7 @@ export default function ParentProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Account Type
                 </label>
                 <Input
@@ -234,15 +260,36 @@ export default function ParentProfilePage() {
         <Card className="p-8 rounded-3xl bg-white shadow-xl mb-8">
           <div className="flex justify-between items-center mb-6">
             <h3 className="font-headline font-extrabold text-xl text-on-surface">My Children</h3>
-            <Button variant="outline" className="text-sm px-4 py-2">
+            <Button variant="outline" onClick={() => router.push("/dashboard/parent/children/add")} className="text-sm px-4 py-2">
               Add Child
             </Button>
           </div>
-          <div className="text-center py-12 text-on-surface-variant">
-            <span className="material-symbols-outlined text-6xl opacity-20 mb-4">child_care</span>
-            <p className="font-medium">No children added yet</p>
-            <p className="text-sm opacity-60 mt-1">Add your child to start tracking their progress</p>
-          </div>
+          
+          {loadingChildren ? (
+            <div className="text-center py-12">
+              <div className="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto" />
+            </div>
+          ) : children.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {children.map(child => (
+                <div key={child.id} className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-outline-variant/10">
+                  <div className="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined">child_care</span>
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="font-bold text-on-surface truncate">{child.name}</p>
+                    <p className="text-xs text-on-surface-variant">{new Date(child.dateOfBirth).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-on-surface-variant">
+              <span className="material-symbols-outlined text-6xl opacity-20 mb-4">child_care</span>
+              <p className="font-medium">No children added yet</p>
+              <p className="text-sm opacity-60 mt-1">Add your child to start tracking their progress</p>
+            </div>
+          )}
         </Card>
 
         {/* Account Actions */}

@@ -105,8 +105,7 @@ export class AiService {
 
   async saveScreeningResult(data: {
     userId: string;
-    source: string;
-    modelVersion: string;
+    childId: string;
     riskScore: number;
     riskLabel: string;
     summary: Record<string, unknown>;
@@ -116,16 +115,26 @@ export class AiService {
     const session = await this.prisma.screeningSession.create({
       data: {
         userId: data.userId,
-        source: data.source,
-        modelVersion: data.modelVersion,
+        childId: data.childId,
         riskScore: data.riskScore,
-        riskLabel: data.riskLabel,
+        riskLevel: data.riskLabel as any,
+        summary: JSON.stringify(data.summary),
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        summary: data.summary as any,
-        recommendations: data.recommendations,
-        metrics: data.metrics as any[],
+        metadata: { metrics: data.metrics } as any,
       },
     });
+
+    await this.prisma.screeningResult.create({
+      data: {
+        sessionId: session.id,
+        riskScore: data.riskScore,
+        riskLevel: data.riskLabel as any,
+        behaviors: data.metrics as any,
+        summary: JSON.stringify(data.summary),
+        recommendations: data.recommendations as any,
+      },
+    });
+
     return { success: true, sessionId: session.id, ...data };
   }
 

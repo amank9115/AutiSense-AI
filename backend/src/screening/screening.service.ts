@@ -5,7 +5,7 @@ import {
   NotFoundException,
   InsufficientPermissionsException,
 } from '../common/exceptions';
-import { ScreeningStatus, RiskLevel } from '@prisma/client';
+import { ScreeningStatus, RiskLevel, Role } from '@prisma/client';
 
 export interface CreateScreeningSessionDto {
   userId: string;
@@ -64,6 +64,7 @@ export class ScreeningService {
       data: {
         userId: dto.userId,
         childId: dto.childId,
+        organizationId: child.organizationId,
         status: ScreeningStatus.pending,
         metadata: dto.metadata,
       },
@@ -166,11 +167,12 @@ export class ScreeningService {
    */
   async getUserSessions(
     userId: string,
+    role: Role = Role.parent,
     page: number = 1,
     limit: number = 20,
   ) {
-    // Try to get from cache (only for first page)
-    if (page === 1) {
+    // Try to get from cache (only for first page and for parents)
+    if (page === 1 && role === Role.parent) {
       const cacheKey = this.getUserSessionsCacheKey(userId);
       const cached = await this.cache.get<{
         data: any[];
@@ -183,10 +185,34 @@ export class ScreeningService {
     }
 
     const skip = (page - 1) * limit;
+    let where: any = { userId };
+
+    // If user is a doctor or clinician, they should see sessions for their organization(s)
+    if (
+      role === Role.doctor ||
+      role === Role.clinician ||
+      role === Role.super_admin
+    ) {
+      const memberships = await this.prisma.organizationMember.findMany({
+        where: { userId },
+        select: { organizationId: true },
+      });
+      const orgIds = memberships.map((m) => m.organizationId);
+
+      if (orgIds.length > 0) {
+        where = { organizationId: { in: orgIds } };
+      } else if (role !== Role.super_admin) {
+        // If not a super admin and no org memberships, they see nothing or just their own
+        where = { userId };
+      } else {
+        // Super admin sees everything
+        where = {};
+      }
+    }
 
     const [sessions, total] = await Promise.all([
       this.prisma.screeningSession.findMany({
-        where: { userId },
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
@@ -195,7 +221,7 @@ export class ScreeningService {
           results: true,
         },
       }),
-      this.prisma.screeningSession.count({ where: { userId } }),
+      this.prisma.screeningSession.count({ where }),
     ]);
 
     const result = {
@@ -208,8 +234,8 @@ export class ScreeningService {
       },
     };
 
-    // Cache the result (only for first page)
-    if (page === 1) {
+    // Cache the result (only for first page and for parents)
+    if (page === 1 && role === Role.parent) {
       const cacheKey = this.getUserSessionsCacheKey(userId);
       await this.cache.set(cacheKey, result, this.CACHE_TTL);
     }

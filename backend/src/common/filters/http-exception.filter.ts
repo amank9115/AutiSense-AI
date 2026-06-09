@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { AppException, ErrorCode } from '../exceptions';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -22,33 +23,56 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : 'Internal server error';
+    let errorResponse: any;
 
-    // Log the error
-    if (status >= 500) {
-      this.logger.error(
-        `HTTP Status: ${status} Error Message: ${JSON.stringify(message)}`,
-        exception instanceof Error ? exception.stack : '',
-      );
+    if (exception instanceof AppException) {
+      // Handle custom AppException
+      errorResponse = {
+        statusCode: status,
+        message: exception.message,
+        errorCode: exception.errorCode,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+        ...(exception.context && { context: exception.context }),
+      };
+    } else if (exception instanceof HttpException) {
+      // Handle built-in NestJS HttpException
+      const exceptionResponse = exception.getResponse();
+      const message =
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
+          : (exceptionResponse as any).message || exception.message;
+
+      errorResponse = {
+        statusCode: status,
+        message,
+        errorCode: ErrorCode.INTERNAL_SERVER_ERROR,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+      };
     } else {
-      this.logger.warn(
-        `HTTP Status: ${status} Error Message: ${JSON.stringify(message)}`,
-      );
+      // Handle unknown exceptions
+      errorResponse = {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Internal server error',
+        errorCode: ErrorCode.INTERNAL_SERVER_ERROR,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        method: request.method,
+      };
     }
 
-    const errorResponse = {
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      error:
-        typeof message === 'string'
-          ? message
-          : ((message as Record<string, unknown>)?.message ?? message),
-    };
+    // Log exceptions based on status code
+    if (status >= 500) {
+      this.logger.error(
+        `${request.method} ${request.url} - ${status}`,
+        exception instanceof Error ? exception.stack : '',
+      );
+    } else if (status >= 400) {
+      this.logger.warn(`${request.method} ${request.url} - ${status}`);
+    }
 
     response.status(status).json(errorResponse);
   }

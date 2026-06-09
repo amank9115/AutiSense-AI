@@ -184,14 +184,14 @@ export default function DoctorAppointmentsPage() {
   );
 
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased lg:ml-80 p-6 lg:p-10 xl:p-16">
+    <div className="text-on-surface font-body antialiased p-6 lg:p-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
           <h2 className="font-headline font-extrabold text-5xl text-on-surface tracking-tighter mb-2">
             Appointments
           </h2>
-          <p className="text-on-surface-variant font-medium text-lg opacity-60">
+          <p className="text-on-surface-muted text-lg">
             Manage your patient consultation schedule
           </p>
         </div>

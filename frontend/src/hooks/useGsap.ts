@@ -27,9 +27,14 @@ export function useFadeInOnScroll(
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion() || !ref.current) return;
-
+    if (!ref.current) return;
     const el = ref.current;
+
+    if (prefersReducedMotion()) {
+      gsap.set(el, { opacity: 1, y: 0, x: 0 });
+      return;
+    }
+
     const {
       y = 60,
       x = 0,
@@ -74,9 +79,14 @@ export function useStaggerChildren(
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion() || !ref.current) return;
-
+    if (!ref.current) return;
     const container = ref.current;
+
+    if (prefersReducedMotion()) {
+      gsap.set(container.querySelectorAll(":scope > *"), { opacity: 1, y: 0 });
+      return;
+    }
+
     const {
       y = 50,
       stagger = DURATION.stagger,
@@ -225,15 +235,14 @@ export function useCountUp(
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion() || !ref.current) return;
-
+    if (!ref.current) return;
     const el = ref.current;
-    const {
-      duration = 2,
-      suffix = "",
-      prefix = "",
-      start = "top 85%",
-    } = options;
+    const { duration = 2, suffix = "", prefix = "", start = "top 85%" } = options;
+
+    if (prefersReducedMotion()) {
+      el.textContent = `${prefix}${target.toLocaleString()}${suffix}`;
+      return;
+    }
 
     el.textContent = `${prefix}0${suffix}`;
 
@@ -354,7 +363,13 @@ export function useHeroTimeline() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion() || !containerRef.current) return;
+    if (!containerRef.current) return;
+
+    if (prefersReducedMotion()) {
+      const heroes = containerRef.current.querySelectorAll("[data-hero]");
+      gsap.set(heroes, { opacity: 1, y: 0, x: 0, scale: 1 });
+      return;
+    }
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({

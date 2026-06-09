@@ -35,6 +35,11 @@ interface AppState {
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
 
+  // Sidebar state
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+
   // Screening results
   mlResults: MlResults | null;
   setMlResults: (results: MlResults | null) => void;
@@ -50,6 +55,7 @@ export const useAppStore = create<AppState>()(
       isGuest: false,
       theme: 'light',
       mlResults: null,
+      sidebarCollapsed: false,
 
       // Auth actions
       setAuth: (user, token) => set({ user, token, isGuest: false }),
@@ -65,6 +71,10 @@ export const useAppStore = create<AppState>()(
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
       setTheme: (theme) => set({ theme }),
+
+      // Sidebar actions
+      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 
       // Screening results actions
       setMlResults: (results) => set({ mlResults: results }),

@@ -1,17 +1,47 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import { Card, Button } from "@/components/ui/StitchUI";
 import Image from "next/image";
+import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
 
 import { useAppStore } from "@/store";
 
 export default function ResultsPage() {
   const router = useRouter();
-  const mlResults = useAppStore((state) => state.mlResults);
+  const searchParams = useSearchParams();
+  const sessionId = searchParams?.get("sessionId");
+  const mlResultsFromStore = useAppStore((state) => state.mlResults);
+  const [session, setSession] = useState<(ScreeningSession & { results?: Record<string, unknown> }) | null>(null);
+  const [loading, setLoading] = useState(!!sessionId);
+
+  useEffect(() => {
+    if (sessionId) {
+      const fetchSession = async () => {
+        try {
+          const data = await screeningApi.getSessionDetails(sessionId);
+          setSession(data);
+        } catch (err) {
+          console.error("Failed to fetch session", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchSession();
+    }
+  }, [sessionId]);
+
+  // Use session results if available, otherwise fallback to store (for immediate post-screening view)
+  const displayResults = session?.results ? {
+    riskScore: session.results.riskScore as number,
+    riskLabel: (session.results.riskLevel as string) || "Low",
+    modelVersion: (session.results.modelVersion as string) || "2.1.0",
+    summary: (session.results.behaviors as Record<string, number>) || {},
+    recommendations: (session.results.recommendations as string[]) || [],
+  } : mlResultsFromStore;
 
   const handleBookConsultation = () => {
     router.push("/professionals");
@@ -37,6 +67,17 @@ export default function ResultsPage() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="bg-surface min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-on-surface-variant text-sm font-medium animate-pulse">Analyzing results...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased">
       <Navbar />
@@ -45,7 +86,7 @@ export default function ResultsPage() {
         {/* Hero Section */}
         <div className="mb-12 sm:mb-20">
           <h2 className="font-headline font-extrabold text-4xl sm:text-5xl lg:text-8xl text-primary leading-tight mb-4 sm:mb-6 tracking-tighter">Discovery Results</h2>
-          <p className="text-base sm:text-lg lg:text-xl text-on-surface-variant max-w-2xl leading-relaxed font-medium opacity-80">A detailed overview of your child&apos;s sensory profile and developmental milestones.</p>
+          <p className="text-base sm:text-lg lg:text-xl text-on-surface-variant max-w-2xl leading-relaxed font-medium opacity-80">A detailed overview of {session?.child?.name || "your child"}&apos;s sensory profile and developmental milestones.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
@@ -64,13 +105,13 @@ export default function ResultsPage() {
               </div>
               <div className="md:w-2/3 relative z-10 text-center md:text-left">
                 <span className="bg-tertiary-container text-on-tertiary-container px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest mb-3 sm:mb-4 inline-block shadow-sm">
-                  {mlResults ? "Analysis Complete" : "Profile Identified"}
+                  {displayResults ? "Analysis Complete" : "Profile Identified"}
                 </span>
                 <h3 className="font-headline font-extrabold text-2xl sm:text-3xl lg:text-4xl text-on-surface mb-3 sm:mb-4 tracking-tight">
-                  {mlResults ? mlResults.riskLabel : "The Thoughtful Observer"}
+                  {displayResults ? displayResults.riskLabel : "The Thoughtful Observer"}
                 </h3>
                 <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-on-surface-variant italic font-body border-l-4 border-primary/20 pl-4 sm:pl-6 opacity-80">
-                  {mlResults ? `"Based on ML v${mlResults.modelVersion}, the overall risk score is ${(mlResults.riskScore * 100).toFixed(0)}%."` : `"Your child finds deep meaning in quiet details and prefers structured environments."`}
+                  {displayResults ? `"Based on ML v${displayResults.modelVersion}, the overall risk score is ${(displayResults.riskScore * 100).toFixed(0)}%."` : `"Your child finds deep meaning in quiet details and prefers structured environments."`}
                 </p>
               </div>
               <div className="absolute -top-12 -right-12 w-48 sm:w-64 h-48 sm:h-64 bg-secondary-container opacity-20 rounded-full blur-3xl"></div>
@@ -80,11 +121,11 @@ export default function ResultsPage() {
             <div className="bg-surface-container-lowest rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-12 shadow-xl border-t-8 border-primary relative overflow-hidden">
               <h4 className="font-headline font-extrabold text-2xl sm:text-3xl mb-8 sm:mb-12 text-on-surface tracking-tight">AI Observation Summary</h4>
               <div className="space-y-8 sm:space-y-12">
-                {mlResults ? (
+                {displayResults ? (
                   <>
-                    <MilestoneProgress label="Eye Contact" status={mlResults.summary.EyeContact > 80 ? "Typical" : "Developing"} progress={`${mlResults.summary.EyeContact}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
-                    <MilestoneProgress label="Joint Attention" status={mlResults.summary.JointAttention > 80 ? "Typical" : "Developing"} progress={`${mlResults.summary.JointAttention}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
-                    <MilestoneProgress label="Facial Expression" status={mlResults.summary.FacialExpression > 80 ? "Typical" : "Developing"} progress={`${mlResults.summary.FacialExpression}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
+                    <MilestoneProgress label="Eye Contact" status={displayResults.summary.EyeContact > 80 ? "Typical" : "Developing"} progress={`${displayResults.summary.EyeContact}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
+                    <MilestoneProgress label="Joint Attention" status={displayResults.summary.JointAttention > 80 ? "Typical" : "Developing"} progress={`${displayResults.summary.JointAttention}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
+                    <MilestoneProgress label="Facial Expression" status={displayResults.summary.FacialExpression > 80 ? "Typical" : "Developing"} progress={`${displayResults.summary.FacialExpression}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
                   </>
                 ) : (
                   <>
@@ -122,14 +163,15 @@ export default function ResultsPage() {
                 <span className="material-symbols-outlined text-tertiary text-4xl sm:text-5xl mb-4 sm:mb-6 block">support_agent</span>
                 <h5 className="font-headline font-bold text-xl sm:text-2xl mb-3 sm:mb-4 text-on-tertiary-fixed">Recommendations</h5>
                 <ul className="space-y-3 sm:space-y-4 text-on-tertiary-container font-medium opacity-80">
-                  {(mlResults ? mlResults.recommendations : [
+                  {(displayResults ? displayResults.recommendations : [
                     "Transitioning between activities",
                     "Managing auditory stimuli",
                     "Initiating social interactions"
-                  ]).map((s, i) => (
+                  ]).map((rec: string, i: number) => (
+
                     <li key={i} className="flex items-start gap-2 sm:gap-3">
                       <span className="material-symbols-outlined text-tertiary text-sm mt-1">error_outline</span>
-                      <span className="font-body text-xs sm:text-sm uppercase tracking-wide">{s}</span>
+                      <span className="font-body text-xs sm:text-sm uppercase tracking-wide">{rec}</span>
                     </li>
                   ))}
                 </ul>

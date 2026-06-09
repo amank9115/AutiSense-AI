@@ -1,5 +1,4 @@
 import { fetchJson, wait } from "../api/client"
-import { liveMetricSeed } from "../data/mockPlatformData"
 import type { BehaviorMetric } from "../types/platform"
 
 const clamp = (value: number) => Math.min(100, Math.max(0, value))
@@ -7,7 +6,14 @@ const clamp = (value: number) => Math.min(100, Math.max(0, value))
 export const simulateBehaviorFrame = async (): Promise<BehaviorMetric[]> => {
   await wait(180)
 
-  return liveMetricSeed.map((metric) => {
+  const baseMetrics = [
+    { label: "Eye Contact", value: 85 },
+    { label: "Joint Attention", value: 78 },
+    { label: "Facial Expression", value: 92 },
+    { label: "Vocal Play", value: 65 },
+  ]
+
+  return baseMetrics.map((metric) => {
     const jitter = Math.round((Math.random() - 0.5) * 8)
     const nextValue = clamp(metric.value + jitter)
 

@@ -75,6 +75,53 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } });
   }
 
+  async addChild(userId: string, data: any) {
+    return this.prisma.child.create({
+      data: {
+        name: data.name,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+        medicalNotes: data.medicalNotes,
+        parentId: userId,
+      },
+    });
+  }
+
+  async getChildren(userId: string, role: Role = Role.parent) {
+    if (role === Role.doctor || role === Role.clinician || role === Role.super_admin) {
+      const memberships = await this.prisma.organizationMember.findMany({
+        where: { userId },
+        select: { organizationId: true },
+      });
+      const orgIds = memberships.map((m) => m.organizationId);
+
+      if (orgIds.length > 0) {
+        return this.prisma.child.findMany({
+          where: { organizationId: { in: orgIds } },
+          include: { 
+            parent: { select: { name: true, email: true } },
+            screeningSessions: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              include: { results: true }
+            }
+          },
+        });
+      }
+    }
+
+    return this.prisma.child.findMany({
+      where: { parentId: userId },
+      include: {
+        screeningSessions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: { results: true }
+        }
+      }
+    });
+  }
+
   async changePassword(
     userId: string,
     currentPassword: string,

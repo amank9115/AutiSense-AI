@@ -31,22 +31,25 @@ export const fetchJson = async <T>(path: string, init?: RequestInit, isRetry = f
   })
 
   if (!response.ok) {
-    if (response.status === 401 && !isRetry) {
+    // Never attempt token refresh on auth endpoints — it would count as
+    // another failed attempt and trigger the brute-force lockout (HTTP 423).
+    const isAuthEndpoint = path.includes('/auth/');
+
+    if (response.status === 401 && !isRetry && !isAuthEndpoint) {
       // Attempt to refresh the token using HttpOnly cookie
       try {
         const refreshRes = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
         });
-        
+
         if (refreshRes.ok) {
-          const refreshData = await refreshRes.json();
+          const refreshJson = await refreshRes.json();
+          const refreshData = refreshJson?.data ?? refreshJson;
           if (refreshData.access_token) {
             const store = useAppStore.getState();
             if (store.user) {
-              // Update state with new access token
               store.setAuth(store.user, refreshData.access_token);
-              // Retry original request
               return fetchJson<T>(path, init, true);
             }
           }
@@ -86,5 +89,19 @@ export const fetchJson = async <T>(path: string, init?: RequestInit, isRetry = f
     throw new Error(message)
   }
 
-  return (await response.json()) as T
+  const json = await response.json();
+
+  // Unwrap the global backend response envelope: { data, message, timestamp }
+  // The TransformInterceptor wraps every successful response in this shape.
+  if (
+    json !== null &&
+    typeof json === 'object' &&
+    'data' in json &&
+    'message' in json &&
+    'timestamp' in json
+  ) {
+    return json.data as T;
+  }
+
+  return json as T;
 }

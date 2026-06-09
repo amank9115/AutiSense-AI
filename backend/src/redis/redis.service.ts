@@ -9,14 +9,18 @@ export class RedisService implements OnModuleDestroy {
   constructor() {
     const host = process.env.REDIS_HOST || 'localhost';
     const port = parseInt(process.env.REDIS_PORT || '6379', 10);
+    const password = process.env.REDIS_PASSWORD;
+    const tls = process.env.REDIS_TLS === 'true';
 
     this.client = new Redis({
       host,
       port,
+      ...(password ? { password } : {}),
+      ...(tls ? { tls: {} } : {}),
       retryStrategy: (times) => {
         if (times > 3) {
           this.logger.error('Redis connection failed after 3 retries');
-          return null; // Stop retrying
+          return null;
         }
         return Math.min(times * 200, 2000);
       },

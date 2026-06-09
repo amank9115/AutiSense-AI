@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { FeatureFlagsService } from '../feature-flags.service';
+import { FeatureFlagsService } from './feature-flags.service';
 import { FEATURE_FLAG_KEY } from './decorators/feature-flag.decorator';
 
 @Injectable()

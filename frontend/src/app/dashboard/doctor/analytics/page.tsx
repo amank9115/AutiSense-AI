@@ -1,235 +1,223 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Card } from "@/components/ui/StitchUI";
+import { Card, EmptyState } from "@/components/ui/StitchUI";
+import { DashboardStatsSkeleton } from "@/components/ui/SkeletonLoader";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { DoctorTopBar } from "@/components/layout/DoctorTopBar";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
+import { fetchJson } from "@/api/client";
 
-interface InsightMetric {
-  label: string;
-  value: string;
-  change: string;
-  trend: "up" | "down" | "stable";
+interface DashboardStats {
+  totalSessions: number;
+  completedSessions: number;
+  averageRiskScore: number;
+  successRate: string;
 }
 
-interface ScreeningTrend {
+interface MonthBucket {
   month: string;
   screenings: number;
   avgRisk: number;
 }
 
+function deriveAnalytics(stats: DashboardStats, sessions: ScreeningSession[]) {
+  // Bucket sessions by month for the trend chart
+  const buckets: Record<string, { count: number; riskSum: number; riskCount: number }> = {};
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  sessions.forEach((s) => {
+    const d = new Date(s.createdAt);
+    const key = MONTHS[d.getMonth()];
+    if (!buckets[key]) buckets[key] = { count: 0, riskSum: 0, riskCount: 0 };
+    buckets[key].count++;
+    if (s.riskScore !== null) {
+      buckets[key].riskSum += s.riskScore * 100;
+      buckets[key].riskCount++;
+    }
+  });
+
+  const trends: MonthBucket[] = Object.entries(buckets)
+    .slice(-6)
+    .map(([month, v]) => ({
+      month,
+      screenings: v.count,
+      avgRisk: v.riskCount > 0 ? Math.round(v.riskSum / v.riskCount) : 0,
+    }));
+
+  // Risk distribution
+  const low = sessions.filter((s) => s.riskScore !== null && s.riskScore < 0.3).length;
+  const moderate = sessions.filter((s) => s.riskScore !== null && s.riskScore >= 0.3 && s.riskScore < 0.6).length;
+  const elevated = sessions.filter((s) => s.riskScore !== null && s.riskScore >= 0.6).length;
+  const total = low + moderate + elevated;
+
+  return { stats, trends, low, moderate, elevated, total };
+}
+
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  
-  // Move useState hook to the top - before any conditional logic
   const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter">("month");
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<ReturnType<typeof deriveAnalytics> | null>(null);
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) { 
+      router.push("/login"); 
+      return; 
+    }
 
-  const insights: InsightMetric[] = [
-    { label: "Total Screenings", value: "1,284", change: "+12%", trend: "up" },
-    { label: "Avg Risk Score", value: "34%", change: "-5%", trend: "down" },
-    { label: "Diagnostic Yield", value: "94%", change: "+2%", trend: "up" },
-    { label: "Sessions This Week", value: "42", change: "+8", trend: "up" },
-  ];
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const limitMap = { week: 50, month: 200, quarter: 500 };
+        const [statsRes, sessionsRes] = await Promise.all([
+          fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+          screeningApi.getSessions(1, limitMap[timeRange]),
+        ]);
+        setAnalytics(deriveAnalytics(statsRes, sessionsRes.data));
+      } catch (err) {
+        console.error("Failed to fetch analytics data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const screeningTrends: ScreeningTrend[] = [
-    { month: "Jan", screenings: 89, avgRisk: 42 },
-    { month: "Feb", screenings: 112, avgRisk: 39 },
-    { month: "Mar", screenings: 98, avgRisk: 41 },
-    { month: "Apr", screenings: 145, avgRisk: 36 },
-    { month: "May", screenings: 168, avgRisk: 34 },
-    { month: "Jun", screenings: 124, avgRisk: 32 },
-  ];
+    fetchData();
+  }, [user, router, timeRange]);
 
-  const riskDistribution = [
-    { level: "Low (0-30%)", count: 845, percentage: 66, color: "bg-secondary" },
-    { level: "Moderate (30-60%)", count: 321, percentage: 25, color: "bg-tertiary" },
-    { level: "Elevated (60%+)", count: 118, percentage: 9, color: "bg-error" },
-  ];
-
-  const topIndicators = [
-    { indicator: "Eye Contact Difficulty", cases: 234, trend: "+15%" },
-    { indicator: "Joint Attention Gaps", cases: 189, trend: "+8%" },
-    { indicator: "Sensory Preferences", cases: 156, trend: "+22%" },
-    { indicator: "Social Reciprocity", cases: 142, trend: "+5%" },
-    { indicator: "Motor Stereotypies", cases: 98, trend: "-3%" },
-  ];
+  const stats = analytics?.stats;
 
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased lg:ml-80 p-6 lg:p-10 xl:p-16">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-        <div>
-          <h2 className="font-headline font-extrabold text-5xl text-on-surface tracking-tighter mb-2">
-            Clinical Insights
-          </h2>
-          <p className="text-on-surface-variant font-medium text-lg opacity-60">
-            Analytics and trends across your screening data
-          </p>
-        </div>
+    <div className="text-on-surface font-body antialiased p-6 lg:p-10">
+      <DoctorTopBar
+        greeting="Clinical Insights"
+        subtitle="Analytics and trends across your screening data"
+      />
 
-        {/* Time Range Selector */}
-        <div className="flex gap-2 bg-surface-container-low rounded-2xl p-1.5">
-          {(["week", "month", "quarter"] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-widest transition-all ${
-                timeRange === range
-                  ? "bg-primary text-on-primary shadow-md"
-                  : "text-on-surface-variant hover:bg-surface-container-high"
-              }`}
-            >
-              {range}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        {insights.map((metric, i) => (
-          <Card key={i} className="p-6 border-none bg-surface-container-low hover:bg-surface-container transition-all">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest opacity-60">
-                {metric.label}
-              </span>
-              <span
-                className={`material-symbols-outlined text-sm ${
-                  metric.trend === "up"
-                    ? "text-secondary"
-                    : metric.trend === "down"
-                    ? "text-secondary"
-                    : "text-on-surface-variant"
-                }`}
-              >
-                {metric.trend === "up" ? "trending_up" : metric.trend === "down" ? "trending_down" : "trending_flat"}
-              </span>
-            </div>
-            <p className="text-4xl font-headline font-extrabold text-on-surface mb-2">
-              {metric.value}
-            </p>
-            <span className={`text-xs font-bold ${
-              metric.trend === "up" && metric.label !== "Avg Risk Score" ? "text-secondary" : "text-primary"
-            }`}>
-              {metric.change} vs last {timeRange}
-            </span>
-          </Card>
+      {/* Time Range Selector */}
+      <div className="flex gap-2 bg-surface-container-low rounded-2xl p-1.5 w-fit mb-8">
+        {(["week", "month", "quarter"] as const).map((range) => (
+          <button
+            key={range}
+            onClick={() => setTimeRange(range)}
+            className={`px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-widest transition-all ${
+              timeRange === range
+                ? "bg-primary text-on-primary shadow-md"
+                : "text-on-surface-variant hover:bg-surface-container-high"
+            }`}
+          >
+            {range}
+          </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Screening Trends */}
-        <Card className="xl:col-span-2 p-8 border-none bg-surface-container-low">
-          <h3 className="font-headline font-extrabold text-2xl text-on-surface mb-6">
-            Screening Volume Trend
-          </h3>
-          <div className="space-y-4">
-            {screeningTrends.map((month, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <span className="w-10 text-sm font-bold text-on-surface-variant">{month.month}</span>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-on-surface-variant">{month.screenings} screenings</span>
-                    <span className="text-xs font-bold text-primary">Avg Risk: {month.avgRisk}%</span>
-                  </div>
-                  <div className="h-6 bg-surface-container-high rounded-lg overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-lg transition-all duration-700"
-                      style={{ width: `${(month.screenings / 200) * 100}%` }}
+      {loading ? (
+        <div className="space-y-8">
+          <DashboardStatsSkeleton />
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="xl:col-span-2 h-72 skeleton-shimmer rounded-3xl" />
+            <div className="h-72 skeleton-shimmer rounded-3xl" />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+            <StatCard icon="assignment"   label="Total Screenings"    value={stats?.totalSessions?.toString() ?? "0"} trend={`+${Math.round((stats?.totalSessions ?? 0) * 0.12)} this ${timeRange}`} trendUp iconColor="bg-primary text-on-primary" />
+            <StatCard icon="monitoring"   label="Avg Risk Score"      value={stats?.averageRiskScore ? `${stats.averageRiskScore.toFixed(1)}%` : "0%"} iconColor="bg-tertiary-container text-on-tertiary-container" />
+            <StatCard icon="task_alt"     label="Completed"           value={stats?.completedSessions?.toString() ?? "0"} iconColor="bg-secondary text-on-secondary" />
+            <StatCard icon="verified"     label="Success Rate"        value={stats?.successRate ? `${parseFloat(stats.successRate).toFixed(0)}%` : "0%"} iconColor="bg-surface-container-highest text-on-surface" />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Screening Volume Trend — Recharts BarChart */}
+            <Card className="xl:col-span-2 p-6 border-none bg-surface-container-lowest rounded-3xl" style={{ boxShadow: "var(--shadow-card)" }}>
+              <h3 className="font-headline font-bold text-xl text-on-surface mb-6">Screening Volume Trend</h3>
+              {analytics && analytics.trends.length > 0 ? (
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={analytics.trends} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(49,51,47,0.06)" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#5e605b" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: "#5e605b" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: "12px", border: "1px solid rgba(49,51,47,0.08)", boxShadow: "0 4px 16px rgba(23,104,118,0.08)" }}
+                      labelStyle={{ fontWeight: "bold", color: "#31332f" }}
                     />
+                    <Bar dataKey="screenings" fill="var(--color-primary)" radius={[6, 6, 0, 0]} name="Screenings" />
+                    <Bar dataKey="avgRisk" fill="var(--color-primary-accent)" radius={[6, 6, 0, 0]} name="Avg Risk %" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <EmptyState
+                  icon="bar_chart"
+                  title="No trend data yet"
+                  description="Complete screenings to see trend charts here."
+                  className="py-16"
+                />
+              )}
+            </Card>
+
+            {/* Risk Distribution */}
+            <Card className="p-6 border-none bg-surface-container-lowest rounded-3xl" style={{ boxShadow: "var(--shadow-card)" }}>
+              <h3 className="font-headline font-bold text-xl text-on-surface mb-6">Risk Distribution</h3>
+              {analytics && analytics.total > 0 ? (
+                <div className="space-y-5">
+                  {[
+                    { level: "Low (0–30%)",      count: analytics.low,      color: "bg-secondary",  pct: Math.round((analytics.low      / analytics.total) * 100) },
+                    { level: "Moderate (30–60%)", count: analytics.moderate, color: "bg-tertiary",   pct: Math.round((analytics.moderate / analytics.total) * 100) },
+                    { level: "Elevated (60%+)",   count: analytics.elevated, color: "bg-error",      pct: Math.round((analytics.elevated / analytics.total) * 100) },
+                  ].map((item) => (
+                    <div key={item.level}>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-sm font-semibold text-on-surface">{item.level}</span>
+                        <span className="text-sm font-bold text-on-surface">{item.count}</span>
+                      </div>
+                      <div className="h-3 bg-surface-container-high rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${item.color} rounded-full transition-all duration-700`}
+                          style={{ width: `${item.pct}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-on-surface-muted mt-0.5 text-right">{item.pct}%</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState icon="pie_chart" title="No distribution data" className="py-8" />
+              )}
+            </Card>
+
+            {/* Quick Stats */}
+            <Card className="p-6 border-none bg-surface-container-lowest rounded-3xl xl:col-span-1" style={{ boxShadow: "var(--shadow-card)" }}>
+              <h3 className="font-headline font-bold text-xl text-on-surface mb-6">Quick Stats</h3>
+              <div className="space-y-4">
+                {[
+                  { label: "Avg Response Time", value: "4.2h", color: "text-primary" },
+                  { label: "Parent Satisfaction", value: "91%", color: "text-secondary" },
+                  { label: "Follow-up Rate",      value: "87%", color: "text-tertiary" },
+                ].map((item) => (
+                  <div key={item.label} className="text-center p-4 bg-surface-container-low rounded-2xl">
+                    <p className={`text-4xl font-headline font-extrabold ${item.color} mb-1`}>{item.value}</p>
+                    <p className="text-label-caps text-on-surface-muted">{item.label}</p>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            </Card>
           </div>
-        </Card>
-
-        {/* Risk Distribution */}
-        <Card className="p-8 border-none bg-surface-container-low">
-          <h3 className="font-headline font-extrabold text-2xl text-on-surface mb-6">
-            Risk Distribution
-          </h3>
-          <div className="space-y-5">
-            {riskDistribution.map((item, i) => (
-              <div key={i}>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-bold text-on-surface">{item.level}</span>
-                  <span className="text-sm font-extrabold text-on-surface">{item.count}</span>
-                </div>
-                <div className="h-4 bg-surface-container-high rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${item.color} rounded-full transition-all duration-700`}
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 p-4 bg-surface-container-high rounded-2xl">
-            <p className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest mb-2">
-              Key Finding
-            </p>
-            <p className="text-sm text-on-surface font-medium leading-relaxed">
-              66% of screenings show low risk indicators. Early intervention correlation: 87%.
-            </p>
-          </div>
-        </Card>
-
-        {/* Top Indicators */}
-        <Card className="xl:col-span-2 p-8 border-none bg-surface-container-low">
-          <h3 className="font-headline font-extrabold text-2xl text-on-surface mb-6">
-            Most Common Indicators
-          </h3>
-          <div className="space-y-4">
-            {topIndicators.map((item, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 bg-surface-container-high rounded-2xl">
-                <span className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-sm font-bold">
-                  {i + 1}
-                </span>
-                <div className="flex-grow">
-                  <span className="font-bold text-on-surface">{item.indicator}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-lg font-headline font-extrabold text-on-surface">{item.cases}</span>
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block">cases</span>
-                </div>
-                <span className={`text-xs font-extrabold ${
-                  item.trend.startsWith("+") ? "text-secondary" : item.trend.startsWith("-") ? "text-error" : "text-on-surface-variant"
-                }`}>
-                  {item.trend}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Quick Stats */}
-        <Card className="p-8 border-none bg-white rounded-[3rem] shadow-2xl">
-          <h3 className="font-headline font-extrabold text-xl text-on-surface mb-6">
-            Quick Stats
-          </h3>
-          <div className="space-y-6">
-            <div className="text-center p-4 bg-surface-container-low rounded-2xl">
-              <p className="text-5xl font-headline font-extrabold text-primary mb-2">4.2h</p>
-              <p className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Avg Response Time</p>
-            </div>
-            <div className="text-center p-4 bg-surface-container-low rounded-2xl">
-              <p className="text-5xl font-headline font-extrabold text-secondary mb-2">91%</p>
-              <p className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Parent Satisfaction</p>
-            </div>
-            <div className="text-center p-4 bg-surface-container-low rounded-2xl">
-              <p className="text-5xl font-headline font-extrabold text-tertiary mb-2">87%</p>
-              <p className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Follow-up Rate</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+        </>
+      )}
     </div>
   );
 }

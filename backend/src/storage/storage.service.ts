@@ -22,7 +22,7 @@ export class StorageService {
   private readonly forcePathStyle: boolean;
 
   constructor(private config: AppConfigService) {
-    const storageConfig = config.storage || {
+    const storageConfig = {
       bucket: process.env.S3_BUCKET || 'autisense-reports',
       region: process.env.AWS_REGION || 'us-east-1',
       endpoint: process.env.S3_ENDPOINT,

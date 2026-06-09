@@ -1,52 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card } from "@/components/ui/StitchUI";
 import Image from "next/image";
-import { Navbar, Footer } from "@/components/layout/Navigation";
-
-interface Child {
-  id: string;
-  name: string;
-  age: string;
-  lastSession: string;
-  status: "Active" | "Pending" | "Archived";
-}
-
-const mockChildren: Child[] = [
-  {
-    id: "CH-001",
-    name: "Aarav Sharma",
-    age: "4 years 3 months",
-    lastSession: "May 28, 2026",
-    status: "Active",
-  },
-  {
-    id: "CH-002",
-    name: "Mira Sharma",
-    age: "2 years 8 months",
-    lastSession: "May 15, 2026",
-    status: "Active",
-  },
-];
+import { screeningApi, ChildProfile } from "@/services/api/screeningApi";
 
 export default function ChildrenPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [children] = useState<Child[]>(mockChildren);
+  const [children, setChildren] = useState<ChildProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchChildren = async () => {
+      try {
+        const data = await screeningApi.getChildren();
+        setChildren(data);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load children profiles";
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChildren();
+  }, [user, router]);
+
+  if (!user) return null;
+
+  const calculateAge = (dob: string) => {
+    const birth = new Date(dob);
+    const today = new Date();
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    return `${years}y ${months}m`;
+  };
 
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col">
-      <Navbar />
-
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
@@ -59,7 +63,7 @@ export default function ChildrenPage() {
           </div>
           <Button
             variant="primary"
-            onClick={() => router.push("/screening")}
+            onClick={() => router.push("/dashboard/parent/children/add")}
             className="px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg"
           >
             <span className="material-symbols-outlined mr-2">add</span>
@@ -68,13 +72,23 @@ export default function ChildrenPage() {
         </div>
 
         {/* Children Grid */}
-        {children.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
+            <p className="text-on-surface-variant text-sm font-medium animate-pulse">Loading profiles...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-error/10 border border-error/20 text-error p-6 rounded-2xl text-center">
+            <p className="font-bold">{error}</p>
+            <Button variant="secondary" onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+          </div>
+        ) : children.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {children.map((child) => (
               <Card
                 key={child.id}
                 className="p-8 border border-outline-variant/10 bg-surface-container-low hover:shadow-2xl transition-all duration-500 group cursor-pointer"
-                onClick={() => router.push(`/results`)}
+                onClick={() => router.push(`/dashboard/parent/history?childId=${child.id}`)}
               >
                 <div className="flex items-start gap-6">
                   <div className="w-20 h-20 rounded-full bg-primary-container flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
@@ -88,28 +102,22 @@ export default function ChildrenPage() {
                         {child.name}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
-                          child.status === "Active"
-                            ? "bg-secondary-container text-on-secondary-container"
-                            : child.status === "Pending"
-                            ? "bg-tertiary-container text-on-tertiary-container"
-                            : "bg-surface-container-high text-on-surface-variant"
-                        }`}
+                        className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-secondary-container text-on-secondary-container`}
                       >
-                        {child.status}
+                        Active
                       </span>
                     </div>
                     <div className="space-y-1 text-sm text-on-surface-variant">
                       <p className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-sm">cake</span>
-                        {child.age}
+                        {calculateAge(child.dateOfBirth)}
                       </p>
                       <p className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-sm">schedule</span>
-                        Last session: {child.lastSession}
+                        Added: {new Date(child.createdAt).toLocaleDateString()}
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm">badge</span>
+                      <p className="flex items-center gap-2 text-[10px] opacity-40">
+                        <span className="material-symbols-outlined text-[10px]">badge</span>
                         {child.id}
                       </p>
                     </div>
@@ -120,7 +128,7 @@ export default function ChildrenPage() {
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push("/screening");
+                      router.push(`/screening?childId=${child.id}`);
                     }}
                     className="flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-widest"
                   >
@@ -130,7 +138,7 @@ export default function ChildrenPage() {
                     variant="primary"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push("/results");
+                      router.push(`/dashboard/parent/history?childId=${child.id}`);
                     }}
                     className="flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-widest"
                   >
@@ -163,9 +171,6 @@ export default function ChildrenPage() {
             </Button>
           </div>
         )}
-      </main>
-
-      <Footer />
     </div>
   );
 }

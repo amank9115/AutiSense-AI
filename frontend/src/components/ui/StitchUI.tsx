@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ChevronRight } from "lucide-react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "tertiary" | "ghost" | "outline";
@@ -41,13 +42,15 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string; onClick?: () => void }> = ({
+export const Card: React.FC<{ children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void }> = ({
   children,
   className = "",
+  style,
   onClick,
 }) => (
   <div
     className={`bg-surface-container-lowest rounded-lg p-6 md:p-8 login-card border-none ${className}`}
+    style={style}
     onClick={onClick}
     role={onClick ? "button" : undefined}
     tabIndex={onClick ? 0 : undefined}
@@ -70,8 +73,148 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { lab
     )}
     <input
       id={id}
-      className={`w-full px-6 py-4 rounded-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-bright font-headline transition-all outline-none ${className}`}
+      className={`w-full px-6 py-4 rounded-full bg-surface-container-highest border-none focus:ring-2 focus:ring-primary/20 focus:bg-surface-bright font-headline transition-all focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none outline-none ${className}`}
       {...props}
     />
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────
+// Skeleton — shimmer loading placeholder
+// ─────────────────────────────────────────────────────────
+
+interface SkeletonProps {
+  variant?: "line" | "circle" | "card";
+  className?: string;
+  width?: string;
+  height?: string;
+}
+
+export const Skeleton: React.FC<SkeletonProps> = ({
+  variant = "line",
+  className = "",
+  width,
+  height,
+}) => {
+  const base = "skeleton-shimmer rounded-full";
+  const variants = {
+    line: "h-4 rounded-full",
+    circle: "rounded-full aspect-square",
+    card: "rounded-2xl",
+  };
+
+  return (
+    <div
+      className={`${base} ${variants[variant]} ${className}`}
+      style={{ width, height }}
+      aria-hidden="true"
+    />
+  );
+};
+
+// ─────────────────────────────────────────────────────────
+// Badge — status pill
+// ─────────────────────────────────────────────────────────
+
+interface BadgeProps {
+  variant?: "default" | "success" | "warning" | "destructive" | "neutral";
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const Badge: React.FC<BadgeProps> = ({
+  variant = "default",
+  children,
+  className = "",
+}) => {
+  const variants = {
+    default: "bg-primary-container text-on-primary-container",
+    success: "bg-success-container text-success-dim",
+    warning: "bg-tertiary-container text-on-tertiary-container",
+    destructive: "bg-error-container/20 text-error",
+    neutral: "bg-surface-container-high text-on-surface-variant",
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold font-label ${variants[variant]} ${className}`}
+    >
+      {children}
+    </span>
+  );
+};
+
+// ─────────────────────────────────────────────────────────
+// EmptyState — consistent empty/zero-data placeholder
+// ─────────────────────────────────────────────────────────
+
+interface EmptyStateProps {
+  icon?: string;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  className?: string;
+}
+
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon = "inbox",
+  title,
+  description,
+  action,
+  className = "",
+}) => (
+  <div className={`flex flex-col items-center justify-center gap-3 py-12 px-6 text-center ${className}`}>
+    <span className="material-symbols-outlined text-5xl text-on-surface-muted">{icon}</span>
+    <p className="font-headline font-semibold text-on-surface">{title}</p>
+    {description && (
+      <p className="text-sm text-on-surface-muted max-w-xs">{description}</p>
+    )}
+    {action && <div className="mt-2">{action}</div>}
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────
+// PageHeader — consistent dashboard page title block
+// ─────────────────────────────────────────────────────────
+
+interface PageHeaderProps {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  breadcrumbs?: { label: string; href?: string }[];
+  className?: string;
+}
+
+export const PageHeader: React.FC<PageHeaderProps> = ({
+  title,
+  description,
+  action,
+  breadcrumbs,
+  className = "",
+}) => (
+  <div className={`flex flex-col gap-1 ${className}`}>
+    {breadcrumbs && breadcrumbs.length > 0 && (
+      <nav aria-label="breadcrumb" className="flex items-center gap-1 text-xs text-on-surface-muted mb-1">
+        {breadcrumbs.map((crumb, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <ChevronRight className="w-3 h-3" />}
+            {crumb.href ? (
+              <a href={crumb.href} className="hover:text-on-surface transition-colors">{crumb.label}</a>
+            ) : (
+              <span aria-current={i === breadcrumbs.length - 1 ? "page" : undefined}>{crumb.label}</span>
+            )}
+          </React.Fragment>
+        ))}
+      </nav>
+    )}
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h1 className="font-headline font-bold text-2xl text-on-surface">{title}</h1>
+        {description && (
+          <p className="text-sm text-on-surface-muted mt-0.5">{description}</p>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
   </div>
 );

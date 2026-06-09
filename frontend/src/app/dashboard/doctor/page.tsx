@@ -3,218 +3,226 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Button, Card, Input } from "@/components/ui/StitchUI";
-import Image from "next/image";
+import { Button, Card, EmptyState } from "@/components/ui/StitchUI";
+import { DashboardStatsSkeleton, PatientListSkeleton } from "@/components/ui/SkeletonLoader";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { DoctorTopBar } from "@/components/layout/DoctorTopBar";
+import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
+import { fetchJson } from "@/api/client";
 
-const StatCard = ({ icon, label, value, trend, color }: { icon: string, label: string, value: string, trend: string, color: string }) => (
-  <Card className="p-8 border-none bg-surface-container-low hover:bg-surface-container transition-all duration-500 shadow-xl group overflow-hidden relative">
-    <div className="relative z-10">
-      <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center mb-6 shadow-lg transform group-hover:scale-110 transition-transform duration-500`}>
-        <span className="material-symbols-outlined text-3xl">{icon}</span>
+const PatientRow = ({
+  name, id, age, status, date, sessionId,
+}: {
+  name: string; id: string; age: string; status: string; date: string; sessionId: string;
+}) => {
+  const router = useRouter();
+  return (
+    <div
+      onClick={() => router.push(`/results?sessionId=${sessionId}`)}
+      className="flex items-center justify-between p-4 hover:bg-surface-container-low transition-all rounded-2xl cursor-pointer group border border-transparent hover:border-outline-variant/10"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary group-hover:scale-105 transition-transform shrink-0">
+          <span className="material-symbols-outlined text-lg">child_care</span>
+        </div>
+        <div>
+          <h4 className="font-headline font-bold text-on-surface group-hover:text-primary transition-colors text-sm">{name}</h4>
+          <div className="flex items-center gap-2 text-xs text-on-surface-muted">
+            <span>{id}</span>
+            <span className="w-1 h-1 rounded-full bg-outline-variant" />
+            <span>{age}</span>
+          </div>
+        </div>
       </div>
-      <p className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest opacity-60 mb-2">{label}</p>
-      <div className="flex items-baseline gap-3">
-        <h3 className="text-4xl font-headline font-extrabold text-on-surface tracking-tighter">{value}</h3>
-        <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">{trend}</span>
-      </div>
-    </div>
-    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 blur-3xl"></div>
-  </Card>
-);
-
-const PatientRow = ({ name, id, age, status, date, img }: { name: string, id: string, age: string, status: string, date: string, img: string }) => (
-  <div className="flex items-center justify-between p-6 hover:bg-surface-container-highest/30 transition-all rounded-2xl cursor-pointer group border border-transparent hover:border-outline-variant/10">
-    <div className="flex items-center gap-6">
-      <div className="w-14 h-14 rounded-full relative overflow-hidden shadow-md border-2 border-white group-hover:scale-105 transition-transform">
-        <Image src={img} alt={name} fill className="object-cover" />
-      </div>
-      <div>
-        <h4 className="font-headline font-extrabold text-on-surface text-lg group-hover:text-primary transition-colors">{name}</h4>
-        <div className="flex items-center gap-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">
-          <span>{id}</span>
-          <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
-          <span>{age}</span>
+      <div className="flex items-center gap-6">
+        <div className="text-right hidden sm:block">
+          <p className="text-label-caps text-primary">{status}</p>
+          <p className="text-xs text-on-surface-muted">{date}</p>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary transition-all">
+          <span className="material-symbols-outlined text-base">chevron_right</span>
         </div>
       </div>
     </div>
-    <div className="flex items-center gap-10">
-      <div className="text-right hidden md:block">
-        <p className="text-[10px] font-extrabold text-primary uppercase tracking-widest mb-1">{status}</p>
-        <p className="text-xs font-bold text-on-surface-variant opacity-60">{date}</p>
-      </div>
-      <button className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm">
-        <span className="material-symbols-outlined text-xl">chevron_right</span>
-      </button>
-    </div>
-  </div>
-);
+  );
+};
+
+interface DashboardStats {
+  totalSessions: number;
+  completedSessions: number;
+  averageRiskScore: number;
+  successRate: string;
+}
 
 export default function DoctorDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
+  const [sessions, setSessions] = useState<ScreeningSession[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-    }
+    if (!user) { router.push("/login"); return; }
+
+    const fetchData = async () => {
+      try {
+        const [sessionsRes, statsRes] = await Promise.all([
+          screeningApi.getSessions(1, 5),
+          fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+        ]);
+        setSessions(sessionsRes.data);
+        setStats(statsRes);
+      } catch (err) {
+        console.error("Failed to fetch doctor dashboard data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, [user, router]);
 
-  if (!user) {
-    return (
-      <div className="bg-surface min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-          <p className="text-on-surface-variant text-sm font-medium animate-pulse">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Morning";
-    if (hour < 17) return "Afternoon";
-    return "Evening";
+  const calculateAge = (dob: string) => {
+    const birth = new Date(dob);
+    const today = new Date();
+    let years = today.getFullYear() - birth.getFullYear();
+    let months = today.getMonth() - birth.getMonth();
+    if (months < 0) { years--; months += 12; }
+    return `${years}y ${months}m`;
   };
 
+  const hasPendingSessions = sessions.some((s) => s.status === "pending");
+
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex">
-      {/* Sidebar */}
-      <aside className="w-80 h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 p-8 flex flex-col z-50 hidden lg:flex">
-        <div className="mb-12 px-2">
-          <h1 className="font-headline font-bold text-primary text-2xl tracking-tight leading-none mb-1">MannSaathi</h1>
-          <p className="text-[10px] font-extrabold text-primary uppercase tracking-[0.3em] opacity-40">Provider Portal</p>
-        </div>
+    <div className="p-6 lg:p-10 text-on-surface font-body antialiased">
+      <DoctorTopBar subtitle="You have pending screenings requiring your review." />
 
-        <nav className="flex-1 space-y-2">
-          {[
-            { icon: "dashboard", label: "Overview", active: true, href: "/dashboard/doctor" },
-            { icon: "group", label: "Patient List", href: "/dashboard/doctor/patients" },
-            { icon: "calendar_month", label: "Appointments", href: "/dashboard/doctor/appointments" },
-            { icon: "analytics", label: "Clinical Insights", href: "/dashboard/doctor/analytics" },
-            { icon: "folder_shared", label: "Archive", href: "/dashboard/doctor/archive" },
-          ].map((item, i) => (
-            <button
-              key={i}
-              onClick={() => item.href ? router.push(item.href) : null}
-              disabled={!item.href}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${item.active ? "bg-primary text-on-primary shadow-2xl shadow-primary/20 font-bold" : !item.href ? "text-on-surface-variant/40 cursor-not-allowed" : "text-on-surface-variant hover:bg-surface-container-high"}`}
-              title={!item.href ? "Coming soon" : undefined}
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span className="font-extrabold text-[10px] uppercase tracking-widest">{item.label}</span>
-              {!item.href && <span className="ml-auto text-[8px] font-bold uppercase tracking-widest text-on-surface-variant/30 bg-surface-container-highest px-2 py-0.5 rounded-full">Soon</span>}
-            </button>
-          ))}
-        </nav>
-
-        <div className="mt-auto pt-8 border-t border-outline-variant/10 space-y-4">
-          <button
-            onClick={() => router.push("/dashboard/doctor/profile")}
-            className="w-full bg-surface-container p-4 rounded-3xl flex items-center gap-4 shadow-inner hover:bg-surface-container-high transition-all"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-on-primary font-bold text-lg shadow-lg">
-              {user.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-extrabold text-on-surface truncate">{user.name}</p>
-              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-60">Healthcare Provider</p>
-            </div>
-          </button>
-          <button
-            onClick={() => { logout(); router.push('/'); }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-error/20 bg-error/5 text-error text-xs font-bold uppercase tracking-widest hover:bg-error/10 transition-all"
-          >
-            <span className="material-symbols-outlined text-sm">logout</span>
-            Sign Out
-          </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 lg:ml-80 p-6 lg:p-10 xl:p-16">
-        <header className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-          <div>
-            <h2 className="font-headline font-extrabold text-5xl text-on-surface tracking-tighter mb-2">{getGreeting()}, {user.name?.split(' ')[0]}.</h2>
-            <p className="text-on-surface-variant font-medium text-lg opacity-60">You have 4 screenings pending review today.</p>
-          </div>
-          <div className="flex gap-4">
-            <div className="relative">
-              <Input className="w-72 pl-12 bg-surface-container-low border-none rounded-full shadow-inner" placeholder="Search patients..." />
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-            </div>
-            <button onClick={() => alert("You have 4 pending screenings requiring your review.")} className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant shadow-sm border border-outline-variant/5 hover:bg-surface-container-high transition-colors cursor-pointer relative" title="Notifications">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-1 right-1 w-3 h-3 bg-error rounded-full border-2 border-surface"></span>
-            </button>
-          </div>
-        </header>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 mb-16">
-          <StatCard icon="assignment" label="Total Screenings" value="1,284" trend="+12% this month" color="bg-primary text-on-primary" />
-          <StatCard icon="pending_actions" label="Pending Review" value="4" trend="Action required" color="bg-secondary text-on-secondary" />
-          <StatCard icon="verified" label="Diagnostic Yield" value="94%" trend="Clinical high" color="bg-tertiary-container text-on-tertiary-container" />
-          <StatCard icon="schedule" label="Avg. Response" value="4.2h" trend="-15% latency" color="bg-surface-container-highest text-on-surface" />
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
-          {/* Recent Patients */}
-          <Card className="xl:col-span-2 p-10 border-none bg-white rounded-[3rem] shadow-2xl">
-            <div className="flex items-center justify-between mb-10">
-              <h3 className="font-headline font-extrabold text-3xl text-primary tracking-tight">Recent Activity</h3>
-              <button
-              onClick={() => router.push("/dashboard/doctor/patients")}
-              className="text-[10px] font-extrabold text-secondary uppercase tracking-[0.2em] hover:underline"
-            >
-              View All Patients
-            </button>
+      {loading ? (
+        <div className="space-y-8">
+          <DashboardStatsSkeleton />
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="xl:col-span-2 bg-surface-container-lowest rounded-3xl p-8 space-y-4" style={{ boxShadow: "var(--shadow-card)" }}>
+              <div className="h-6 w-36 skeleton-shimmer rounded-full" />
+              <PatientListSkeleton rows={5} />
             </div>
             <div className="space-y-4">
-              <PatientRow name="Leo Harrington" id="PID-8291" age="4y 2m" status="Report Generated" date="Oct 24, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuC4hA10WbTxc8TNA9o1o7cke0TvhBXlZtjUF31PmM8oEswZND8L8mm8Hm4mnbgBk5p0CZrO3Zm03fez2ChRd-gLjNrN8OKyL8HJQsroHnTqkKj5H9GJ-iHXWcLrxHEaRyFiSzEb2bWia5qdUunacS6Dwhuw_LeqPSwXtAHyWLF5-_A5uUrd9Ffsrq_pWT_SjUfRHgG65LfbdmqUgcjEOxi6EG1vM3n7ycosgyD2Dm41Vf3Jd0W4neKTdPBo3_EPorSsUSf7XIrMKYI" />
-              <PatientRow name="Maya Sterling" id="PID-7734" age="3y 8m" status="Pending Analysis" date="Oct 23, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJEdQeHDL-E7ePoYImpgB1mJrH1zyYce9iLrcCsy15qCyGmsfFrOSlulTr2XVEcWGz0kwtRFFrHCwPw1jcZPRLTlSzM8l26DAOJ2Ssx6ovP4k0wBvjNlryGeMwqdbRJpvP5IzlWRH2nr9athKecMvgDQiRl7BorHxZGRklr_TibkN4SvHLFl6_cEVm25FDEY7j6-JXjtust5fiTKfca0VDsa7S4dJi6enzwOG35Edkp0L17dHb1kCuxinOMrxV2Ev1pgw-TTPhOc" />
-              <PatientRow name="Ethan Brooks" id="PID-9012" age="5y 1m" status="In Progress" date="Oct 23, 2023" img="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJEdQeHDL-E7ePoYImpgB1mJrH1zyYce9iLrcCsy15qCyGmsfFrOSlulTr2XVEcWGz0kwtRFFrHCwPw1jcZPRLTlSzM8l26DAOJ2Ssx6ovP4k0wBvjNlryGeMwqdbRJpvP5IzlWRH2nr9athKecMvgDQiRl7BorHxZGRklr_TibkN4SvHLFl6_cEVm25FDEY7j6-JXjtust5fiTKfca0VDsa7S4dJi6enzwOG35Edkp0L17dHb1kCuxinOMrxV2Ev1pgw-TTPhOc" />
-            </div>
-          </Card>
-
-          {/* Clinical Alerts */}
-          <div className="space-y-12">
-            <Card className="p-10 border-none bg-primary text-on-primary rounded-[3rem] shadow-2xl relative overflow-hidden">
-              <div className="relative z-10">
-                <span className="material-symbols-outlined text-white/50 text-4xl mb-6">warning_amber</span>
-                <h4 className="font-headline font-bold text-2xl mb-4 tracking-tight leading-snug">Symptom Cluster Detected</h4>
-                <p className="text-white/80 font-medium leading-relaxed mb-8">System detected a high-frequency hand-flapping cluster in 3 new screenings this morning.</p>
-                <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard/doctor/patients")}
-                className="w-full bg-white/10 border-white/20 text-white font-extrabold py-4 rounded-2xl hover:bg-white/20 uppercase tracking-widest text-[10px]"
-              >
-                Review Cluster
-              </Button>
-              </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-            </Card>
-
-            <div className="bg-surface-container-low rounded-[3rem] p-10 border border-outline-variant/10 shadow-sm relative overflow-hidden">
-              <h4 className="font-headline font-extrabold text-xl text-primary mb-6 tracking-tight">Clinical Roadmap</h4>
-              <div className="space-y-6">
-                {[
-                  { label: "Quarterly Audit", date: "Oct 30", status: "Upcoming" },
-                  { label: "Staff Training", date: "Nov 02", status: "Mandatory" },
-                  { label: "Policy Update", date: "Nov 15", status: "Review" }
-                ].map((item, i) => (
-                  <div key={i} className="flex justify-between items-center group cursor-pointer">
-                    <div>
-                      <p className="font-bold text-on-surface group-hover:text-primary transition-colors text-sm">{item.label}</p>
-                      <p className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">{item.date}</p>
-                    </div>
-                    <span className="px-3 py-1 rounded-full bg-surface-container-highest text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant opacity-60 group-hover:opacity-100 transition-opacity">{item.status}</span>
-                  </div>
-                ))}
-              </div>
+              <div className="h-48 skeleton-shimmer rounded-3xl" />
+              <div className="h-48 skeleton-shimmer rounded-3xl" />
             </div>
           </div>
         </div>
-      </main>
+      ) : (
+        <>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+            <StatCard icon="assignment"      label="Total Screenings" value={stats?.totalSessions?.toString() ?? "0"}                             iconColor="bg-primary text-on-primary" />
+            <StatCard icon="pending_actions" label="Completed"        value={stats?.completedSessions?.toString() ?? "0"}                         iconColor="bg-secondary text-on-secondary" />
+            <StatCard icon="verified"        label="Avg Risk"         value={stats?.averageRiskScore ? `${stats.averageRiskScore.toFixed(1)}%` : "0%"} iconColor="bg-tertiary-container text-on-tertiary-container" />
+            <StatCard icon="schedule"        label="Success Rate"     value={stats?.successRate ? `${parseFloat(stats.successRate).toFixed(0)}%` : "0%"} iconColor="bg-surface-container-highest text-on-surface" />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Recent Patients */}
+            <Card className="xl:col-span-2 p-6 lg:p-8 border-none bg-surface-container-lowest rounded-3xl" style={{ boxShadow: "var(--shadow-card-raised)" }}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-headline font-bold text-xl text-on-surface">Recent Activity</h3>
+                <button
+                  onClick={() => router.push("/dashboard/doctor/patients")}
+                  className="text-xs font-bold text-primary hover:underline uppercase tracking-widest"
+                >
+                  View All
+                </button>
+              </div>
+              <div className="space-y-1">
+                {sessions.length > 0 ? (
+                  sessions.map((session) => (
+                    <PatientRow
+                      key={session.id}
+                      name={session.child?.name ?? "Unknown"}
+                      id={session.id.slice(0, 8)}
+                      age={session.child?.dateOfBirth ? calculateAge(session.child.dateOfBirth) : "N/A"}
+                      status={session.status}
+                      date={new Date(session.createdAt).toLocaleDateString()}
+                      sessionId={session.id}
+                    />
+                  ))
+                ) : (
+                  <EmptyState
+                    icon="person_search"
+                    title="No recent activity"
+                    description="Screening sessions will appear here once patients complete assessments."
+                    action={
+                      <button
+                        onClick={() => router.push("/dashboard/doctor/patients")}
+                        className="text-xs font-bold text-primary hover:underline"
+                      >
+                        View all patients
+                      </button>
+                    }
+                  />
+                )}
+              </div>
+            </Card>
+
+            {/* Alerts + Roadmap */}
+            <div className="space-y-6">
+              {/* Clinical Alert — conditional on real data */}
+              {hasPendingSessions ? (
+                <Card className="p-6 border-none bg-primary text-on-primary rounded-3xl relative overflow-hidden" style={{ boxShadow: "var(--shadow-card-raised)" }}>
+                  <div className="relative z-10">
+                    <span className="material-symbols-outlined text-3xl text-white/60 mb-4 block">warning_amber</span>
+                    <h4 className="font-headline font-bold text-lg mb-2 tracking-tight">Pending Reviews</h4>
+                    <p className="text-white/80 text-sm leading-relaxed mb-6">
+                      {sessions.filter((s) => s.status === "pending").length} screening{sessions.filter((s) => s.status === "pending").length !== 1 ? "s" : ""} awaiting your clinical review.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/dashboard/doctor/patients")}
+                      className="w-full bg-white/10 border-white/20 text-white font-bold py-3 rounded-2xl hover:bg-white/20 text-xs uppercase tracking-widest"
+                    >
+                      Review Now
+                    </Button>
+                  </div>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl pointer-events-none" />
+                </Card>
+              ) : (
+                <div className="p-6 bg-success-container/20 border border-success/20 rounded-3xl">
+                  <EmptyState
+                    icon="check_circle"
+                    title="All clear"
+                    description="No pending reviews. Great work!"
+                    className="py-6"
+                  />
+                </div>
+              )}
+
+              {/* Clinical Roadmap */}
+              <div className="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/10" style={{ boxShadow: "var(--shadow-card)" }}>
+                <h4 className="font-headline font-bold text-base text-on-surface mb-4">
+                  Clinical Roadmap
+                  <span className="ml-2 text-[9px] font-bold bg-surface-container-highest text-on-surface-muted px-2 py-0.5 rounded-full uppercase tracking-wider align-middle">Demo</span>
+                </h4>
+                <div className="space-y-4">
+                  {[
+                    { label: "Quarterly Audit",  date: "Oct 30", status: "Upcoming" },
+                    { label: "Staff Training",   date: "Nov 02", status: "Mandatory" },
+                    { label: "Policy Update",    date: "Nov 15", status: "Review" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-on-surface text-sm">{item.label}</p>
+                        <p className="text-xs text-on-surface-muted">{item.date}</p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-surface-container text-xs font-bold text-on-surface-muted uppercase tracking-widest">
+                        {item.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore, MlResults } from "@/store";
 import { motion, AnimatePresence } from "framer-motion";
 import Webcam from "react-webcam";
 import { fetchJson } from "@/api/client";
+import { screeningApi } from "@/services/api/screeningApi";
 
 const MODULES = [
   { id: "calibration", title: "Calibration", duration: 5, icon: "center_focus_strong", parentHint: "Ensure your child is facing the camera clearly.", childPrompt: "Look at the camera!" },
@@ -17,7 +18,15 @@ const MODULES = [
 
 export default function ScreeningPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const childId = searchParams?.get("childId");
   const setMlResults = useAppStore((state) => state.setMlResults);
+
+  useEffect(() => {
+    if (!childId) {
+      router.push("/dashboard/parent/children");
+    }
+  }, [childId, router]);
   const token = useAppStore((state) => state.token);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(-1); // -1 = setup
@@ -106,8 +115,15 @@ export default function ScreeningPage() {
     if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
 
     try {
-      if (frames.length >= 3) {
-        // Call ML service for analysis
+      if (frames.length >= 3 && childId) {
+        // 1. Create session in backend
+        const session = await screeningApi.createSession(childId, {
+          moduleCount: MODULES.length,
+          frameCount: frames.length,
+          source: "web-camera"
+        });
+
+        // 2. Call ML service for analysis
         const mlResult = await fetchJson<{ riskScore?: number; riskLabel?: string; modelVersion?: string; featureAverages?: { eye_contact?: number; attention_span?: number; emotion_signals?: number }; recommendations?: string[] }>("/ml/camera-screening", {
           method: "POST",
           body: JSON.stringify({ frames }),
@@ -127,25 +143,21 @@ export default function ScreeningPage() {
           recommendations: mlResult.recommendations ?? [],
         };
 
-        // Persist to backend
+        // 3. Persist results to backend session
         try {
-          await fetchJson("/screening/save", {
-            method: "POST",
-            body: JSON.stringify({
-              source: "camera",
-              modelVersion: results.modelVersion,
-              riskScore: results.riskScore,
-              riskLabel: results.riskLabel,
-              summary: results.summary,
-              recommendations: results.recommendations,
-              metrics: frames.slice(-10),
-            }),
+          await screeningApi.saveResults(session.id, {
+            riskScore: results.riskScore,
+            riskLevel: results.riskLabel.toUpperCase(),
+            confidence: 0.9,
+            behaviors: results.summary as Record<string, unknown>,
+            recommendations: results.recommendations,
           });
-        } catch {
-          // Persist failed, but still show results
+        } catch (e) {
+          console.error("Failed to save screening results", e);
         }
 
         setMlResults(results);
+        setTimeout(() => router.push(`/results?sessionId=${session.id}`), 1500);
       } else {
         // Not enough frames, use fallback
         const fallbackResults: MlResults = {
@@ -156,6 +168,7 @@ export default function ScreeningPage() {
           recommendations: ["Not enough data was captured. Please try again."],
         };
         setMlResults(fallbackResults);
+        setTimeout(() => router.push("/results"), 1500);
       }
     } catch (err) {
       setProcessingError(err instanceof Error ? err.message : "Analysis failed.");
@@ -168,9 +181,9 @@ export default function ScreeningPage() {
         recommendations: ["Continue typical development monitoring."],
       };
       setMlResults(mockResults);
+      setTimeout(() => router.push("/results"), 1500);
     } finally {
       setIsProcessing(false);
-      setTimeout(() => router.push("/results"), 1500);
     }
   };
 

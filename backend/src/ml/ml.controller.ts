@@ -1,26 +1,15 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MlService } from './ml.service';
+import { CameraScreeningDto, LiveInferenceDto } from './dto';
 
 @Controller('ml')
 export class MlController {
   constructor(private readonly mlService: MlService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post('camera-screening')
-  async cameraScreening(
-    @Body()
-    body: {
-      frames: Array<{
-        eyeContact: number;
-        attentionSpan: number;
-        emotionSignals: number;
-        gestureAnalysis: number;
-        confidence: number;
-        imageBase64?: string;
-      }>;
-      userId?: string;
-      childInfo?: Record<string, string>;
-    },
-  ) {
+  async cameraScreening(@Body() body: CameraScreeningDto) {
     const sessionKey = `session-${Date.now()}`;
     const frames = body.frames.map((frame, index) => ({
       frame_index: index,
@@ -51,22 +40,9 @@ export class MlController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('live-inference')
-  async liveInference(
-    @Body()
-    body: {
-      sessionKey: string;
-      frame: {
-        eyeContact: number;
-        attentionSpan: number;
-        emotionSignals: number;
-        gestureAnalysis: number;
-        confidence: number;
-        frameIndex?: number;
-        imageBase64?: string;
-      };
-    },
-  ) {
+  async liveInference(@Body() body: LiveInferenceDto) {
     const frame = {
       frame_index: body.frame.frameIndex ?? 0,
       eye_contact: body.frame.eyeContact,

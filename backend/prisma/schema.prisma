@@ -18,6 +18,7 @@ enum Role {
   parent
   doctor
   clinician
+  super_admin
 }
 
 enum ScreeningStatus {
@@ -39,6 +40,21 @@ enum ReportFormat {
   pdf
   csv
   json
+}
+
+enum Plan {
+  free
+  starter
+  pro
+  enterprise
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  canceled
+  incomplete
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -66,6 +82,8 @@ model User {
   screeningSessions     ScreeningSession[]    @relation("UserScreeningSessions")
   chatSessions          ChatSession[]         @relation("UserChatSessions")
   refreshTokens          RefreshToken[]        @relation("UserRefreshTokens")
+  organizationMemberships OrganizationMember[] @relation("UserOrgMemberships")
+  ownedOrganizations     Organization[]        @relation("OrgOwner")
 
   @@index([email])
   @@index([role])
@@ -92,6 +110,7 @@ model RefreshToken {
 model Child {
   id                 String              @id @default(uuid())
   parentId           String
+  organizationId     String?
   name               String
   dateOfBirth        DateTime
   gender             String?
@@ -101,9 +120,11 @@ model Child {
 
   // Relations
   parent             User                @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  organization       Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   screeningSessions  ScreeningSession[]  @relation("ChildScreeningSessions")
 
   @@index([parentId])
+  @@index([organizationId])
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -114,20 +135,21 @@ model ScreeningSession {
   id                 String              @id @default(uuid())
   userId             String
   childId            String
+  organizationId     String?
   status             ScreeningStatus     @default(pending)
-  
+
   // Metadata
   duration           Int?                // in seconds
   frameCount         Int?                // total frames analyzed
-  
+
   // Results
   riskScore          Float?              // 0-100
   riskLevel          RiskLevel?
   summary            String?
-  
+
   // Additional data
   metadata           Json?               // Camera settings, quality metrics, etc.
-  
+
   startedAt          DateTime?
   completedAt        DateTime?
   createdAt          DateTime            @default(now())
@@ -136,12 +158,14 @@ model ScreeningSession {
   // Relations
   user               User                @relation("UserScreeningSessions", fields: [userId], references: [id], onDelete: Cascade)
   child              Child               @relation("ChildScreeningSessions", fields: [childId], references: [id], onDelete: Cascade)
+  organization       Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   analysisData       AnalysisData?       @relation("SessionAnalysisData")
   results            ScreeningResult?    @relation("SessionResults")
   report             Report?             @relation("SessionReport")
 
   @@index([userId])
   @@index([childId])
+  @@index([organizationId])
   @@index([status])
 }
 
@@ -227,16 +251,19 @@ model Report {
 model ChatSession {
   id                 String              @id @default(uuid())
   userId             String
+  organizationId     String?
   title              String?
-  
+
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
   // Relations
   user               User                @relation("UserChatSessions", fields: [userId], references: [id], onDelete: Cascade)
+  organization       Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   messages           ChatMessage[]       @relation("SessionMessages")
 
   @@index([userId])
+  @@index([organizationId])
 }
 
 model ChatMessage {
@@ -255,6 +282,122 @@ model ChatMessage {
   session            ChatSession         @relation("SessionMessages", fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SaaS Multi-Tenancy Models
+// ──────────────────────────────────────────────────────────────────────────────
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  ownerId     String
+  plan        Plan     @default(free)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner            User                @relation("OrgOwner", fields: [ownerId], references: [id])
+  members          OrganizationMember[]
+  screeningSessions ScreeningSession[]
+  children         Child[]
+  chatSessions     ChatSession[]
+  subscription     Subscription?
+  apiKeys          ApiKey[]
+  webhooks         WebhookEndpoint[]
+  auditLogs        AuditLog[]
+
+  @@index([ownerId])
+  @@index([slug])
+}
+
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String
+  role           String   @default("member")
+  createdAt      DateTime @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation("UserOrgMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  organizationId   String             @unique
+  plan             Plan               @default(free)
+  status           SubscriptionStatus @default(active)
+  stripeCustomerId String?
+  stripePriceId    String?
+  stripeSubId      String?
+  currentPeriodEnd DateTime?
+  usageLimits      Json?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([stripeCustomerId])
+}
+
+model ApiKey {
+  id             String    @id @default(uuid())
+  organizationId String
+  name           String
+  keyHash        String    @unique
+  keyPrefix      String
+  scopes         Json
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([keyHash])
+}
+
+model WebhookEndpoint {
+  id             String   @id @default(uuid())
+  organizationId String
+  url            String
+  secret         String
+  events         Json
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model AuditLog {
+  id             String    @id @default(uuid())
+  organizationId String?
+  actorId        String?
+  actorType      String    @default("user")
+  action         String
+  resourceType   String
+  resourceId     String?
+  changes        Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime  @default(now())
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Button } from "@/components/ui/StitchUI";
-import { Navbar, Footer } from "@/components/layout/Navigation";
 
 interface Appointment {
   id: string;
@@ -98,10 +97,7 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col">
-      <Navbar />
-
-      <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
@@ -252,9 +248,6 @@ export default function AppointmentsPage() {
             )}
           </div>
         )}
-      </main>
-
-      <Footer />
     </div>
   );
 }

@@ -27,7 +27,11 @@ export const authApi = {
   }) => {
     return fetchJson<AuthResponse>("/api/v1/auth/register", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        // Tell the backend what URL to use in the verification email
+        baseUrl: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+      }),
     })
   },
 

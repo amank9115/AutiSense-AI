@@ -59,52 +59,8 @@ export default function DoctorProfilePage() {
   };
 
   return (
-    <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex">
-      {/* Sidebar */}
-      <aside className="w-80 h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant/10 p-8 flex flex-col z-50">
-        <div className="mb-12 px-2">
-          <Link href="/dashboard/doctor">
-            <h1 className="font-headline font-bold text-primary text-2xl tracking-tight leading-none mb-1 hover:text-primary/80 transition-colors">MannSaathi</h1>
-          </Link>
-          <p className="text-[10px] font-extrabold text-primary uppercase tracking-[0.3em] opacity-40">Provider Portal</p>
-        </div>
-
-        <nav className="flex-1 space-y-2">
-          {[
-            { icon: "dashboard", label: "Overview", href: "/dashboard/doctor" },
-            { icon: "group", label: "Patient List" },
-            { icon: "calendar_month", label: "Appointments" },
-            { icon: "analytics", label: "Clinical Insights" },
-            { icon: "folder_shared", label: "Archive" },
-          ].map((item, i) => (
-            <Link
-              key={i}
-              href={item.href || "#"}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 ${i === 0 ? "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest" : "text-on-surface-variant hover:bg-surface-container-high"}`}
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span className="font-extrabold text-[10px] uppercase tracking-widest">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="mt-auto pt-8 border-t border-outline-variant/10">
-          <button
-            onClick={() => router.push("/dashboard/doctor")}
-            className="w-full bg-primary text-on-primary p-4 rounded-3xl flex items-center gap-4 shadow-inner hover:bg-primary/90 transition-all"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-              {user.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-extrabold truncate">{user.name}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Healthcare Provider</p>
-            </div>
-                      </button>
-        </div>
-      </aside>
-
-      <main className="flex-1 ml-80 p-10 lg:p-16">
+    <div className="text-on-surface font-body antialiased p-6 lg:p-10">
+      <div>
         <header className="flex items-center justify-between mb-12">
           <div>
             <h2 className="font-headline font-extrabold text-4xl text-on-surface tracking-tight">My Profile</h2>
@@ -158,7 +114,7 @@ export default function DoctorProfilePage() {
           <form onSubmit={handleSave} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Full Name
                 </label>
                 <Input
@@ -170,7 +126,7 @@ export default function DoctorProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Email Address
                 </label>
                 <Input
@@ -183,7 +139,7 @@ export default function DoctorProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Phone Number
                 </label>
                 <Input
@@ -197,7 +153,7 @@ export default function DoctorProfilePage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+                <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                   Account Type
                 </label>
                 <Input
@@ -244,7 +200,7 @@ export default function DoctorProfilePage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+              <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                 License Number
               </label>
               <Input
@@ -256,7 +212,7 @@ export default function DoctorProfilePage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+              <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                 Specialization
               </label>
               <Input
@@ -268,7 +224,7 @@ export default function DoctorProfilePage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+              <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                 Hospital / Clinic
               </label>
               <Input
@@ -280,7 +236,7 @@ export default function DoctorProfilePage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="font-headline font-extrabold text-xs text-on-surface uppercase tracking-widest opacity-60">
+              <label className="font-headline font-extrabold text-xs text-label-caps text-on-surface-muted">
                 Years of Experience
               </label>
               <Input
@@ -322,7 +278,7 @@ export default function DoctorProfilePage() {
             </button>
           </div>
         </Card>
-      </main>
+      </div>
     </div>
   );
 }

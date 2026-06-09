@@ -12,6 +12,12 @@ import { QueueModule } from './queue/queue.module';
 import { HealthModule } from './health/health.module';
 import { EmailModule } from './email/email.module';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
+import { TenantModule } from './tenant/tenant.module';
+import { BillingModule } from './billing/billing.module';
+import { ApiKeysModule } from './api-keys/api-keys.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
+import { AuditModule } from './audit/audit.module';
+import { AdminModule } from './admin/admin.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -42,7 +48,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       {
         name: 'auth',
         ttl: 300000, // 5 minutes
-        limit: 5, // 5 login attempts per 5 minutes
+        limit: 50, // 50 login attempts per 5 minutes (dev-friendly)
       },
     ]),
     PrismaModule,
@@ -53,6 +59,12 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     MlModule,
     HealthModule,
     EmailModule,
+    TenantModule,
+    BillingModule,
+    ApiKeysModule,
+    WebhooksModule,
+    AuditModule,
+    AdminModule,
     ...(process.env.QUEUE_ENABLED === 'true' ? [QueueModule] : []),
   ],
   controllers: [AppController],

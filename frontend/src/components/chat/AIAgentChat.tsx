@@ -8,19 +8,17 @@ import { useAppStore } from "@/store";
 
 const AIAgentChat = () => {
   const user = useAppStore(state => state.user);
+  const token = useAppStore(state => state.token);
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
   
   const chat = useChat({
-    api: "http://localhost:3000/ai/chat/default-session/stream",
+    api: `${API_BASE}/ai/chat/default-session`,
     headers: {
-      // In a real app, you would pass the JWT token here
-      Authorization: `Bearer placeholder-token`
+      Authorization: `Bearer ${token}`
     },
-    // Vercel AI SDK can parse standard text streams or custom SSE
-    // Since NestJS sends SSE with data: {"chunk": "..."}, we might need a custom fetch or stream processing
-    // But for this phase, we connect it directly to fulfill the migration requirement
-    } as any) as any;
+  } as any);
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = chat as any;
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = chat as any;
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -72,7 +70,7 @@ const AIAgentChat = () => {
           onKeyDown={(e) => {
              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit(e as any);
+                handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
              }
           }}
           rows={1}
