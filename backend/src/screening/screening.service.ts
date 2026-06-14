@@ -136,7 +136,7 @@ export class ScreeningService {
     });
 
     // Invalidate user's session cache
-    await this.invalidateUserCache(session.userId);
+    await this.invalidateUserCache(userId);
 
     return result;
   }
@@ -326,7 +326,7 @@ export class ScreeningService {
     });
 
     // Invalidate user's session cache
-    await this.invalidateUserCache(session.userId);
+    await this.invalidateUserCache(userId);
   }
 
   /**

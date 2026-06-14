@@ -12,7 +12,7 @@ import {
 import { StorageService } from './storage.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FeatureFlagsService } from '../feature-flags/feature-flags.service';
-import { AuthenticatedRequest } from '../common/types/authenticated-request';
+import type { AuthenticatedRequest } from '../common/types/authenticated-request';
 
 @Controller('api/v1/storage')
 @UseGuards(JwtAuthGuard)

@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions, JwtSignOptions } from '@nestjs/jwt';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailModule } from '../email/email.module';
@@ -18,9 +18,12 @@ import { RefreshTokenService } from './refresh-token.service';
     UsersModule,
     PassportModule,
     JwtModule.registerAsync({
-      useFactory: (configService: AppConfigService) => ({
+      useFactory: (configService: AppConfigService): JwtModuleOptions => ({
         secret: configService.auth.jwtSecret,
-        signOptions: { expiresIn: configService.auth.jwtExpiry || '15m' },
+        signOptions: {
+          expiresIn: (configService.auth.jwtExpiry ||
+            '15m') as JwtSignOptions['expiresIn'],
+        },
       }),
       inject: [AppConfigService],
     }),
