@@ -50,10 +50,10 @@ METADATA_OUTPUT = os.path.join(os.path.dirname(__file__), "app", "asd_metadata.p
 
 def download_dataset() -> tuple[pd.DataFrame, pd.Series]:
     """
-    Loads the provided Autism Data from the backend-express/ml-data directory.
+    Loads the provided Autism Data from the ml-service/data directory.
     """
     print("\n[1/5] Loading provided ASD Dataset...")
-    local_path = os.path.join(os.path.dirname(__file__), "..", "backend-express", "ml-data", "Autism_Data.arff")
+    local_path = os.path.join(os.path.dirname(__file__), "data", "Autism_Data.arff")
     print(f"      Source: {local_path}")
 
     try:
