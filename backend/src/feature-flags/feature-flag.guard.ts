@@ -28,7 +28,9 @@ export class FeatureFlagGuard implements CanActivate {
     if (requiredFlag) {
       const isEnabled = await this.featureFlagsService.isEnabled(requiredFlag);
       if (!isEnabled) {
-        this.logger.warn(`Feature ${requiredFlag} is disabled, blocking access`);
+        this.logger.warn(
+          `Feature ${requiredFlag} is disabled, blocking access`,
+        );
         throw new ForbiddenException(
           `This feature (${requiredFlag}) is currently disabled`,
         );
@@ -41,7 +43,10 @@ export class FeatureFlagGuard implements CanActivate {
       context.getHandler(),
     );
 
-    if (isDevelopmentOnly && !this.featureFlagsService.isEnvironment('development')) {
+    if (
+      isDevelopmentOnly &&
+      !this.featureFlagsService.isEnvironment('development')
+    ) {
       throw new ForbiddenException(
         'This endpoint is only available in development mode',
       );
@@ -53,7 +58,10 @@ export class FeatureFlagGuard implements CanActivate {
       context.getHandler(),
     );
 
-    if (isProductionOnly && !this.featureFlagsService.isEnvironment('production')) {
+    if (
+      isProductionOnly &&
+      !this.featureFlagsService.isEnvironment('production')
+    ) {
       throw new ForbiddenException(
         'This endpoint is only available in production',
       );

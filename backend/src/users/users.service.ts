@@ -31,7 +31,9 @@ export class UsersService {
     pagination: { page: number; limit: number; total: number; pages: number };
   }> {
     const skip = (options.page - 1) * options.limit;
-    const where: Prisma.UserWhereInput = options.role ? { role: options.role } : {};
+    const where: Prisma.UserWhereInput = options.role
+      ? { role: options.role }
+      : {};
 
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -88,7 +90,11 @@ export class UsersService {
   }
 
   async getChildren(userId: string, role: Role = Role.parent) {
-    if (role === Role.doctor || role === Role.clinician || role === Role.super_admin) {
+    if (
+      role === Role.doctor ||
+      role === Role.clinician ||
+      role === Role.super_admin
+    ) {
       const memberships = await this.prisma.organizationMember.findMany({
         where: { userId },
         select: { organizationId: true },
@@ -98,13 +104,13 @@ export class UsersService {
       if (orgIds.length > 0) {
         return this.prisma.child.findMany({
           where: { organizationId: { in: orgIds } },
-          include: { 
+          include: {
             parent: { select: { name: true, email: true } },
             screeningSessions: {
               orderBy: { createdAt: 'desc' },
               take: 1,
-              include: { results: true }
-            }
+              include: { results: true },
+            },
           },
         });
       }
@@ -116,9 +122,9 @@ export class UsersService {
         screeningSessions: {
           orderBy: { createdAt: 'desc' },
           take: 1,
-          include: { results: true }
-        }
-      }
+          include: { results: true },
+        },
+      },
     });
   }
 

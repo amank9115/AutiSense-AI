@@ -85,7 +85,8 @@ describe('CircuitBreakerService', () => {
 
       // Simulate timeout by using a very short timeout
       service.getCircuit('test-service', { failureThreshold: 3, timeout: 1 });
-      (service.getStats('test-service') as any).lastFailureTime = Date.now() - 100; // In the past
+      (service.getStats('test-service') as any).lastFailureTime =
+        Date.now() - 100; // In the past
 
       // Allow one success to transition to HALF_OPEN
       service.recordFailure('test-service'); // From HALF_OPEN = back to OPEN
@@ -102,7 +103,10 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should block calls when OPEN and timeout not reached', () => {
-      service.getCircuit('test-service', { failureThreshold: 1, timeout: 60000 });
+      service.getCircuit('test-service', {
+        failureThreshold: 1,
+        timeout: 60000,
+      });
       service.recordFailure('test-service');
 
       expect(service.isCallAllowed('test-service')).toBe(false);
@@ -113,9 +117,12 @@ describe('CircuitBreakerService', () => {
       service.recordFailure('test-service'); // Now OPEN
 
       // Simulate time passing
-      (service.getStats('test-service') as any).nextAttemptTime = Date.now() - 1000;
+      (service.getStats('test-service') as any).nextAttemptTime =
+        Date.now() - 1000;
 
-      expect(service.isCallAllowed('test-service')).toBe(CircuitState.HALF_OPEN);
+      expect(service.isCallAllowed('test-service')).toBe(
+        CircuitState.HALF_OPEN,
+      );
     });
 
     it('should allow calls in HALF_OPEN state', () => {
@@ -138,7 +145,10 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should call fallback when circuit is OPEN', async () => {
-      service.getCircuit('test-service', { failureThreshold: 1, timeout: 60000 });
+      service.getCircuit('test-service', {
+        failureThreshold: 1,
+        timeout: 60000,
+      });
       service.recordFailure('test-service'); // Now OPEN
 
       const fn = jest.fn();
@@ -195,7 +205,10 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should reset failures when transitioning to CLOSED', () => {
-      service.getCircuit('test-service', { successThreshold: 1, failureThreshold: 3 });
+      service.getCircuit('test-service', {
+        successThreshold: 1,
+        failureThreshold: 3,
+      });
 
       // Add some failures
       service.recordFailure('test-service');

@@ -66,7 +66,9 @@ export class CircuitBreakerService {
 
       if (circuit.successes >= config.successThreshold) {
         this.transitionTo(name, CircuitState.CLOSED);
-        this.logger.log(`Circuit ${name} closed (recovered after ${circuit.successes} successful calls)`);
+        this.logger.log(
+          `Circuit ${name} closed (recovered after ${circuit.successes} successful calls)`,
+        );
       }
     } else {
       circuit.successes = 1;
@@ -86,11 +88,15 @@ export class CircuitBreakerService {
     if (circuit.state === CircuitState.HALF_OPEN) {
       // In HALF_OPEN, any failure immediately opens the circuit
       this.transitionTo(name, CircuitState.OPEN);
-      this.logger.warn(`Circuit ${name} reopened due to failure in HALF_OPEN state`);
+      this.logger.warn(
+        `Circuit ${name} reopened due to failure in HALF_OPEN state`,
+      );
     } else if (circuit.failures >= config.failureThreshold) {
       // Threshold reached, open the circuit
       this.transitionTo(name, CircuitState.OPEN);
-      this.logger.warn(`Circuit ${name} opened after ${circuit.failures} consecutive failures`);
+      this.logger.warn(
+        `Circuit ${name} opened after ${circuit.failures} consecutive failures`,
+      );
     }
   }
 
@@ -105,7 +111,6 @@ export class CircuitBreakerService {
     }
 
     if (circuit.state === CircuitState.OPEN) {
-      const config = this.configs.get(name)!;
       const now = Date.now();
 
       // Check if timeout has passed, transition to HALF_OPEN
@@ -129,7 +134,6 @@ export class CircuitBreakerService {
 
     // Check for automatic transition from OPEN to HALF_OPEN
     if (circuit.state === CircuitState.OPEN) {
-      const config = this.configs.get(name)!;
       if (Date.now() >= circuit.nextAttemptTime) {
         this.transitionTo(name, CircuitState.HALF_OPEN);
       }
@@ -169,7 +173,7 @@ export class CircuitBreakerService {
     name: string,
     fn: () => Promise<T>,
     fallback: () => Promise<T>,
-    config?: Partial<CircuitConfig>,
+    _config?: Partial<CircuitConfig>,
   ): Promise<T> {
     if (!this.isCallAllowed(name)) {
       this.logger.debug(`Circuit ${name} is OPEN, using fallback`);
@@ -180,7 +184,7 @@ export class CircuitBreakerService {
       const result = await fn();
       this.recordSuccess(name);
       return result;
-    } catch (error) {
+    } catch {
       this.recordFailure(name);
       this.logger.warn(`Circuit ${name} request failed, trying fallback`);
       return fallback();

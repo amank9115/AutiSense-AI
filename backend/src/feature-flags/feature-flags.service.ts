@@ -55,7 +55,9 @@ export class FeatureFlagsService {
       if (envValue !== undefined) {
         const enabled = envValue === 'true';
         this.flags.set(flagName, enabled);
-        this.logger.log(`Flag ${flagName} overridden by environment: ${enabled}`);
+        this.logger.log(
+          `Flag ${flagName} overridden by environment: ${enabled}`,
+        );
       }
     }
   }
@@ -130,14 +132,14 @@ export class FeatureFlagsService {
    * Get enabled flags only
    */
   getEnabled(): FeatureFlag[] {
-    return this.getAll().filter(f => f.enabled);
+    return this.getAll().filter((f) => f.enabled);
   }
 
   /**
    * Get disabled flags only
    */
   getDisabled(): FeatureFlag[] {
-    return this.getAll().filter(f => !f.enabled);
+    return this.getAll().filter((f) => !f.enabled);
   }
 
   /**

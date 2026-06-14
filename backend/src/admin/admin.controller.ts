@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/roles.guard';
 import { Role } from '@prisma/client';
@@ -48,8 +42,14 @@ export class AdminController {
       where: { id: orgId },
       include: {
         subscription: true,
-        members: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
-        _count: { select: { screeningSessions: true, apiKeys: true, webhooks: true } },
+        members: {
+          include: {
+            user: { select: { id: true, name: true, email: true, role: true } },
+          },
+        },
+        _count: {
+          select: { screeningSessions: true, apiKeys: true, webhooks: true },
+        },
       },
     });
   }
@@ -76,6 +76,11 @@ export class AdminController {
       this.prisma.screeningSession.count(),
       this.prisma.apiKey.count({ where: { revokedAt: null } }),
     ]);
-    return { users, organizations: orgs, screeningSessions: screenings, activeApiKeys: apiKeys };
+    return {
+      users,
+      organizations: orgs,
+      screeningSessions: screenings,
+      activeApiKeys: apiKeys,
+    };
   }
 }

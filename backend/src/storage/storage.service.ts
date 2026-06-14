@@ -1,4 +1,11 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+/*
+ * Stub storage service. The async methods and several parameters are
+ * intentionally unused placeholders — their bodies become awaited AWS SDK
+ * calls once @aws-sdk/client-s3 is wired in. Relax the two rules that
+ * flag those placeholders for this file only.
+ */
+/* eslint-disable @typescript-eslint/require-await, @typescript-eslint/no-unused-vars */
+import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../config/config.service';
 
 export interface UploadResult {
@@ -45,7 +52,8 @@ export class StorageService {
     key: string,
     options: SignedUrlOptions = {},
   ): Promise<{ uploadUrl: string; key: string }> {
-    const { expiresIn = 3600, contentType = 'application/octet-stream' } = options;
+    const { expiresIn = 3600, contentType = 'application/octet-stream' } =
+      options;
 
     // In production, use AWS SDK:
     // const command = new PutObjectCommand({
@@ -154,7 +162,11 @@ export class StorageService {
   /**
    * Generate a unique key for reports
    */
-  generateReportKey(userId: string, sessionId: string, format: 'pdf' | 'csv' | 'json'): string {
+  generateReportKey(
+    userId: string,
+    sessionId: string,
+    format: 'pdf' | 'csv' | 'json',
+  ): string {
     const timestamp = Date.now();
     const filename = `report_${sessionId}_${timestamp}.${format}`;
     return `reports/${userId}/${filename}`;

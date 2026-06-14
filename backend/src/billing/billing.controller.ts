@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Param, UseGuards, Body, Headers } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Body,
+  Headers,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BillingService } from './billing.service';
 import { UsageService } from './usage.service';
@@ -30,7 +38,10 @@ export class BillingController {
     @Body() payload: Record<string, any>,
     @Headers('stripe-signature') signature: string,
   ) {
-    await this.billing.handleStripeWebhook(Buffer.from(JSON.stringify(payload)), signature);
+    await this.billing.handleStripeWebhook(
+      Buffer.from(JSON.stringify(payload)),
+      signature,
+    );
     return { received: true };
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { AppConfigService } from '../config/config.service';
 
@@ -11,7 +16,8 @@ export class PrismaService
 
   constructor(private config: AppConfigService) {
     const env = config?.server?.nodeEnv || 'development';
-    const connectionUrl = config?.database?.url || process.env.DATABASE_URL || '';
+    const connectionUrl =
+      config?.database?.url || process.env.DATABASE_URL || '';
 
     // Add connection pool parameters for production
     let finalUrl = connectionUrl;
@@ -26,9 +32,8 @@ export class PrismaService
           url: finalUrl,
         },
       },
-      log: env === 'development'
-        ? ['query', 'info', 'warn', 'error']
-        : ['error'],
+      log:
+        env === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
     });
   }
 
@@ -50,9 +55,7 @@ export class PrismaService
   }
 
   // Helper method for transactions
-  async transaction<T>(
-    fn: (prisma: PrismaService) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (prisma: PrismaService) => Promise<T>): Promise<T> {
     return this.$transaction(async (tx) => {
       return fn(tx as unknown as PrismaService);
     });

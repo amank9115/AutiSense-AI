@@ -9,7 +9,7 @@ import { tap } from 'rxjs/operators';
 import { CacheService } from '../cache.service';
 import { CacheOptions, CACHE_OPTIONS_KEY } from '../decorators/cache.decorator';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
+import { AuthenticatedRequest } from '../../common/types/authenticated-request';
 
 @Injectable()
 export class CacheInterceptor implements NestInterceptor {
@@ -22,17 +22,16 @@ export class CacheInterceptor implements NestInterceptor {
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
-    const cacheOptions = this.reflector.get<CacheOptions & { enabled: boolean }>(
-      CACHE_OPTIONS_KEY,
-      context.getHandler(),
-    );
+    const cacheOptions = this.reflector.get<
+      CacheOptions & { enabled: boolean }
+    >(CACHE_OPTIONS_KEY, context.getHandler());
 
     if (!cacheOptions?.enabled) {
       return next.handle();
     }
 
-    const request = context.switchToHttp().getRequest<Request>();
-    const userId = (request as any).user?.userId || 'anonymous';
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const userId = request.user?.userId ?? 'anonymous';
     const { prefix, ttl = 300 } = cacheOptions;
 
     // Build cache key from prefix and userId
@@ -44,11 +43,11 @@ export class CacheInterceptor implements NestInterceptor {
       return of(cached);
     }
 
-    // Execute handler and cache result
+    // Execute handler and cache result (fire-and-forget write)
     return next.handle().pipe(
-      tap(async (result) => {
+      tap((result) => {
         if (result !== null && result !== undefined) {
-          await this.cacheService.set(cacheKey, result, ttl);
+          void this.cacheService.set(cacheKey, result, ttl);
         }
       }),
     );

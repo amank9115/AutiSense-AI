@@ -3,10 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Plan } from '@prisma/client';
 
 const PLAN_LIMITS: Record<Plan, { screenings: number; apiCalls: number }> = {
-  free:       { screenings: 10,    apiCalls: 1_000 },
-  starter:    { screenings: 100,   apiCalls: 10_000 },
-  pro:        { screenings: 1_000, apiCalls: 100_000 },
-  enterprise: { screenings: -1,    apiCalls: -1 },  // -1 = unlimited
+  free: { screenings: 10, apiCalls: 1_000 },
+  starter: { screenings: 100, apiCalls: 10_000 },
+  pro: { screenings: 1_000, apiCalls: 100_000 },
+  enterprise: { screenings: -1, apiCalls: -1 }, // -1 = unlimited
 };
 
 @Injectable()

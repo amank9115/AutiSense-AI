@@ -16,14 +16,18 @@ import { LoggerService } from './logger.service';
               winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
               winston.format.errors({ stack: true }),
               winston.format.colorize({ all: true }),
-              winston.format.printf(({ level, message, timestamp, stack, context, ...meta }) => {
-                const metaStr = Object.keys(meta).length
-                  ? ` ${JSON.stringify(meta, null, 2)}`
-                  : '';
-                const contextStr = context ? ` [${context}]` : '';
-                const stackStr = stack ? `\n${stack}` : '';
-                return `${timestamp} [${level}]${contextStr}: ${message}${metaStr}${stackStr}`;
-              }),
+              winston.format.printf(
+                ({ level, message, timestamp, stack, context, ...meta }) => {
+                  const metaStr = Object.keys(meta).length
+                    ? ` ${JSON.stringify(meta, null, 2)}`
+                    : '';
+                  const contextStr =
+                    typeof context === 'string' ? ` [${context}]` : '';
+                  const stackStr =
+                    typeof stack === 'string' ? `\n${stack}` : '';
+                  return `${String(timestamp)} [${String(level)}]${contextStr}: ${String(message)}${metaStr}${stackStr}`;
+                },
+              ),
             )
           : winston.format.combine(
               winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -42,10 +46,13 @@ import { LoggerService } from './logger.service';
                 : winston.format.combine(
                     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                     winston.format.colorize({ all: true }),
-                    winston.format.printf(({ level, message, timestamp, context }) => {
-                      const contextStr = context ? ` [${context}]` : '';
-                      return `${timestamp} [${level}]${contextStr}: ${message}`;
-                    }),
+                    winston.format.printf(
+                      ({ level, message, timestamp, context }) => {
+                        const contextStr =
+                          typeof context === 'string' ? ` [${context}]` : '';
+                        return `${String(timestamp)} [${String(level)}]${contextStr}: ${String(message)}`;
+                      },
+                    ),
                   ),
             }),
           );
@@ -77,7 +84,9 @@ import { LoggerService } from './logger.service';
         }
 
         return winston.createLogger({
-          level: isTest ? 'debug' : process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
+          level: isTest
+            ? 'debug'
+            : process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
           format,
           transports,
           exitOnError: false,
@@ -86,7 +95,8 @@ import { LoggerService } from './logger.service';
     },
     {
       provide: LoggerService,
-      useFactory: (winstonLogger: winston.Logger) => new LoggerService(winstonLogger),
+      useFactory: (winstonLogger: winston.Logger) =>
+        new LoggerService(winstonLogger),
       inject: ['WINSTON_LOGGER'],
     },
   ],

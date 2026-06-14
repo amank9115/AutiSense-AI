@@ -26,29 +26,51 @@ export class WebhooksService {
   async list(organizationId: string) {
     return this.prisma.webhookEndpoint.findMany({
       where: { organizationId },
-      select: { id: true, url: true, events: true, active: true, createdAt: true },
+      select: {
+        id: true,
+        url: true,
+        events: true,
+        active: true,
+        createdAt: true,
+      },
     });
   }
 
   async delete(id: string, organizationId: string): Promise<void> {
-    await this.prisma.webhookEndpoint.deleteMany({ where: { id, organizationId } });
+    await this.prisma.webhookEndpoint.deleteMany({
+      where: { id, organizationId },
+    });
   }
 
-  async dispatch(organizationId: string, event: WebhookEvent, payload: Record<string, any>): Promise<void> {
+  async dispatch(
+    organizationId: string,
+    event: WebhookEvent,
+    payload: Record<string, any>,
+  ): Promise<void> {
     const endpoints = await this.prisma.webhookEndpoint.findMany({
       where: { organizationId, active: true },
     });
 
-    const body = JSON.stringify({ event, data: payload, timestamp: new Date().toISOString() });
+    const body = JSON.stringify({
+      event,
+      data: payload,
+      timestamp: new Date().toISOString(),
+    });
 
     await Promise.allSettled(
       endpoints
-        .filter((ep: WebhookEndpoint) => (ep.events as string[]).includes(event))
+        .filter((ep: WebhookEndpoint) =>
+          (ep.events as string[]).includes(event),
+        )
         .map((ep: WebhookEndpoint) => this.deliver(ep.url, ep.secret, body)),
     );
   }
 
-  private async deliver(url: string, secret: string, body: string): Promise<void> {
+  private async deliver(
+    url: string,
+    secret: string,
+    body: string,
+  ): Promise<void> {
     const signature = createHmac('sha256', secret).update(body).digest('hex');
     try {
       await fetch(url, {
@@ -61,7 +83,9 @@ export class WebhooksService {
         signal: AbortSignal.timeout(10_000),
       });
     } catch (err) {
-      this.logger.warn(`Webhook delivery failed for ${url}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Webhook delivery failed for ${url}: ${(err as Error).message}`,
+      );
     }
   }
 }

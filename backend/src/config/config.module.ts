@@ -33,7 +33,9 @@ import { AppConfigService } from './config.service';
         REDIS_HOST: Joi.string().optional().default('localhost'),
         REDIS_PORT: Joi.number().optional().default(6379),
         RESEND_API_KEY: Joi.string().optional(),
-        EMAIL_FROM: Joi.string().optional().default('AutiSense <noreply@autisense.ai>'),
+        EMAIL_FROM: Joi.string()
+          .optional()
+          .default('AutiSense <noreply@autisense.ai>'),
         GROQ_API_KEY: Joi.string().optional(),
         OLLAMA_BASE_URL: Joi.string()
           .optional()

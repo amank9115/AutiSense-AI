@@ -6,7 +6,11 @@ import { Organization, OrganizationMember } from '@prisma/client';
 export class TenantService {
   constructor(private prisma: PrismaService) {}
 
-  async create(ownerId: string, name: string, slug: string): Promise<Organization> {
+  async create(
+    ownerId: string,
+    name: string,
+    slug: string,
+  ): Promise<Organization> {
     return this.prisma.organization.create({
       data: {
         name,
@@ -35,7 +39,10 @@ export class TenantService {
       where: { userId },
       include: { organization: true },
     });
-    return memberships.map((m: OrganizationMember & { organization: Organization }) => m.organization);
+    return memberships.map(
+      (m: OrganizationMember & { organization: Organization }) =>
+        m.organization,
+    );
   }
 
   async addMember(organizationId: string, userId: string, role = 'member') {
@@ -61,7 +68,9 @@ export class TenantService {
   async listMembers(organizationId: string) {
     return this.prisma.organizationMember.findMany({
       where: { organizationId },
-      include: { user: { select: { id: true, name: true, email: true, role: true } } },
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true } },
+      },
     });
   }
 }

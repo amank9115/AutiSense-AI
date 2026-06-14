@@ -9,7 +9,10 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        { provide: PrismaService, useValue: { user: { findUnique: jest.fn(), create: jest.fn() } } },
+        {
+          provide: PrismaService,
+          useValue: { user: { findUnique: jest.fn(), create: jest.fn() } },
+        },
       ],
     }).compile();
 

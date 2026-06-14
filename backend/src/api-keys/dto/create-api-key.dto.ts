@@ -6,7 +6,10 @@ export class CreateApiKeyDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ type: [String], description: 'Allowed scopes e.g. ["screening:read", "screening:write"]' })
+  @ApiProperty({
+    type: [String],
+    description: 'Allowed scopes e.g. ["screening:read", "screening:write"]',
+  })
   @IsArray()
   @IsString({ each: true })
   scopes: string[];

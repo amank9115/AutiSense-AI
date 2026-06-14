@@ -30,7 +30,10 @@ export class RefreshTokenService {
    * Create a new refresh token for a user with token rotation
    * Revokes all previous tokens in the same family (rotation)
    */
-  async createToken(userId: string, previousTokenHash?: string): Promise<{
+  async createToken(
+    userId: string,
+    previousTokenHash?: string,
+  ): Promise<{
     token: string;
     expiresAt: Date;
     familyId: string;
@@ -38,7 +41,7 @@ export class RefreshTokenService {
     const token = this.generateToken();
     const tokenHash = this.hashToken(token);
     const familyId = previousTokenHash
-      ? await this.getTokenFamilyId(previousTokenHash) || crypto.randomUUID()
+      ? (await this.getTokenFamilyId(previousTokenHash)) || crypto.randomUUID()
       : crypto.randomUUID();
 
     const refreshToken = await this.prisma.refreshToken.create({
@@ -46,7 +49,9 @@ export class RefreshTokenService {
         userId,
         tokenHash,
         familyId,
-        expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(
+          Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+        ),
       },
     });
 
@@ -80,12 +85,16 @@ export class RefreshTokenService {
       // Token reuse detected - potential security issue
       // Revoke all tokens in this family to prevent further attacks
       await this.revokeAllFamilyTokens(refreshToken.familyId);
-      throw new TokenRevokedException('Token has been revoked. All sessions have been logged out for security.');
+      throw new TokenRevokedException(
+        'Token has been revoked. All sessions have been logged out for security.',
+      );
     }
 
     // Check if token is expired
     if (refreshToken.expiresAt < new Date()) {
-      throw new TokenRevokedException('Refresh token has expired. Please login again.');
+      throw new TokenRevokedException(
+        'Refresh token has expired. Please login again.',
+      );
     }
 
     return {

@@ -8,11 +8,9 @@ export class HttpLoggerMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction): void {
     const startTime = Date.now();
-    const { method, path, query, body } = req;
+    const { method, path } = req;
 
     // Log incoming request
-    const sanitizedBody = this.sanitizeBody(body);
-
     this.logger.debug(`Incoming ${method} ${path}`, 'HTTP');
 
     // Capture response
@@ -24,42 +22,19 @@ export class HttpLoggerMiddleware implements NestMiddleware {
       const statusCode = res.statusCode;
 
       if (statusCode >= 400) {
-        logger.warn(
-          `${method} ${path} ${statusCode} - ${duration}ms`,
-          'HTTP',
-        );
+        logger.warn(`${method} ${path} ${statusCode} - ${duration}ms`, 'HTTP');
       } else if (duration > 1000) {
         logger.warn(
           `Slow request: ${method} ${path} ${statusCode} - ${duration}ms`,
           'HTTP',
         );
       } else {
-        logger.debug(
-          `${method} ${path} ${statusCode} - ${duration}ms`,
-          'HTTP',
-        );
+        logger.debug(`${method} ${path} ${statusCode} - ${duration}ms`, 'HTTP');
       }
 
       return originalSend.call(this, data);
     };
 
     next();
-  }
-
-  private sanitizeBody(body: any): any {
-    if (!body || typeof body !== 'object') {
-      return body;
-    }
-
-    const sanitized = { ...body };
-    const sensitiveFields = ['password', 'token', 'authorization', 'secret', 'apiKey', 'api_key', 'refreshToken'];
-
-    for (const field of sensitiveFields) {
-      if (field in sanitized) {
-        sanitized[field] = '***REDACTED***';
-      }
-    }
-
-    return sanitized;
   }
 }

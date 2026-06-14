@@ -14,11 +14,7 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/roles.guard';
 import { Role } from '@prisma/client';
-import {
-  NotFoundException,
-  ForbiddenException,
-  ValidationException,
-} from '../common/exceptions';
+import { NotFoundException, ValidationException } from '../common/exceptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';

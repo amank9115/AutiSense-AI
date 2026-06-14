@@ -1,6 +1,7 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { AuthenticatedRequest } from '../types/authenticated-request';
 
 export const CORRELATION_ID_HEADER = 'x-correlation-id';
 
@@ -8,12 +9,12 @@ export const CORRELATION_ID_HEADER = 'x-correlation-id';
 export class CorrelationIdMiddleware implements NestMiddleware {
   private readonly logger = new Logger(CorrelationIdMiddleware.name);
 
-  use(req: Request, res: Response, next: NextFunction): void {
+  use(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
     const correlationId =
       (req.headers[CORRELATION_ID_HEADER] as string) || uuidv4();
 
     // Attach to request object for downstream use
-    (req as any).correlationId = correlationId;
+    req.correlationId = correlationId;
 
     // Set response header
     res.setHeader(CORRELATION_ID_HEADER, correlationId);

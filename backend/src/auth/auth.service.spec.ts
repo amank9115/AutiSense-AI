@@ -34,12 +34,43 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: UsersService, useValue: { findOne: jest.fn(), findById: jest.fn() } },
-        { provide: JwtService, useValue: { sign: jest.fn(), verify: jest.fn() } },
-        { provide: EmailService, useValue: { sendVerificationEmail: jest.fn(), sendPasswordResetEmail: jest.fn() } },
-        { provide: PrismaService, useValue: { refreshToken: { create: jest.fn() } } },
-        { provide: LockoutService, useValue: { checkLockout: jest.fn(), recordFailedAttempt: jest.fn(), clearLockout: jest.fn() } },
-        { provide: RefreshTokenService, useValue: { createToken: jest.fn(), rotateToken: jest.fn(), revokeToken: jest.fn(), revokeAllUserTokens: jest.fn(), validateToken: jest.fn() } },
+        {
+          provide: UsersService,
+          useValue: { findOne: jest.fn(), findById: jest.fn() },
+        },
+        {
+          provide: JwtService,
+          useValue: { sign: jest.fn(), verify: jest.fn() },
+        },
+        {
+          provide: EmailService,
+          useValue: {
+            sendVerificationEmail: jest.fn(),
+            sendPasswordResetEmail: jest.fn(),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: { refreshToken: { create: jest.fn() } },
+        },
+        {
+          provide: LockoutService,
+          useValue: {
+            checkLockout: jest.fn(),
+            recordFailedAttempt: jest.fn(),
+            clearLockout: jest.fn(),
+          },
+        },
+        {
+          provide: RefreshTokenService,
+          useValue: {
+            createToken: jest.fn(),
+            rotateToken: jest.fn(),
+            revokeToken: jest.fn(),
+            revokeAllUserTokens: jest.fn(),
+            validateToken: jest.fn(),
+          },
+        },
         { provide: JwtService, useValue: { sign: jest.fn() } },
       ],
     }).compile();
@@ -62,12 +93,19 @@ describe('AuthService', () => {
       lockoutService.checkLockout.mockResolvedValue(undefined);
       lockoutService.clearLockout.mockResolvedValue(undefined);
 
-      const result = await service.validateUser('test@example.com', 'password123');
+      const result = await service.validateUser(
+        'test@example.com',
+        'password123',
+      );
 
       expect(result).toBeDefined();
       expect(result?.email).toBe('test@example.com');
-      expect(lockoutService.checkLockout).toHaveBeenCalledWith('test@example.com');
-      expect(lockoutService.clearLockout).toHaveBeenCalledWith('test@example.com');
+      expect(lockoutService.checkLockout).toHaveBeenCalledWith(
+        'test@example.com',
+      );
+      expect(lockoutService.clearLockout).toHaveBeenCalledWith(
+        'test@example.com',
+      );
       expect(usersService.findOne).toHaveBeenCalledWith('test@example.com');
     });
 
@@ -75,7 +113,10 @@ describe('AuthService', () => {
       usersService.findOne.mockResolvedValue(null);
       lockoutService.checkLockout.mockResolvedValue(undefined);
 
-      const result = await service.validateUser('nonexistent@example.com', 'password');
+      const result = await service.validateUser(
+        'nonexistent@example.com',
+        'password',
+      );
 
       expect(result).toBeNull();
       expect(lockoutService.recordFailedAttempt).not.toHaveBeenCalled();
@@ -86,10 +127,15 @@ describe('AuthService', () => {
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
       lockoutService.checkLockout.mockResolvedValue(undefined);
 
-      const result = await service.validateUser('test@example.com', 'wrongpassword');
+      const result = await service.validateUser(
+        'test@example.com',
+        'wrongpassword',
+      );
 
       expect(result).toBeNull();
-      expect(lockoutService.recordFailedAttempt).toHaveBeenCalledWith('test@example.com');
+      expect(lockoutService.recordFailedAttempt).toHaveBeenCalledWith(
+        'test@example.com',
+      );
     });
 
     it('should not include passwordHash in returned user', async () => {
@@ -98,7 +144,10 @@ describe('AuthService', () => {
       lockoutService.checkLockout.mockResolvedValue(undefined);
       lockoutService.clearLockout.mockResolvedValue(undefined);
 
-      const result = await service.validateUser('test@example.com', 'password123');
+      const result = await service.validateUser(
+        'test@example.com',
+        'password123',
+      );
 
       expect(result).not.toHaveProperty('passwordHash');
       expect(result).toHaveProperty('email');
@@ -145,7 +194,10 @@ describe('AuthService', () => {
 
       await service.login(mockUser as User);
 
-      expect(refreshTokenService.createToken).toHaveBeenCalledWith('user-123', undefined);
+      expect(refreshTokenService.createToken).toHaveBeenCalledWith(
+        'user-123',
+        undefined,
+      );
     });
   });
 
@@ -186,7 +238,9 @@ describe('AuthService', () => {
       const result = await service.logout('refresh-token');
 
       expect(result.message).toBe('Logged out successfully');
-      expect(refreshTokenService.revokeToken).toHaveBeenCalledWith('refresh-token');
+      expect(refreshTokenService.revokeToken).toHaveBeenCalledWith(
+        'refresh-token',
+      );
     });
 
     it('should handle logout without token', async () => {
@@ -205,7 +259,9 @@ describe('AuthService', () => {
 
       expect(result.message).toBe('All sessions have been logged out');
       expect(result.sessionsRevoked).toBe(3);
-      expect(refreshTokenService.revokeAllUserTokens).toHaveBeenCalledWith('user-123');
+      expect(refreshTokenService.revokeAllUserTokens).toHaveBeenCalledWith(
+        'user-123',
+      );
     });
   });
 
@@ -218,7 +274,9 @@ describe('AuthService', () => {
       } as User);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
       const emailService = module.get(EmailService);
-      emailService.sendVerificationEmail.mockResolvedValue({ previewUrl: 'http://preview' });
+      emailService.sendVerificationEmail.mockResolvedValue({
+        previewUrl: 'http://preview',
+      });
 
       const result = await service.register({
         email: 'new@example.com',

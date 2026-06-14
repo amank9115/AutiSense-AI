@@ -14,7 +14,8 @@ import { Role } from '@prisma/client';
 // - At least one lowercase letter
 // - At least one number
 // - At least one special character (@$!%*?&)
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/;
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/;
 
 export class RegisterDto {
   @IsEmail()
@@ -39,4 +40,8 @@ export class RegisterDto {
   @IsEnum(Role)
   @IsOptional()
   role?: Role;
+
+  @IsString()
+  @IsOptional()
+  baseUrl?: string;
 }

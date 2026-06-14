@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Delete, Param, Query, UseGuards, Request, Res, ForbiddenException } from '@nestjs/common';
-import { Response } from 'express';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+  ForbiddenException,
+} from '@nestjs/common';
 import { StorageService } from './storage.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FeatureFlagsService } from '../feature-flags/feature-flags.service';
+import { AuthenticatedRequest } from '../common/types/authenticated-request';
 
 @Controller('api/v1/storage')
 @UseGuards(JwtAuthGuard)
@@ -17,18 +27,25 @@ export class StorageController {
    */
   @Post('upload-url')
   async getUploadUrl(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Query('sessionId') sessionId: string,
     @Query('format') format: 'pdf' | 'csv' = 'pdf',
   ) {
     // Check if report export is enabled
-    const isEnabled = await this.featureFlags.isEnabled('EXPORT_REPORTS_ENABLED');
+    const isEnabled = await this.featureFlags.isEnabled(
+      'EXPORT_REPORTS_ENABLED',
+    );
     if (!isEnabled) {
       throw new ForbiddenException('Report export is currently disabled');
     }
 
+    const userId = req.user?.userId;
+    if (!userId) {
+      throw new ForbiddenException('Authenticated user required');
+    }
+
     const key = this.storageService.generateReportKey(
-      req.user.userId,
+      userId,
       sessionId,
       format,
     );
@@ -69,12 +86,12 @@ export class StorageController {
    * List user's reports
    */
   @Get()
-  async listFiles(@Request() req: any) {
-    const prefix = `reports/${req.user.userId}`;
+  async listFiles(@Request() req: AuthenticatedRequest) {
+    const prefix = `reports/${req.user?.userId ?? ''}`;
     const files = await this.storageService.list(prefix);
 
     return {
-      files: files.map(key => ({
+      files: files.map((key) => ({
         key,
         url: this.storageService.getPublicUrl(key),
       })),

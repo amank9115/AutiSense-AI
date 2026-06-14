@@ -21,11 +21,13 @@ export class LockoutService {
     // Allow configuration via environment variables
     this.config = {
       maxFailedAttempts: parseInt(
-        process.env.LOCKOUT_MAX_ATTEMPTS || String(DEFAULT_CONFIG.maxFailedAttempts),
+        process.env.LOCKOUT_MAX_ATTEMPTS ||
+          String(DEFAULT_CONFIG.maxFailedAttempts),
         10,
       ),
       lockoutDurationSeconds: parseInt(
-        process.env.LOCKOUT_DURATION_SECONDS || String(DEFAULT_CONFIG.lockoutDurationSeconds),
+        process.env.LOCKOUT_DURATION_SECONDS ||
+          String(DEFAULT_CONFIG.lockoutDurationSeconds),
         10,
       ),
     };
@@ -37,14 +39,25 @@ export class LockoutService {
    */
   async checkLockout(email: string): Promise<void> {
     const key = `${this.prefix}${email}`;
-    const lockCount = await this.redis.get(key);
+    try {
+      const lockCount = await this.redis.get(key);
 
-    if (lockCount) {
-      const ttl = await this.redis.ttl(key);
-      const remainingMinutes = Math.ceil(ttl / 60);
+      if (lockCount) {
+        const ttl = await this.redis.ttl(key);
+        const remainingMinutes = Math.ceil(ttl / 60);
 
-      throw new AccountLockedException(
-        `Account is locked due to too many failed attempts. Try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+        throw new AccountLockedException(
+          `Account is locked due to too many failed attempts. Try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+        );
+      }
+    } catch (error) {
+      if (error instanceof AccountLockedException) {
+        throw error;
+      }
+      // If Redis is down, we allow the check to pass to avoid blocking legitimate logins
+      console.warn(
+        `Lockout check skipped for ${email} due to Redis error:`,
+        (error as Error).message,
       );
     }
   }
@@ -55,12 +68,19 @@ export class LockoutService {
   async recordFailedAttempt(email: string): Promise<void> {
     const key = `${this.prefix}${email}`;
 
-    // Increment the failed attempts counter
-    const attempts = await this.redis.incr(key);
+    try {
+      // Increment the failed attempts counter
+      const attempts = await this.redis.incr(key);
 
-    // Set expiration on first failed attempt (when count becomes 1)
-    if (attempts === 1) {
-      await this.redis.expire(key, this.config.lockoutDurationSeconds);
+      // Set expiration on first failed attempt (when count becomes 1)
+      if (attempts === 1) {
+        await this.redis.expire(key, this.config.lockoutDurationSeconds);
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to record attempt for ${email} due to Redis error:`,
+        (error as Error).message,
+      );
     }
   }
 
@@ -69,7 +89,14 @@ export class LockoutService {
    */
   async clearLockout(email: string): Promise<void> {
     const key = `${this.prefix}${email}`;
-    await this.redis.del(key);
+    try {
+      await this.redis.del(key);
+    } catch (error) {
+      console.warn(
+        `Failed to clear lockout for ${email} due to Redis error:`,
+        (error as Error).message,
+      );
+    }
   }
 
   /**

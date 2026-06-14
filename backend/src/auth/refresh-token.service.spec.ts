@@ -47,7 +47,9 @@ describe('RefreshTokenService', () => {
         createdAt: new Date(),
       };
 
-      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(mockToken);
+      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(
+        mockToken,
+      );
 
       const result = await service.createToken('user-123');
 
@@ -75,11 +77,14 @@ describe('RefreshTokenService', () => {
         createdAt: new Date(),
       };
 
-      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(mockToken);
+      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(
+        mockToken,
+      );
 
       await service.createToken('user-123');
 
-      const createCall = (prismaService.refreshToken.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prismaService.refreshToken.create as jest.Mock).mock
+        .calls[0][0];
       expect(createCall.data.tokenHash).toBeDefined();
       // Token hash should be a SHA-256 hash (64 characters hex)
       expect(createCall.data.tokenHash).toMatch(/^[a-f0-9]{64}$/);
@@ -96,7 +101,9 @@ describe('RefreshTokenService', () => {
         createdAt: new Date(),
       };
 
-      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(mockToken);
+      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(
+        mockToken,
+      );
 
       const result = await service.createToken('user-123');
 
@@ -116,7 +123,9 @@ describe('RefreshTokenService', () => {
         createdAt: new Date(),
       };
 
-      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(mockToken);
+      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(
+        mockToken,
+      );
 
       const result = await service.validateToken('valid-token');
 
@@ -126,9 +135,13 @@ describe('RefreshTokenService', () => {
     });
 
     it('should throw UnauthorizedException for non-existent token', async () => {
-      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(null);
+      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(
+        null,
+      );
 
-      await expect(service.validateToken('invalid-token')).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateToken('invalid-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw if token is revoked', async () => {
@@ -142,8 +155,12 @@ describe('RefreshTokenService', () => {
         createdAt: new Date(),
       };
 
-      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(mockToken);
-      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
+      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(
+        mockToken,
+      );
+      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue({
+        count: 1,
+      });
 
       await expect(service.validateToken('revoked-token')).rejects.toThrow();
     });
@@ -159,7 +176,9 @@ describe('RefreshTokenService', () => {
         createdAt: new Date(),
       };
 
-      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(mockToken);
+      (prismaService.refreshToken.findUnique as jest.Mock).mockResolvedValue(
+        mockToken,
+      );
 
       await expect(service.validateToken('expired-token')).rejects.toThrow();
     });
@@ -167,7 +186,9 @@ describe('RefreshTokenService', () => {
 
   describe('revokeToken', () => {
     it('should update token with revokedAt timestamp', async () => {
-      (prismaService.refreshToken.update as jest.Mock).mockResolvedValue(undefined);
+      (prismaService.refreshToken.update as jest.Mock).mockResolvedValue(
+        undefined,
+      );
 
       await service.revokeToken('token-to-revoke');
 
@@ -180,7 +201,9 @@ describe('RefreshTokenService', () => {
 
   describe('revokeAllUserTokens', () => {
     it('should revoke all non-revoked tokens for user', async () => {
-      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue({ count: 3 });
+      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue({
+        count: 3,
+      });
 
       const count = await service.revokeAllUserTokens('user-123');
 
@@ -192,7 +215,9 @@ describe('RefreshTokenService', () => {
     });
 
     it('should return 0 when no tokens to revoke', async () => {
-      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
+      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue({
+        count: 0,
+      });
 
       const count = await service.revokeAllUserTokens('user-with-no-tokens');
 
@@ -226,8 +251,12 @@ describe('RefreshTokenService', () => {
       (prismaService.refreshToken.findUnique as jest.Mock)
         .mockResolvedValueOnce(oldToken)
         .mockResolvedValueOnce(null);
-      (prismaService.refreshToken.update as jest.Mock).mockResolvedValue(undefined);
-      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(newToken);
+      (prismaService.refreshToken.update as jest.Mock).mockResolvedValue(
+        undefined,
+      );
+      (prismaService.refreshToken.create as jest.Mock).mockResolvedValue(
+        newToken,
+      );
 
       const result = await service.rotateToken('old-token');
 
@@ -266,7 +295,9 @@ describe('RefreshTokenService', () => {
 
   describe('cleanupExpiredTokens', () => {
     it('should delete expired tokens', async () => {
-      (prismaService.refreshToken.deleteMany as jest.Mock).mockResolvedValue({ count: 5 });
+      (prismaService.refreshToken.deleteMany as jest.Mock).mockResolvedValue({
+        count: 5,
+      });
 
       const count = await service.cleanupExpiredTokens();
 

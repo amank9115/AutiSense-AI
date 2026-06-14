@@ -37,15 +37,21 @@ describe('LockoutService', () => {
     it('should not throw when account is not locked', async () => {
       redisService.get.mockResolvedValue(null);
 
-      await expect(service.checkLockout('test@example.com')).resolves.not.toThrow();
-      expect(redisService.get).toHaveBeenCalledWith('auth:lockout:test@example.com');
+      await expect(
+        service.checkLockout('test@example.com'),
+      ).resolves.not.toThrow();
+      expect(redisService.get).toHaveBeenCalledWith(
+        'auth:lockout:test@example.com',
+      );
     });
 
     it('should throw AccountLockedException when account is locked', async () => {
       redisService.get.mockResolvedValue('5');
       redisService.ttl.mockResolvedValue(300); // 5 minutes remaining
 
-      await expect(service.checkLockout('test@example.com')).rejects.toThrow(AccountLockedException);
+      await expect(service.checkLockout('test@example.com')).rejects.toThrow(
+        AccountLockedException,
+      );
       expect(redisService.ttl).toHaveBeenCalled();
     });
 
@@ -69,7 +75,9 @@ describe('LockoutService', () => {
 
       await service.recordFailedAttempt('test@example.com');
 
-      expect(redisService.incr).toHaveBeenCalledWith('auth:lockout:test@example.com');
+      expect(redisService.incr).toHaveBeenCalledWith(
+        'auth:lockout:test@example.com',
+      );
       expect(redisService.expire).toHaveBeenCalled();
     });
 
@@ -89,7 +97,9 @@ describe('LockoutService', () => {
 
       await service.clearLockout('test@example.com');
 
-      expect(redisService.del).toHaveBeenCalledWith('auth:lockout:test@example.com');
+      expect(redisService.del).toHaveBeenCalledWith(
+        'auth:lockout:test@example.com',
+      );
     });
   });
 
@@ -115,7 +125,8 @@ describe('LockoutService', () => {
     it('should return remaining time in seconds', async () => {
       redisService.ttl.mockResolvedValue(300); // 5 minutes
 
-      const remaining = await service.getRemainingLockoutTime('test@example.com');
+      const remaining =
+        await service.getRemainingLockoutTime('test@example.com');
 
       expect(remaining).toBe(300);
     });
@@ -123,7 +134,8 @@ describe('LockoutService', () => {
     it('should return -1 when key does not exist', async () => {
       redisService.ttl.mockResolvedValue(-2); // -2 indicates no TTL
 
-      const remaining = await service.getRemainingLockoutTime('test@example.com');
+      const remaining =
+        await service.getRemainingLockoutTime('test@example.com');
 
       expect(remaining).toBe(-1);
     });
@@ -135,7 +147,9 @@ describe('LockoutService', () => {
 
       await service.unlockAccount('test@example.com');
 
-      expect(redisService.del).toHaveBeenCalledWith('auth:lockout:test@example.com');
+      expect(redisService.del).toHaveBeenCalledWith(
+        'auth:lockout:test@example.com',
+      );
     });
   });
 

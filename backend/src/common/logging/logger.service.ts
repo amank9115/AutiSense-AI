@@ -9,12 +9,15 @@ export class LoggerService implements NestLoggerService {
     this.logger = winstonLogger;
   }
 
-  setContext(context: string) {
+  setContext(_context: string) {
     // This method is called by NestJS logger interface, but we don't use it
   }
 
   debug(message: string, context?: string): void {
-    this.logger.debug(message, { context, timestamp: new Date().toISOString() });
+    this.logger.debug(message, {
+      context,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   error(message: string, error?: any, context?: string): void {
@@ -48,7 +51,10 @@ export class LoggerService implements NestLoggerService {
   }
 
   verbose(message: string, context?: string): void {
-    this.logger.verbose(message, { context, timestamp: new Date().toISOString() });
+    this.logger.verbose(message, {
+      context,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   // Additional helper methods

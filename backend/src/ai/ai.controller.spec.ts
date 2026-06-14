@@ -9,7 +9,13 @@ describe('AiController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AiController],
       providers: [
-        { provide: AiService, useValue: { queueDocumentForIngestion: jest.fn(), getIngestionStatus: jest.fn() } },
+        {
+          provide: AiService,
+          useValue: {
+            queueDocumentForIngestion: jest.fn(),
+            getIngestionStatus: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

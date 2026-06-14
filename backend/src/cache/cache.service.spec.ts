@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CacheService, DEFAULT_CACHE_TTL, SHORT_CACHE_TTL, LONG_CACHE_TTL } from './cache.service';
+import {
+  CacheService,
+  DEFAULT_CACHE_TTL,
+  SHORT_CACHE_TTL,
+  LONG_CACHE_TTL,
+} from './cache.service';
 import { AppConfigService } from '../config/config.service';
 import Redis from 'ioredis';
 
@@ -115,7 +120,9 @@ describe('CacheService', () => {
       mockRedis.setex.mockRejectedValue(new Error('Write failed'));
 
       // Should not throw
-      await expect(service.set('test-key', { data: 'value' })).resolves.not.toThrow();
+      await expect(
+        service.set('test-key', { data: 'value' }),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -246,7 +253,11 @@ describe('CacheService', () => {
 
       expect(result).toEqual({ id: 2 });
       expect(fetchFn).toHaveBeenCalled();
-      expect(mockRedis.setex).toHaveBeenCalledWith('key', 300, JSON.stringify({ id: 2 }));
+      expect(mockRedis.setex).toHaveBeenCalledWith(
+        'key',
+        300,
+        JSON.stringify({ id: 2 }),
+      );
     });
   });
 

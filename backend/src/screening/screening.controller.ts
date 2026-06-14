@@ -66,11 +66,10 @@ export class ScreeningController {
     @Request() req: RequestWithUser,
     @Body() body: SaveResultDto,
   ) {
-    return this.screeningService.saveScreeningResult(
+    return this.screeningService.saveScreeningResult(sessionId, req.user.sub, {
+      ...body,
       sessionId,
-      req.user.sub,
-      { ...body, sessionId },
-    );
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -80,7 +79,10 @@ export class ScreeningController {
     @Request() req: RequestWithUser,
     @Body() body: SaveAnalysisDto,
   ) {
-    return this.screeningService.saveAnalysisData(sessionId, req.user.sub, { ...body, sessionId });
+    return this.screeningService.saveAnalysisData(sessionId, req.user.sub, {
+      ...body,
+      sessionId,
+    });
   }
 
   @UseGuards(JwtAuthGuard)

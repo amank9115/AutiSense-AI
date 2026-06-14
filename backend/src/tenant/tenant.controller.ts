@@ -13,7 +13,10 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantService } from './tenant.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { ResourceConflictException, NotFoundException } from '../common/exceptions';
+import {
+  ResourceConflictException,
+  NotFoundException,
+} from '../common/exceptions';
 
 interface RequestWithUser {
   user: { sub: string };
@@ -25,7 +28,10 @@ export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
   @Post()
-  async create(@Request() req: RequestWithUser, @Body() dto: CreateOrganizationDto) {
+  async create(
+    @Request() req: RequestWithUser,
+    @Body() dto: CreateOrganizationDto,
+  ) {
     const existing = await this.tenantService.findBySlug(dto.slug);
     if (existing) {
       throw new ResourceConflictException('Organization slug is already taken');

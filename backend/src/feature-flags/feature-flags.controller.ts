@@ -82,7 +82,9 @@ export class FeatureFlagsController {
     this.featureFlagsService.reset(name);
     return {
       name,
-      enabled: this.featureFlagsService.getAll().find(f => f.name === name)?.enabled ?? false,
+      enabled:
+        this.featureFlagsService.getAll().find((f) => f.name === name)
+          ?.enabled ?? false,
     };
   }
 

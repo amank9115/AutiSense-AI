@@ -19,17 +19,21 @@ export class BillingService {
     });
   }
 
-  async updateStatus(organizationId: string, status: SubscriptionStatus): Promise<void> {
+  async updateStatus(
+    organizationId: string,
+    status: SubscriptionStatus,
+  ): Promise<void> {
     await this.prisma.subscription.update({
       where: { organizationId },
       data: { status },
     });
   }
 
-  async handleStripeWebhook(payload: Buffer, signature: string): Promise<void> {
-    // Stripe webhook handler — validate signature and process events
+  handleStripeWebhook(_payload: Buffer, _signature: string): Promise<void> {
+    // Stripe webhook handler — validate signature and process events.
     // Install stripe SDK: npm install stripe
     // Implement: checkout.session.completed, invoice.payment_failed, customer.subscription.updated
     this.logger.log('Stripe webhook received — Stripe SDK integration pending');
+    return Promise.resolve();
   }
 }

@@ -40,13 +40,20 @@ export const configuration = (): IConfig => {
   const jwtSecret = process.env.JWT_SECRET;
 
   // Validate JWT_SECRET in production to prevent deployment without proper secrets
-  if (process.env.NODE_ENV === 'production' && (!jwtSecret || jwtSecret.includes('dev-secret') || jwtSecret.length < 32)) {
-    throw new Error('JWT_SECRET must be set and be at least 32 characters in production. Use a cryptographically secure random string.');
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (!jwtSecret || jwtSecret.includes('dev-secret') || jwtSecret.length < 32)
+  ) {
+    throw new Error(
+      'JWT_SECRET must be set and be at least 32 characters in production. Use a cryptographically secure random string.',
+    );
   }
 
   return {
     database: {
-      url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/autism_screening',
+      url:
+        process.env.DATABASE_URL ||
+        'postgresql://user:password@localhost:5432/autism_screening',
     },
     server: {
       port: parseInt(process.env.PORT ?? '3000', 10),
@@ -57,9 +64,12 @@ export const configuration = (): IConfig => {
       jwtSecret: jwtSecret || 'dev-only-secret-do-not-use-in-production-32ch',
       jwtExpiry: process.env.JWT_EXPIRY ?? '24h',
       refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY ?? '7d',
-      allowedOrigins: (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000,http://localhost:3001,http://localhost:4000')
+      allowedOrigins: (
+        process.env.ALLOWED_ORIGINS ??
+        'http://localhost:3000,http://localhost:3001,http://localhost:4000'
+      )
         .split(',')
-        .map(origin => origin.trim()),
+        .map((origin) => origin.trim()),
     },
     mlService: {
       enabled: process.env.PY_ML_ENABLED === 'true',

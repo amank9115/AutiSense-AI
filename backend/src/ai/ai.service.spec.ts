@@ -14,8 +14,14 @@ describe('AiService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AiService,
-        { provide: PrismaService, useValue: { screeningResult: { create: jest.fn() } } },
-        { provide: DocumentProcessor, useValue: { processDocument: jest.fn() } },
+        {
+          provide: PrismaService,
+          useValue: { screeningResult: { create: jest.fn() } },
+        },
+        {
+          provide: DocumentProcessor,
+          useValue: { processDocument: jest.fn() },
+        },
       ],
     }).compile();
 

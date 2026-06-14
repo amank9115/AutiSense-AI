@@ -6,15 +6,18 @@ import { IConfig } from './configuration';
 export class AppConfigService {
   constructor(private configService: NestConfigService<IConfig, true>) {}
 
-  get database() {
-    return this.configService.get('database');
+  get database(): IConfig['database'] {
+    return this.configService.get('database', { infer: true });
   }
 
-  get server() {
-    return this.configService.get('server');
+  get server(): IConfig['server'] {
+    return this.configService.get('server', { infer: true });
   }
 
-  get auth() {
+  get auth(): Pick<
+    IConfig['server'],
+    'jwtSecret' | 'jwtExpiry' | 'refreshTokenExpiry'
+  > {
     return {
       jwtSecret: this.server.jwtSecret,
       jwtExpiry: this.server.jwtExpiry,
@@ -22,28 +25,28 @@ export class AppConfigService {
     };
   }
 
-  get mlService() {
-    return this.configService.get('mlService');
+  get mlService(): IConfig['mlService'] {
+    return this.configService.get('mlService', { infer: true });
   }
 
-  get aiEngine() {
-    return this.configService.get('aiEngine');
+  get aiEngine(): IConfig['aiEngine'] {
+    return this.configService.get('aiEngine', { infer: true });
   }
 
-  get redis() {
-    return this.configService.get('redis');
+  get redis(): IConfig['redis'] {
+    return this.configService.get('redis', { infer: true });
   }
 
-  get email() {
-    return this.configService.get('email');
+  get email(): IConfig['email'] {
+    return this.configService.get('email', { infer: true });
   }
 
-  get groq() {
-    return this.configService.get('groq');
+  get groq(): IConfig['groq'] {
+    return this.configService.get('groq', { infer: true });
   }
 
-  get ollama() {
-    return this.configService.get('ollama');
+  get ollama(): IConfig['ollama'] {
+    return this.configService.get('ollama', { infer: true });
   }
 
   isDevelopment(): boolean {

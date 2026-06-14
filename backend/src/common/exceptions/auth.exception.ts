@@ -55,7 +55,8 @@ export class TokenRevokedException extends AppException {
 export class AccountLockedException extends AppException {
   constructor(message?: string) {
     super(
-      message || 'Account is temporarily locked due to too many failed attempts',
+      message ||
+        'Account is temporarily locked due to too many failed attempts',
       423, // Locked
       ErrorCode.ACCOUNT_LOCKED,
     );

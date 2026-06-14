@@ -6,7 +6,10 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { AppConfigService } from './config/config.service';
 import { LoggerService } from './common/logging';
 import { HttpLoggerMiddleware } from './common/logging/http-logger.middleware';
-import { CorrelationIdMiddleware, CORRELATION_ID_HEADER } from './common/middleware/correlation-id.middleware';
+import {
+  CorrelationIdMiddleware,
+  CORRELATION_ID_HEADER,
+} from './common/middleware/correlation-id.middleware';
 import cookieParser from 'cookie-parser';
 
 // Security headers with Helmet (requires: npm install helmet @types/helmet)
@@ -39,13 +42,19 @@ async function bootstrap() {
   // }));
 
   // Get allowed origins from environment
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:3001,http://localhost:4000')
+  const allowedOrigins = (
+    process.env.ALLOWED_ORIGINS ||
+    'http://localhost:3000,http://localhost:3001,http://localhost:4000'
+  )
     .split(',')
-    .map(origin => origin.trim());
+    .map((origin) => origin.trim());
 
   // CORS configuration - environment-based
   app.enableCors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // Allow requests with no origin (mobile apps, Postman, curl)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -55,7 +64,12 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', CORRELATION_ID_HEADER, 'Accept'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      CORRELATION_ID_HEADER,
+      'Accept',
+    ],
   });
 
   app.use(cookieParser());
@@ -122,10 +136,13 @@ async function bootstrap() {
 
   // Graceful shutdown handlers
   const gracefulShutdown = async (signal: string) => {
-    logger.log(`📤 Received ${signal}. Starting graceful shutdown...`, 'Bootstrap');
+    logger.log(
+      `📤 Received ${signal}. Starting graceful shutdown...`,
+      'Bootstrap',
+    );
 
     // Give time for load balancer health checks to detect shutdown
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     try {
       await app.close();
@@ -137,8 +154,8 @@ async function bootstrap() {
     }
   };
 
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {

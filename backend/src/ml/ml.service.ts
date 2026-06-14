@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AppConfigService } from '../config/config.service';
-import { CircuitBreakerService, CircuitState } from '../common/circuit-breaker/circuit-breaker.service';
+import {
+  CircuitBreakerService,
+  CircuitState,
+} from '../common/circuit-breaker/circuit-breaker.service';
 import {
   MLServiceUnavailableException,
   MLAnalysisFailedException,
@@ -96,8 +99,7 @@ export class MlService {
         return this.request<T>(path, options, retryCount + 1);
       }
 
-      const errorMsg =
-        error instanceof Error ? error.message : 'Unknown error';
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       throw new MLServiceUnavailableException(
         `ML service unavailable: ${errorMsg}`,
       );
@@ -118,7 +120,9 @@ export class MlService {
     // Check circuit breaker state
     const circuitState = this.circuitBreaker.getState(ML_CIRCUIT_NAME);
     if (circuitState === CircuitState.OPEN) {
-      this.logger.warn('ML circuit breaker is OPEN, health check indicates unavailable');
+      this.logger.warn(
+        'ML circuit breaker is OPEN, health check indicates unavailable',
+      );
       return {
         ok: false,
         model_ready: false,
@@ -130,11 +134,12 @@ export class MlService {
       return await this.circuitBreaker.execute<MlHealthResponse>(
         ML_CIRCUIT_NAME,
         () => this.request<MlHealthResponse>('/health'),
-        async () => ({
-          ok: false,
-          model_ready: false,
-          model_version: 'circuit-open',
-        }),
+        () =>
+          Promise.resolve({
+            ok: false,
+            model_ready: false,
+            model_version: 'circuit-open',
+          }),
       );
     } catch (error) {
       this.logger.error('ML health check failed', error);
@@ -152,9 +157,7 @@ export class MlService {
     childInfo?: Record<string, string>,
   ): Promise<MlPredictResponse> {
     if (!this.enabled) {
-      throw new MLServiceUnavailableException(
-        'Python ML service is disabled',
-      );
+      throw new MLServiceUnavailableException('Python ML service is disabled');
     }
 
     // Check circuit breaker before making request
@@ -181,9 +184,7 @@ export class MlService {
     childInfo?: Record<string, string>,
   ): Promise<MlPredictResponse> {
     if (!this.enabled) {
-      throw new MLServiceUnavailableException(
-        'Python ML service is disabled',
-      );
+      throw new MLServiceUnavailableException('Python ML service is disabled');
     }
 
     // Check circuit breaker before making request
@@ -205,9 +206,7 @@ export class MlService {
     childInfo?: Record<string, string>,
   ): Promise<ArrayBuffer> {
     if (!this.enabled) {
-      throw new MLServiceUnavailableException(
-        'Python ML service is disabled',
-      );
+      throw new MLServiceUnavailableException('Python ML service is disabled');
     }
 
     // Check circuit breaker before making request
@@ -246,9 +245,7 @@ export class MlService {
         this.circuitBreaker.recordFailure(ML_CIRCUIT_NAME);
       }
       throw new MLAnalysisFailedException(
-        error instanceof Error
-          ? error.message
-          : 'Report generation failed',
+        error instanceof Error ? error.message : 'Report generation failed',
       );
     } finally {
       clearTimeout(timeoutId);
@@ -257,9 +254,7 @@ export class MlService {
 
   async getSessionData(sessionKey: string): Promise<Record<string, unknown>> {
     if (!this.enabled) {
-      throw new MLServiceUnavailableException(
-        'Python ML service is disabled',
-      );
+      throw new MLServiceUnavailableException('Python ML service is disabled');
     }
 
     // Check circuit breaker before making request

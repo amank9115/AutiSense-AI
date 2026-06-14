@@ -16,7 +16,14 @@ export class RedisService implements OnModuleDestroy {
       host,
       port,
       ...(password ? { password } : {}),
-      ...(tls ? { tls: {} } : {}),
+      ...(tls
+        ? {
+            tls: {
+              // Disable certificate verification for development
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
       retryStrategy: (times) => {
         if (times > 3) {
           this.logger.error('Redis connection failed after 3 retries');

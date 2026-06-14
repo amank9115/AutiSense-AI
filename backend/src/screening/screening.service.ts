@@ -87,7 +87,7 @@ export class ScreeningService {
     userId: string,
     status: ScreeningStatus,
   ) {
-    const session = await this.verifySessionOwnership(sessionId, userId);
+    await this.verifySessionOwnership(sessionId, userId);
 
     return this.prisma.screeningSession.update({
       where: { id: sessionId },
@@ -109,7 +109,7 @@ export class ScreeningService {
     dto: SaveScreeningResultDto,
   ) {
     // Verify session ownership
-    const session = await this.verifySessionOwnership(sessionId, userId);
+    await this.verifySessionOwnership(sessionId, userId);
 
     // Update session with result data
     await this.prisma.screeningSession.update({
@@ -176,7 +176,12 @@ export class ScreeningService {
       const cacheKey = this.getUserSessionsCacheKey(userId);
       const cached = await this.cache.get<{
         data: any[];
-        pagination: { page: number; limit: number; total: number; pages: number };
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          pages: number;
+        };
       }>(cacheKey);
       if (cached) {
         this.logger.debug(`Cache hit for user sessions: ${userId}`);
@@ -297,7 +302,7 @@ export class ScreeningService {
    * Get single session with all data
    */
   async getSessionDetails(sessionId: string, userId: string) {
-    const session = await this.verifySessionOwnership(sessionId, userId);
+    await this.verifySessionOwnership(sessionId, userId);
 
     return this.prisma.screeningSession.findUnique({
       where: { id: sessionId },
@@ -314,7 +319,7 @@ export class ScreeningService {
    * Delete screening session
    */
   async deleteSession(sessionId: string, userId: string) {
-    const session = await this.verifySessionOwnership(sessionId, userId);
+    await this.verifySessionOwnership(sessionId, userId);
 
     await this.prisma.screeningSession.delete({
       where: { id: sessionId },
@@ -344,27 +349,31 @@ export class ScreeningService {
       return cached;
     }
 
-    const [totalSessions, completedSessions, averageRiskScore, sessionsByMonth] =
-      await Promise.all([
-        this.prisma.screeningSession.count({ where: { userId } }),
-        this.prisma.screeningSession.count({
-          where: {
-            userId,
-            status: ScreeningStatus.completed,
-          },
-        }),
-        this.prisma.screeningResult.aggregate({
-          where: { session: { userId } },
-          _avg: { riskScore: true },
-        }),
-        this.prisma.screeningSession.groupBy({
-          by: ['createdAt'],
-          where: { userId },
-          _count: true,
-          orderBy: { createdAt: 'desc' },
-          take: 12,
-        }),
-      ]);
+    const [
+      totalSessions,
+      completedSessions,
+      averageRiskScore,
+      sessionsByMonth,
+    ] = await Promise.all([
+      this.prisma.screeningSession.count({ where: { userId } }),
+      this.prisma.screeningSession.count({
+        where: {
+          userId,
+          status: ScreeningStatus.completed,
+        },
+      }),
+      this.prisma.screeningResult.aggregate({
+        where: { session: { userId } },
+        _avg: { riskScore: true },
+      }),
+      this.prisma.screeningSession.groupBy({
+        by: ['createdAt'],
+        where: { userId },
+        _count: true,
+        orderBy: { createdAt: 'desc' },
+        take: 12,
+      }),
+    ]);
 
     const result = {
       totalSessions,
@@ -391,10 +400,7 @@ export class ScreeningService {
     const sessionsKey = this.getUserSessionsCacheKey(userId);
     const statsKey = this.getUserStatsCacheKey(userId);
 
-    await Promise.all([
-      this.cache.del(sessionsKey),
-      this.cache.del(statsKey),
-    ]);
+    await Promise.all([this.cache.del(sessionsKey), this.cache.del(statsKey)]);
 
     this.logger.debug(`Cache invalidated for user: ${userId}`);
   }
@@ -402,10 +408,7 @@ export class ScreeningService {
   /**
    * Verify session ownership
    */
-  private async verifySessionOwnership(
-    sessionId: string,
-    userId: string,
-  ) {
+  private async verifySessionOwnership(sessionId: string, userId: string) {
     const session = await this.prisma.screeningSession.findUnique({
       where: { id: sessionId },
     });

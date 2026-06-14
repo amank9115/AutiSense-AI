@@ -9,7 +9,16 @@ describe('AuthController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useValue: { login: jest.fn(), register: jest.fn(), refreshToken: jest.fn(), resetPassword: jest.fn(), sendVerificationEmail: jest.fn() } },
+        {
+          provide: AuthService,
+          useValue: {
+            login: jest.fn(),
+            register: jest.fn(),
+            refreshToken: jest.fn(),
+            resetPassword: jest.fn(),
+            sendVerificationEmail: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

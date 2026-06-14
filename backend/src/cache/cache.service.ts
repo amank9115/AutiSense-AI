@@ -19,9 +19,21 @@ export class CacheService implements OnModuleDestroy {
       port: parseInt(process.env.REDIS_PORT || '6379', 10),
     };
 
+    const tls = process.env.REDIS_TLS === 'true';
+    const password = process.env.REDIS_PASSWORD;
+
     this.client = new Redis({
       host: redisConfig.host,
       port: redisConfig.port,
+      ...(password ? { password } : {}),
+      ...(tls
+        ? {
+            tls: {
+              // Disable certificate verification for development
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
       retryStrategy: (times) => {
         if (times > 3) {
           this.logger.error('Redis connection failed after 3 retries');
@@ -81,7 +93,11 @@ export class CacheService implements OnModuleDestroy {
     }
   }
 
-  async set<T>(key: string, value: T, ttlSeconds: number = DEFAULT_CACHE_TTL): Promise<void> {
+  async set<T>(
+    key: string,
+    value: T,
+    ttlSeconds: number = DEFAULT_CACHE_TTL,
+  ): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
       await this.client.setex(key, ttlSeconds, serialized);
@@ -189,7 +205,7 @@ export class CacheService implements OnModuleDestroy {
     try {
       const result = await this.client.ping();
       return result === 'PONG';
-    } catch (error) {
+    } catch {
       return false;
     }
   }

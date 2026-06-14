@@ -67,7 +67,9 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     // Create refresh token with rotation
-    const refreshTokenData = await this.refreshTokenService.createToken(user.id);
+    const refreshTokenData = await this.refreshTokenService.createToken(
+      user.id,
+    );
 
     return {
       access_token,
@@ -86,7 +88,8 @@ export class AuthService {
   ): Promise<{ access_token: string; refresh_token: string }> {
     try {
       // Validate, rotate the refresh token, and get userId
-      const newTokenData = await this.refreshTokenService.rotateToken(refreshToken);
+      const newTokenData =
+        await this.refreshTokenService.rotateToken(refreshToken);
 
       const user = await this.usersService.findById(newTokenData.userId);
 
@@ -115,7 +118,7 @@ export class AuthService {
     if (refreshToken) {
       try {
         await this.refreshTokenService.revokeToken(refreshToken);
-      } catch (error) {
+      } catch {
         // Token might already be invalid, continue with logout
         this.logger.debug('Token revocation failed or token already invalid');
       }
@@ -123,7 +126,9 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  async logoutAllSessions(userId: string): Promise<{ message: string; sessionsRevoked: number }> {
+  async logoutAllSessions(
+    userId: string,
+  ): Promise<{ message: string; sessionsRevoked: number }> {
     const count = await this.refreshTokenService.revokeAllUserTokens(userId);
     return {
       message: 'All sessions have been logged out',

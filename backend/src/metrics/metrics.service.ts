@@ -137,9 +137,16 @@ export class MetricsService implements OnModuleInit {
     });
   }
 
-  observeHttpDuration(method: string, path: string, durationSeconds: number): void {
+  observeHttpDuration(
+    method: string,
+    path: string,
+    durationSeconds: number,
+  ): void {
     const normalizedPath = this.normalizePath(path);
-    this.httpRequestDuration.observe({ method, path: normalizedPath }, durationSeconds);
+    this.httpRequestDuration.observe(
+      { method, path: normalizedPath },
+      durationSeconds,
+    );
   }
 
   incrementHttpInFlight(): void {
@@ -204,7 +211,10 @@ export class MetricsService implements OnModuleInit {
 
   private normalizePath(path: string): string {
     return path
-      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':id')
+      .replace(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        ':id',
+      )
       .replace(/\/\d+/g, '/:id');
   }
 }

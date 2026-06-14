@@ -29,7 +29,13 @@ import { RefreshTokenService } from './refresh-token.service';
     RedisModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, LockoutService, RefreshTokenService],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    LockoutService,
+    RefreshTokenService,
+  ],
   exports: [AuthService, LockoutService, RefreshTokenService],
 })
 export class AuthModule {}

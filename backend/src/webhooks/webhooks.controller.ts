@@ -19,7 +19,10 @@ export class WebhooksController {
   constructor(private webhooks: WebhooksService) {}
 
   @Post(':orgId')
-  async register(@Param('orgId') orgId: string, @Body() dto: RegisterWebhookDto) {
+  async register(
+    @Param('orgId') orgId: string,
+    @Body() dto: RegisterWebhookDto,
+  ) {
     return this.webhooks.register(orgId, dto.url, dto.events);
   }
 
@@ -30,7 +33,10 @@ export class WebhooksController {
 
   @Delete(':orgId/:webhookId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('orgId') orgId: string, @Param('webhookId') webhookId: string) {
+  async remove(
+    @Param('orgId') orgId: string,
+    @Param('webhookId') webhookId: string,
+  ) {
     await this.webhooks.delete(webhookId, orgId);
   }
 }
