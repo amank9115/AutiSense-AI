@@ -113,7 +113,10 @@ export class LockoutService {
    */
   async getRemainingLockoutTime(email: string): Promise<number> {
     const key = `${this.prefix}${email}`;
-    return this.redis.ttl(key);
+    const ttl = await this.redis.ttl(key);
+    // Redis returns -2 when key doesn't exist, -1 when key has no TTL
+    // We return -1 for both cases to indicate "no lockout"
+    return ttl < 0 ? -1 : ttl;
   }
 
   /**

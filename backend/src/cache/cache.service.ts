@@ -100,7 +100,12 @@ export class CacheService implements OnModuleDestroy {
   ): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
-      await this.client.setex(key, ttlSeconds, serialized);
+      if (ttlSeconds === 0) {
+        // Set without expiration
+        await this.client.set(key, serialized);
+      } else {
+        await this.client.setex(key, ttlSeconds, serialized);
+      }
     } catch (error) {
       this.logger.error(`Cache set error for key ${key}`, error);
     }

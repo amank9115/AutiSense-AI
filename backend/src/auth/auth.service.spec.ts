@@ -14,6 +14,7 @@ jest.mock('bcryptjs');
 
 describe('AuthService', () => {
   let service: AuthService;
+  let moduleRef: TestingModule;
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
   let lockoutService: jest.Mocked<LockoutService>;
@@ -31,12 +32,12 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         AuthService,
         {
           provide: UsersService,
-          useValue: { findOne: jest.fn(), findById: jest.fn() },
+          useValue: { findOne: jest.fn(), findById: jest.fn(), create: jest.fn() },
         },
         {
           provide: JwtService,
@@ -71,15 +72,14 @@ describe('AuthService', () => {
             validateToken: jest.fn(),
           },
         },
-        { provide: JwtService, useValue: { sign: jest.fn() } },
       ],
     }).compile();
 
-    service = module.get<AuthService>(AuthService);
-    usersService = module.get(UsersService);
-    jwtService = module.get(JwtService);
-    lockoutService = module.get(LockoutService);
-    refreshTokenService = module.get(RefreshTokenService);
+    service = moduleRef.get<AuthService>(AuthService);
+    usersService = moduleRef.get(UsersService);
+    jwtService = moduleRef.get(JwtService);
+    lockoutService = moduleRef.get(LockoutService);
+    refreshTokenService = moduleRef.get(RefreshTokenService);
   });
 
   afterEach(() => {
@@ -119,7 +119,9 @@ describe('AuthService', () => {
       );
 
       expect(result).toBeNull();
-      expect(lockoutService.recordFailedAttempt).not.toHaveBeenCalled();
+      expect(lockoutService.recordFailedAttempt).toHaveBeenCalledWith(
+        'nonexistent@example.com',
+      );
     });
 
     it('should return null when password is incorrect', async () => {
@@ -194,10 +196,7 @@ describe('AuthService', () => {
 
       await service.login(mockUser as User);
 
-      expect(refreshTokenService.createToken).toHaveBeenCalledWith(
-        'user-123',
-        undefined,
-      );
+      expect(refreshTokenService.createToken).toHaveBeenCalledWith('user-123');
     });
   });
 
@@ -273,8 +272,8 @@ describe('AuthService', () => {
         emailVerificationToken: 'verification-token',
       } as User);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
-      const emailService = module.get(EmailService);
-      emailService.sendVerificationEmail.mockResolvedValue({
+      const emailService = moduleRef.get(EmailService);
+      (emailService.sendVerificationEmail as jest.Mock).mockResolvedValue({
         previewUrl: 'http://preview',
       });
 

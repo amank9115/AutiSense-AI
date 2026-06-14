@@ -78,18 +78,12 @@ describe('CircuitBreakerService', () => {
     it('should transition from HALF_OPEN to OPEN on failure', () => {
       service.getCircuit('test-service', { failureThreshold: 3, timeout: 1 });
 
-      // Force to HALF_OPEN by reaching threshold then waiting
-      service.recordFailure('test-service');
-      service.recordFailure('test-service');
-      service.recordFailure('test-service'); // Now OPEN
+      // Manually set circuit to HALF_OPEN state for this test
+      const circuit = service.getCircuit('test-service');
+      circuit.state = CircuitState.HALF_OPEN;
 
-      // Simulate timeout by using a very short timeout
-      service.getCircuit('test-service', { failureThreshold: 3, timeout: 1 });
-      (service.getStats('test-service') as any).lastFailureTime =
-        Date.now() - 100; // In the past
-
-      // Allow one success to transition to HALF_OPEN
-      service.recordFailure('test-service'); // From HALF_OPEN = back to OPEN
+      // Record failure in HALF_OPEN state should transition to OPEN
+      service.recordFailure('test-service');
 
       expect(service.getState('test-service')).toBe(CircuitState.OPEN);
     });
@@ -116,13 +110,11 @@ describe('CircuitBreakerService', () => {
       service.getCircuit('test-service', { failureThreshold: 1, timeout: 1 });
       service.recordFailure('test-service'); // Now OPEN
 
-      // Simulate time passing
-      (service.getStats('test-service') as any).nextAttemptTime =
-        Date.now() - 1000;
+      // Get the circuit directly and set nextAttemptTime in the past
+      const circuit = service.getCircuit('test-service');
+      circuit.nextAttemptTime = Date.now() - 1000;
 
-      expect(service.isCallAllowed('test-service')).toBe(
-        CircuitState.HALF_OPEN,
-      );
+      expect(service.isCallAllowed('test-service')).toBe(true);
     });
 
     it('should allow calls in HALF_OPEN state', () => {
@@ -194,6 +186,10 @@ describe('CircuitBreakerService', () => {
   describe('recovery from HALF_OPEN', () => {
     it('should transition to CLOSED after success threshold in HALF_OPEN', () => {
       service.getCircuit('test-service', { successThreshold: 2 });
+      
+      // Manually set circuit to HALF_OPEN state for testing
+      const circuit = service.getCircuit('test-service');
+      circuit.state = CircuitState.HALF_OPEN;
 
       // First success in HALF_OPEN
       service.recordSuccess('test-service');
