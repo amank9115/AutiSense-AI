@@ -76,7 +76,10 @@ describe('CircuitBreakerService', () => {
     });
 
     it('should transition from HALF_OPEN to OPEN on failure', () => {
-      service.getCircuit('test-service', { failureThreshold: 3, timeout: 1 });
+      service.getCircuit('test-service', {
+        failureThreshold: 3,
+        timeout: 60000,
+      });
 
       // Manually set circuit to HALF_OPEN state for this test
       const circuit = service.getCircuit('test-service');
