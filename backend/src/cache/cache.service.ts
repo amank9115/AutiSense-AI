@@ -62,7 +62,7 @@ export class CacheService implements OnModuleDestroy {
     });
 
     // Attempt connection on initialization
-    this.client.connect().catch((err) => {
+    this.client.connect().catch((err: Error) => {
       this.logger.warn(`Initial cache connection failed: ${err.message}`);
     });
   }

@@ -5,6 +5,11 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { DocumentProcessor } from './document.processor';
+import {
+  ScreeningSessionMetadata,
+  ScreeningResultBehaviors,
+  RiskLevel,
+} from '../common/types/prisma-json';
 
 @Injectable()
 export class AiService {
@@ -117,10 +122,9 @@ export class AiService {
         userId: data.userId,
         childId: data.childId,
         riskScore: data.riskScore,
-        riskLevel: data.riskLabel as any,
+        riskLevel: data.riskLabel as RiskLevel,
         summary: JSON.stringify(data.summary),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        metadata: { metrics: data.metrics } as any,
+        metadata: { metrics: data.metrics } as ScreeningSessionMetadata,
       },
     });
 
@@ -128,10 +132,10 @@ export class AiService {
       data: {
         sessionId: session.id,
         riskScore: data.riskScore,
-        riskLevel: data.riskLabel as any,
-        behaviors: data.metrics as any,
+        riskLevel: data.riskLabel as RiskLevel,
+        behaviors: data.metrics as ScreeningResultBehaviors,
         summary: JSON.stringify(data.summary),
-        recommendations: data.recommendations as any,
+        recommendations: data.recommendations,
       },
     });
 

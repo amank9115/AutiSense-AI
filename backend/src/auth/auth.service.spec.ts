@@ -37,7 +37,11 @@ describe('AuthService', () => {
         AuthService,
         {
           provide: UsersService,
-          useValue: { findOne: jest.fn(), findById: jest.fn(), create: jest.fn() },
+          useValue: {
+            findOne: jest.fn(),
+            findById: jest.fn(),
+            create: jest.fn(),
+          },
         },
         {
           provide: JwtService,

@@ -40,10 +40,14 @@ describe('CacheService', () => {
   beforeEach(async () => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Set up default mock implementations
-    (mockRedisMethods.connect as jest.Mock).mockResolvedValue(undefined);
-    (mockRedisMethods.on as jest.Mock).mockImplementation(function(this: any, event: string, callback: Function) {
+    mockRedisMethods.connect.mockResolvedValue(undefined);
+    mockRedisMethods.on.mockImplementation(function (
+      this: any,
+      event: string,
+      callback: () => void,
+    ) {
       if (event === 'ready') {
         // Simulate ready event after a short delay
         setTimeout(() => callback(), 0);
@@ -184,7 +188,11 @@ describe('CacheService', () => {
 
       expect(result).toBe(3);
       expect(mockRedisMethods.keys).toHaveBeenCalledWith('key:*');
-      expect(mockRedisMethods.del).toHaveBeenCalledWith('key:1', 'key:2', 'key:3');
+      expect(mockRedisMethods.del).toHaveBeenCalledWith(
+        'key:1',
+        'key:2',
+        'key:3',
+      );
     });
 
     it('should return 0 when no keys match pattern', async () => {

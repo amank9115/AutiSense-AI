@@ -23,7 +23,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    let errorResponse: any;
+    let errorResponse: {
+      statusCode: number;
+      message: string;
+      errorCode: ErrorCode;
+      timestamp: string;
+      path: string;
+      method: string;
+      context?: unknown;
+    };
 
     if (exception instanceof AppException) {
       // Handle custom AppException
@@ -42,7 +50,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const message =
         typeof exceptionResponse === 'string'
           ? exceptionResponse
-          : (exceptionResponse as any).message || exception.message;
+          : (exceptionResponse as { message?: string }).message ||
+            exception.message;
 
       errorResponse = {
         statusCode: status,

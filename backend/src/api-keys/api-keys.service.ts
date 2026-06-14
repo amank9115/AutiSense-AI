@@ -11,7 +11,7 @@ export class ApiKeysService {
     organizationId: string,
     name: string,
     scopes: string[],
-  ): Promise<{ key: string; record: any }> {
+  ): Promise<{ key: string; record: ApiKey }> {
     const rawKey = `ak_${randomBytes(24).toString('hex')}`;
     const keyHash = createHash('sha256').update(rawKey).digest('hex');
     const keyPrefix = rawKey.substring(0, 10);

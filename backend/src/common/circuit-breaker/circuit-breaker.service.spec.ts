@@ -186,7 +186,7 @@ describe('CircuitBreakerService', () => {
   describe('recovery from HALF_OPEN', () => {
     it('should transition to CLOSED after success threshold in HALF_OPEN', () => {
       service.getCircuit('test-service', { successThreshold: 2 });
-      
+
       // Manually set circuit to HALF_OPEN state for testing
       const circuit = service.getCircuit('test-service');
       circuit.state = CircuitState.HALF_OPEN;

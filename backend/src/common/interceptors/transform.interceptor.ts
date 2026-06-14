@@ -21,18 +21,18 @@ export class TransformInterceptor<T> implements NestInterceptor<
 > {
   intercept(
     context: ExecutionContext,
-    next: CallHandler,
+    next: CallHandler<T>,
   ): Observable<SuccessResponse<T>> {
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.path;
 
     // Skip transform for health check endpoints
     if (path === '/health' || path === '/ready') {
-      return next.handle();
+      return next.handle() as Observable<SuccessResponse<T>>;
     }
 
     return next.handle().pipe(
-      map((data) => ({
+      map((data: T) => ({
         data,
         message: 'Success',
         timestamp: new Date().toISOString(),
