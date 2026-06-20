@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import math
 import os
+import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -25,12 +26,26 @@ try:
     _META_PATH     = os.path.join(os.path.dirname(__file__), "asd_metadata.pkl")
 
     if os.path.exists(_MODEL_PATH):
-        _pipeline  = joblib.load(_MODEL_PATH)
-        _meta      = joblib.load(_META_PATH) if os.path.exists(_META_PATH) else {}
-        _model_ready = True
-        _model_version = "manassaathi-rf-uci-asd-v1"
-        print(f"[ML] Trained model loaded from {_MODEL_PATH}")
-        print(f"[ML] Accuracy: {_meta.get('accuracy', '?'):.1%}  ROC-AUC: {_meta.get('roc_auc', '?'):.3f}")
+        try:
+            _pipeline  = joblib.load(_MODEL_PATH)
+            _meta      = joblib.load(_META_PATH) if os.path.exists(_META_PATH) else {}
+            _model_ready = True
+            _model_version = _meta.get("model_version", "manassaathi-rf-uci-asd-v1")
+            print(f"[ML] Trained model loaded from {_MODEL_PATH}")
+            acc = _meta.get("accuracy")
+            auc = _meta.get("roc_auc")
+            acc_str = f"{acc:.1%}" if isinstance(acc, (int, float)) else "?"
+            auc_str = f"{auc:.3f}" if isinstance(auc, (int, float)) else "?"
+            print(f"[ML] Accuracy: {acc_str}  ROC-AUC: {auc_str}")
+        except Exception as load_err:
+            # File exists but is corrupt/incompatible — surface this loudly rather
+            # than silently pretending the trained model is available.
+            _pipeline    = None
+            _meta        = {}
+            _model_ready = False
+            _model_version = "python-heuristic-fallback-v1"
+            print(f"[ML] ERROR: failed to load {_MODEL_PATH}: {load_err}")
+            print("[ML]        Falling back to heuristic sigmoid model.")
     else:
         _pipeline    = None
         _meta        = {}
@@ -56,12 +71,21 @@ except Exception as _pdf_err:
 
 app = FastAPI(title="ManasSaathi Python ML", version="1.0.0")
 
-# CORS middleware for frontend connection
+# CORS middleware for frontend / backend connection. Restrict to known origins
+# by default; override via ML_ALLOWED_ORIGINS (comma-separated) when deploying.
+_allowed_origins = [
+    o.strip()
+    for o in os.getenv(
+        "ML_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://localhost:4000,http://127.0.0.1:4000",
+    ).split(",")
+    if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -84,7 +108,7 @@ class FrameInput(BaseModel):
 
 class WindowRequest(BaseModel):
     session_key: Optional[str] = None
-    frames: List[FrameInput]
+    frames: List[FrameInput] = Field(min_length=1)
     # Optional child info for report generation
     child_name: Optional[str] = None
     parent_name: Optional[str] = None
@@ -116,7 +140,11 @@ def clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
 
 
 def sigmoid(value: float) -> float:
+    value = max(-500.0, min(500.0, value))
     return 1.0 / (1.0 + math.exp(-value))
+
+
+MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB cap on a single decoded frame
 
 
 def decode_image(image_base64: str) -> Optional[np.ndarray]:
@@ -125,6 +153,11 @@ def decode_image(image_base64: str) -> Optional[np.ndarray]:
     raw = image_base64
     if "," in image_base64:
         raw = image_base64.split(",", 1)[1]
+    # Reject oversized payloads before allocating. base64 inflates bytes ~4/3,
+    # so compare the decoded-size estimate against the cap.
+    if len(raw) * 3 // 4 > MAX_IMAGE_BYTES:
+        print("[ML] decode_image: payload exceeds size cap, skipping frame")
+        return None
     try:
         payload = base64.b64decode(raw)
         arr = np.frombuffer(payload, dtype=np.uint8)
@@ -292,11 +325,18 @@ def score_frames(frames: List[FrameInput]) -> Dict[str, Any]:
 
     adjusted = [extract_cv_adjustments(frame) for frame in frames]
 
-    eye       = float(np.mean([item["eye"] for item in adjusted]))
-    attention = float(np.mean([item["attention"] for item in adjusted]))
-    emotion   = float(np.mean([item["emotion"] for item in adjusted]))
-    gesture   = float(np.mean([item["gesture"] for item in adjusted]))
-    confidence = float(np.mean([item["confidence"] for item in adjusted]))
+    def safe_mean(key: str, fallback: float = 50.0) -> float:
+        values = [item[key] for item in adjusted if item.get(key) is not None]
+        finite = [v for v in values if isinstance(v, (int, float)) and math.isfinite(v)]
+        if not finite:
+            return fallback
+        return clamp(float(np.mean(finite)))
+
+    eye        = safe_mean("eye")
+    attention  = safe_mean("attention")
+    emotion    = safe_mean("emotion")
+    gesture    = safe_mean("gesture")
+    confidence = safe_mean("confidence", fallback=70.0)
 
     result = run_model(eye, attention, emotion, gesture)
 
@@ -305,6 +345,7 @@ def score_frames(frames: List[FrameInput]) -> Dict[str, Any]:
         "model_version": result["model_version"],
         "risk_score": result["risk_score"],
         "risk_label": result["risk_label"],
+        "low_confidence": confidence < 50,
         "feature_averages": {
             "eye_contact": int(round(eye)),
             "attention_span": int(round(attention)),
@@ -426,7 +467,16 @@ def generate_report(payload: ReportRequest) -> Response:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
 
-    child_name_safe = session_data["child_name"].replace(" ", "_")
+    MAX_PDF_BYTES = 10 * 1024 * 1024  # 10 MB
+    if len(pdf_bytes) > MAX_PDF_BYTES:
+        raise HTTPException(status_code=500, detail="Generated PDF exceeds the 10 MB size limit")
+
+    # Sanitize the child name for use in a filename: keep alphanumerics, dashes
+    # and underscores only, preventing header injection / path traversal.
+    raw_name = session_data["child_name"] or "child"
+    child_name_safe = re.sub(r"[^A-Za-z0-9_-]", "_", raw_name.replace(" ", "_"))[:60]
+    if not child_name_safe:
+        child_name_safe = "child"
     date_safe = datetime.now().strftime("%Y%m%d")
     filename = f"ManasSaathi_Report_{child_name_safe}_{date_safe}.pdf"
 

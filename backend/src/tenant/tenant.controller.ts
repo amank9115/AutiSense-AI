@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantService } from './tenant.service';
+import { OrgMembershipGuard, OrgOwnerOnly } from './org-membership.guard';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import {
   ResourceConflictException,
@@ -45,6 +46,7 @@ export class TenantController {
   }
 
   @Get(':orgId')
+  @UseGuards(OrgMembershipGuard)
   async getOne(@Param('orgId') orgId: string) {
     const org = await this.tenantService.findById(orgId);
     if (!org) throw new NotFoundException('Organization not found');
@@ -52,11 +54,14 @@ export class TenantController {
   }
 
   @Get(':orgId/members')
+  @UseGuards(OrgMembershipGuard)
   async listMembers(@Param('orgId') orgId: string) {
     return this.tenantService.listMembers(orgId);
   }
 
   @Delete(':orgId/members/:userId')
+  @UseGuards(OrgMembershipGuard)
+  @OrgOwnerOnly()
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeMember(
     @Param('orgId') orgId: string,

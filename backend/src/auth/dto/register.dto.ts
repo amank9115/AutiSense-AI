@@ -3,10 +3,8 @@ import {
   IsString,
   IsOptional,
   MinLength,
-  IsEnum,
   Matches,
 } from 'class-validator';
-import { Role } from '@prisma/client';
 
 // Password must contain:
 // - At least 10 characters
@@ -36,10 +34,6 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   phone?: string;
-
-  @IsEnum(Role)
-  @IsOptional()
-  role?: Role;
 
   @IsString()
   @IsOptional()

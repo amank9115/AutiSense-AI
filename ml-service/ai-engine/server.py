@@ -154,7 +154,9 @@ def process_video_file(video_path: Path) -> Dict[str, object]:
     for item in metrics_batch:
         emo = str(item.get("emotion", "neutral"))
         emotion_votes[emo] = emotion_votes.get(emo, 0) + 1
-    dominant_emotion = max(emotion_votes, key=emotion_votes.get)
+    dominant_emotion = (
+        max(emotion_votes, key=emotion_votes.get) if emotion_votes else "neutral"
+    )
 
     summary = compute_behavior_metrics(
         eye_contact=avg_eye,

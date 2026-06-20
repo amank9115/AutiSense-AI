@@ -381,7 +381,7 @@ export class ScreeningService {
       averageRiskScore: averageRiskScore._avg.riskScore || 0,
       successRate:
         totalSessions > 0
-          ? ((completedSessions / totalSessions) * 100).toFixed(2)
+          ? Math.round((completedSessions / totalSessions) * 10000) / 100
           : 0,
       recentActivity: sessionsByMonth,
     };

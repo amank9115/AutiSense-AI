@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card, EmptyState } from "@/components/ui/StitchUI";
@@ -8,6 +8,8 @@ import { DashboardStatsSkeleton } from "@/components/ui/SkeletonLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import Image from "next/image";
 import { fetchJson } from "@/api/client";
+import { useProtectedData } from "@/hooks/useProtectedData";
+import type { DashboardStats } from "@/lib/analytics";
 
 const MilestoneCard = ({
   title, progress, color, icon,
@@ -56,34 +58,12 @@ const ResourceCard = ({
   </div>
 );
 
-interface DashboardStats {
-  totalSessions: number;
-  completedSessions: number;
-  averageRiskScore: number;
-  successRate: string;
-}
-
 export default function ParentDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) { router.push("/login"); return; }
-
-    const fetchStats = async () => {
-      try {
-        const data = await fetchJson<DashboardStats>("/api/v1/screening/statistics");
-        setStats(data);
-      } catch (err) {
-        console.error("Failed to fetch dashboard statistics", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, [user, router]);
+  const { data: stats, loading } = useProtectedData<DashboardStats>(() =>
+    fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+  );
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -104,7 +84,7 @@ export default function ParentDashboard() {
             <span className="inline-block bg-secondary-container text-on-secondary-container px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
               Your Navigator Dashboard
             </span>
-            <h2 className="font-headline font-extrabold text-3xl lg:text-5xl text-on-surface tracking-tighter leading-tight">
+            <h2 className="font-headline font-extrabold text-2xl sm:text-3xl lg:text-5xl text-on-surface tracking-tighter leading-tight">
               {getGreeting()},{" "}
               <span className="text-primary">{user?.name?.split(" ")[0]}.</span>
             </h2>
@@ -218,7 +198,7 @@ export default function ParentDashboard() {
           <h3 className="font-headline font-bold text-2xl text-on-surface">Handpicked Resources</h3>
           <p className="text-on-surface-muted text-sm">Based on your latest screening results.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           <ResourceCard title="Managing Loud Environments" category="Sensory Tips" img="https://lh3.googleusercontent.com/aida-public/AB6AXuB6EFi9Bpyxu63kdK5PwQ949MoUtkGp7tKfWv70kLvDS2whfK3H-HK5Gd1_007MjK_-eIfYL0lm1NesG3KE--Y3OgcYuSTJHTC9fRyPE6kIjY-20Og2ic8dSIaC3Ydo3PoWzEf5CB4NkYXCb8vV9Ft6k54PYmkXehQyxuo2MU3OnwHwaE3xuSOKJjsD3QKfhAs5tjlpLkOK7P1erCdDkkQh-_nq54ijRTnxOGMN1LxCfM5zdyovjNlXyn_vdE_mFv5UWQ9rf7asMrQ" />
           <ResourceCard title="The Power of Routine Cards" category="Behavioral" img="https://lh3.googleusercontent.com/aida-public/AB6AXuBK0ZEi9DyHphi1q5F44iV4PvSQgenqKrKEBP_wrl037m3EvRRZ7NiWcGgRnzfKC4BC3wvtlgRjrBP0BObCg1UjaeAkkCC4r1P42ZwlwtCX_TDmTI0H_-RyWmfy_erxK6nriviCatR9YaJbjSMUN-Sb-CIuKkFV8eOOvJ7XCbtbUI__E8m_4r9XcpS373qFI5m0cOMN625Py0-YAANAd8crI3WzmLV2BB0XpoenBYmbmwoawyAQ2oolv8k_PhjCaCmQZ8mjSVi0QLY" />
           <ResourceCard title="Play-Based Language Games" category="Communication" img="https://lh3.googleusercontent.com/aida-public/AB6AXuAfFGuSXR_iodvByMIVAU1pCXe7mLfrsVNd_IV42vtLskk_amT6u70Y3A-P-Ev_MB7-x1oJFJf1hRjN1W-rngDOFYwFKtn1eGUivChKvHGP6WOrC2ZCzfc" />

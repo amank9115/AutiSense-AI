@@ -110,8 +110,10 @@ export class RefreshTokenService {
   async revokeToken(token: string): Promise<void> {
     const tokenHash = this.hashToken(token);
 
-    await this.prisma.refreshToken.update({
-      where: { tokenHash },
+    // updateMany silently succeeds even when no record matches the hash,
+    // avoiding a P2025 crash when revoking an already-expired/unknown token.
+    await this.prisma.refreshToken.updateMany({
+      where: { tokenHash, revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }

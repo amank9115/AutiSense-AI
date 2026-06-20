@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getPaginationParams } from '../common/utils/pagination';
 
 export interface AuditLogEntry {
   organizationId?: string;
@@ -25,9 +26,11 @@ export class AuditService {
     organizationId: string,
     options: { page?: number; limit?: number; action?: string } = {},
   ) {
-    const page = options.page ?? 1;
-    const limit = Math.min(options.limit ?? 50, 200);
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = getPaginationParams(
+      options.page,
+      options.limit,
+      { defaultLimit: 50, maxLimit: 200 },
+    );
 
     const where: any = { organizationId };
     if (options.action) where.action = options.action;

@@ -1,4 +1,13 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MlService } from './ml.service';
 import { CameraScreeningDto, LiveInferenceDto } from './dto';
@@ -53,7 +62,7 @@ export class MlController {
       image_base64: body.frame.imageBase64,
     };
 
-    const result = await this.mlService.predictLive(body.sessionKey, frame);
+    const result = await this.mlService.predictLive(body.sessionKey, frame, body.childInfo);
 
     return {
       success: result.success,
@@ -66,6 +75,20 @@ export class MlController {
       recommendations: result.recommendations,
       policy: result.policy,
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('report/:sessionId')
+  async generateReport(
+    @Param('sessionId') sessionId: string,
+    @Res() res: Response,
+  ) {
+    const pdf = await this.mlService.generateReport(sessionId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="screening-report-${sessionId}.pdf"`,
+    });
+    res.send(Buffer.from(pdf));
   }
 
   @Get('health')

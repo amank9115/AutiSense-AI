@@ -8,11 +8,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OrgMembershipGuard } from '../tenant/org-membership.guard';
 import { ApiKeysService } from './api-keys.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
 
 @Controller('api/v1/api-keys')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, OrgMembershipGuard)
 export class ApiKeysController {
   constructor(private apiKeysService: ApiKeysService) {}
 

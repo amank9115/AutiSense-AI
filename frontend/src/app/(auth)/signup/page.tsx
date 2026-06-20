@@ -38,6 +38,7 @@ export default function SignupPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{ email: string } | null>(null);
+  const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   const router = useRouter();
   const setAuth = useAppStore((state) => state.setAuth);
@@ -77,10 +78,14 @@ export default function SignupPage() {
   };
 
   const handleResend = async () => {
-    if (!successData?.email) return;
+    if (!successData?.email || resendStatus === "sending") return;
+    setResendStatus("sending");
     try {
       await authApi.resendVerification(successData.email);
-    } catch { /* silent */ }
+      setResendStatus("sent");
+    } catch {
+      setResendStatus("error");
+    }
   };
 
   return (
@@ -150,11 +155,18 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={handleResend}
-                className="w-full mt-2 border border-success/30 text-success py-3 rounded-2xl font-bold hover:bg-success/5 transition-all text-sm flex items-center justify-center gap-2"
+                disabled={resendStatus === "sending"}
+                className="w-full mt-2 border border-success/30 text-success py-3 rounded-2xl font-bold hover:bg-success/5 transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-60"
               >
                 <span className="material-symbols-outlined text-base">forward_to_inbox</span>
-                Resend Verification Link
+                {resendStatus === "sending" ? "Sending…" : "Resend Verification Link"}
               </button>
+              {resendStatus === "sent" && (
+                <p className="text-xs text-success font-semibold text-center">Verification email resent — check your inbox.</p>
+              )}
+              {resendStatus === "error" && (
+                <p className="text-xs text-error font-semibold text-center">Failed to resend. Please try again in a moment.</p>
+              )}
               <Link href="/login" className="block text-sm font-semibold text-primary hover:underline mt-2">
                 Back to Sign In
               </Link>

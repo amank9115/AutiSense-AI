@@ -72,6 +72,46 @@
   --font-display: "Plus Jakarta Sans", sans-serif;
   --font-body: "Lexend", sans-serif;
   --font-label: "Lexend", sans-serif;
+
+  /* ── Dark SaaS side (MannSaathi v2) ─────────────────── */
+  --color-ink-950: #06070B;
+  --color-ink-900: #0B0C13;
+  --color-ink-800: #11131C;
+  --color-ink-700: #1A1D29;
+  --color-ink-600: #262A39;
+  --color-ink-500: #353A4D;
+  --color-ink-400: #5A6079;
+  --color-ink-300: #8A91A8;
+  --color-ink-200: #C5CAD8;
+  --color-ink-100: #E5E8F0;
+
+  --color-accent-violet: #8B5CF6;
+  --color-accent-fuchsia: #D946EF;
+  --color-accent-sky: #38BDF8;
+  --color-accent-mint: #34D399;
+  --color-accent-amber: #FBBF24;
+
+  /* Aurora gradient stops — for hero mesh & CTA */
+  --color-aurora-1: #6366F1;
+  --color-aurora-2: #8B5CF6;
+  --color-aurora-3: #EC4899;
+  --color-aurora-4: #06B6D4;
+
+  --shadow-glow-violet: 0 0 60px rgba(139, 92, 246, 0.45);
+  --shadow-glow-mint: 0 0 60px rgba(52, 211, 153, 0.35);
+  --shadow-glow-sky: 0 0 60px rgba(56, 189, 248, 0.35);
+  --shadow-dark-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-dark-card-lg: 0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 4px rgba(0, 0, 0, 0.7);
+
+  --radius-hero-card: 1.5rem;
+  --radius-screen: 1.25rem;
+
+  --font-display-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Mouse-glow CSS vars (set by MouseGlow component) */
+  --mouse-x: 50vw;
+  --mouse-y: 50vh;
 }
 
 @layer base {
@@ -303,6 +343,168 @@
   .text-title      { font-size: 1.5rem;    font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
   .text-label-caps { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em;  text-transform: uppercase; }
 
+  /* ═════════════════════════════════════════════════════════════
+     MannSaathi v2 — Premium SaaS dark helpers
+  ═════════════════════════════════════════════════════════════ */
+
+  /* Glass for dark sections — subtle white tint over ink-950 */
+  .glass-dark {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glass for light sections — used over premium white areas */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(11, 12, 19, 0.06);
+  }
+
+  /* Aurora gradient text — animated 4-stop mesh shift */
+  @keyframes aurora-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  .text-aurora {
+    background: linear-gradient(
+      105deg,
+      var(--color-aurora-1) 0%,
+      var(--color-aurora-2) 28%,
+      var(--color-aurora-3) 56%,
+      var(--color-aurora-4) 100%
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: aurora-shift 8s ease-in-out infinite;
+  }
+
+  /* Aurora ring on dark cards */
+  .ring-aurora {
+    box-shadow:
+      inset 0 0 0 1px rgba(139, 92, 246, 0.35),
+      0 0 32px rgba(139, 92, 246, 0.18);
+  }
+
+  /* Glow button — primary dark CTA */
+  @keyframes btn-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4), 0 8px 30px rgba(139, 92, 246, 0.35); }
+    50%      { box-shadow: 0 0 0 8px rgba(139, 92, 246, 0),  0 8px 30px rgba(139, 92, 246, 0.45); }
+  }
+  .btn-glow {
+    background: radial-gradient(120% 180% at 50% 0%, #B594FF 0%, #8B5CF6 45%, #6D28D9 100%);
+    color: #fff;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 320ms ease,
+                filter 320ms ease;
+  }
+  .btn-glow:hover {
+    transform: translateY(-1px) scale(1.025);
+    filter: brightness(1.08);
+    box-shadow: 0 14px 50px rgba(139, 92, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .btn-glow:active { transform: translateY(0) scale(0.985); }
+
+  /* 3D-tilt lift (used by feature bento & floating cards) */
+  .lift-3d {
+    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+    transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 420ms ease;
+    will-change: transform;
+  }
+
+  /* Animated conic-gradient border */
+  @keyframes conic-spin { to { transform: rotate(360deg); } }
+  .gradient-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--ang, 0deg),
+      rgba(99, 102, 241, 0.0) 0deg,
+      rgba(139, 92, 246, 0.6) 60deg,
+      rgba(236, 72, 153, 0.6) 180deg,
+      rgba(6, 182, 212, 0.6) 280deg,
+      rgba(99, 102, 241, 0.0) 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    animation: conic-spin 8s linear infinite;
+  }
+
+  /* Ambient float-y */
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0px); }
+    50%      { transform: translateY(-8px); }
+  }
+  .float-soft    { animation: float-soft 6s ease-in-out infinite; }
+  .float-soft-2  { animation: float-soft 7.5s ease-in-out -1.5s infinite; }
+  .float-soft-3  { animation: float-soft 9s ease-in-out -3s infinite; }
+
+  /* Section scan-grid overlay */
+  .scan-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .scan-grid-mask {
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 0%, transparent 70%);
+            mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 0%, transparent 70%);
+  }
+
+  /* Mouse-tracking cursor glow (used over dark sections) */
+  .mouse-glow-dark {
+    background: radial-gradient(
+      600px circle at var(--mouse-x) var(--mouse-y),
+      rgba(139, 92, 246, 0.10),
+      transparent 50%
+    );
+  }
+  .mouse-glow-mint {
+    background: radial-gradient(
+      500px circle at var(--mouse-x) var(--mouse-y),
+      rgba(52, 211, 153, 0.08),
+      transparent 55%
+    );
+  }
+
+  /* Curved section divider (light → dark morph) */
+  .curve-top {
+    border-top-left-radius: 2.5rem;
+    border-top-right-radius: 2.5rem;
+  }
+
+  /* Star rating glyph */
+  .star-fill { color: #FBBF24; }
+
+  /* Reusable focus ring for dark sections */
+  .focus-aurora:focus-visible {
+    outline: 2px solid var(--color-aurora-2);
+    outline-offset: 3px;
+  }
+
+  /* ── Shadow-tier used by floating cards / hero mockup ── */
+  .shadow-dark-card   { box-shadow: var(--shadow-dark-card); }
+  .shadow-dark-card-lg{ box-shadow: var(--shadow-dark-card-lg); }
+  .shadow-glow-violet { box-shadow: var(--shadow-glow-violet); }
+  .shadow-glow-mint   { box-shadow: var(--shadow-glow-mint); }
+  .shadow-glow-sky    { box-shadow: var(--shadow-glow-sky); }
+
   /* ── Reduced motion: kill all decorative animations ── */
   @media (prefers-reduced-motion: reduce) {
     .animate-float,
@@ -315,13 +517,23 @@
     .animate-orb-glow,
     .bloom-card,
     .tonal-lift,
-    .skeleton-shimmer {
+    .skeleton-shimmer,
+    .float-soft,
+    .float-soft-2,
+    .float-soft-3,
+    .text-aurora,
+    .gradient-border::before {
       animation: none !important;
       transition: none !important;
     }
 
     .skeleton-shimmer {
       background: var(--color-surface-container);
+    }
+
+    .text-aurora {
+      background: linear-gradient(90deg, var(--color-aurora-2), var(--color-aurora-3));
+      background-size: 100% 100%;
     }
   }
 }

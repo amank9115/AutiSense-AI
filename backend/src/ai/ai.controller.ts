@@ -9,12 +9,20 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('ingest')
+  @UseGuards(JwtAuthGuard)
   ingestDocument(@Body() ingestDto: IngestDto) {
     return this.aiService.queueDocumentForIngestion(
       ingestDto.documentId,
       ingestDto.fileUrl,
       ingestDto.mimetype,
     );
+  }
+
+  @Post('chat/global-search')
+  @UseGuards(JwtAuthGuard)
+  async globalSearch(@Body() chatDto: ChatDto) {
+    const message = await this.aiService.globalSearch(chatDto.message);
+    return { message };
   }
 
   @Post('chat/:sessionId')

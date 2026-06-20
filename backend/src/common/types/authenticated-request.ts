@@ -2,7 +2,7 @@ import { Request } from 'express';
 
 /**
  * Shape of the principal attached to the request by the auth guards.
- * JWT auth populates `userId`/`email`/`role`; API-key auth populates
+ * JWT auth populates `sub`/`email`/`role`; API-key auth populates
  * `sub`/`organizationId`/`apiKeyId`. All fields are optional so a single
  * type can describe both flows.
  */

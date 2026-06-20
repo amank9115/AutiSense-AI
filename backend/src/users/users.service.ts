@@ -3,6 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { AuthException, NotFoundException } from '../common/exceptions';
+import {
+  getPaginationParams,
+  buildPaginationMeta,
+} from '../common/utils/pagination';
 
 @Injectable()
 export class UsersService {
@@ -30,7 +34,10 @@ export class UsersService {
     data: Array<Omit<User, 'passwordHash'>>;
     pagination: { page: number; limit: number; total: number; pages: number };
   }> {
-    const skip = (options.page - 1) * options.limit;
+    const { page, limit, skip } = getPaginationParams(
+      options.page,
+      options.limit,
+    );
     const where: Prisma.UserWhereInput = options.role
       ? { role: options.role }
       : {};
@@ -39,7 +46,7 @@ export class UsersService {
       this.prisma.user.findMany({
         where,
         skip,
-        take: options.limit,
+        take: limit,
         select: {
           id: true,
           email: true,
@@ -56,12 +63,7 @@ export class UsersService {
 
     return {
       data: users as Array<Omit<User, 'passwordHash'>>,
-      pagination: {
-        page: options.page,
-        limit: options.limit,
-        total,
-        pages: Math.ceil(total / options.limit),
-      },
+      pagination: buildPaginationMeta(page, limit, total),
     };
   }
 

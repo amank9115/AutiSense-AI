@@ -352,7 +352,8 @@ def generate_pdf_report(session_data: Dict[str, Any]) -> bytes:
         }
         aq_data = [["Question", "Behavior Observed", "Score", "Concern"]]
         for key, desc in aq_questions.items():
-            val = aq_scores.get(key, 0)
+            # main.py stores keys as "A1_Score", "A2_Score", etc.
+            val = aq_scores.get(f"{key}_Score", aq_scores.get(key, 0))
             concern = "Yes" if val >= 0.5 else "No"
             concern_color = COLOR_DANGER if val >= 0.5 else COLOR_BRAND_GREEN
             aq_data.append([key, desc, f"{int(val)}", concern])

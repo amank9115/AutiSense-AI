@@ -22,7 +22,6 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggerModule } from './common/logging';
-import { RedisModule } from './redis/redis.module';
 import { CacheModule } from './cache/cache.module';
 import { CircuitBreakerModule } from './common/circuit-breaker/circuit-breaker.module';
 import { MetricsModule } from './metrics/metrics.module';
@@ -34,7 +33,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
   imports: [
     ConfigModule, // Import first!
     LoggerModule, // Import logger module
-    RedisModule, // Redis connection for caching and lockout
+    // Redis connection for caching and lockout is handled by CacheModule
     CacheModule, // Cache service
     CircuitBreakerModule, // Circuit breaker for external services
     MetricsModule, // Prometheus metrics

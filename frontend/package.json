@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.179",
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
     "@hookform/resolvers": "^5.4.0",
     "@studio-freight/lenis": "^1.0.42",
     "ai": "^6.0.177",

@@ -39,7 +39,7 @@ export class StorageController {
       throw new ForbiddenException('Report export is currently disabled');
     }
 
-    const userId = req.user?.userId;
+    const userId = req.user?.sub;
     if (!userId) {
       throw new ForbiddenException('Authenticated user required');
     }
@@ -62,10 +62,15 @@ export class StorageController {
    */
   @Get('download/:key(*.)')
   async getDownloadUrl(
+    @Request() req: AuthenticatedRequest,
     @Param('key') key: string,
     @Query('expiresIn') expiresIn?: number,
   ) {
-    // Validate key ownership (should check user owns the report)
+    const userId = req.user?.sub;
+    if (!userId || !key.startsWith(`reports/${userId}/`)) {
+      throw new ForbiddenException('Access denied: you do not own this file');
+    }
+
     const url = await this.storageService.getDownloadUrl(key, {
       expiresIn: expiresIn ? parseInt(String(expiresIn), 10) : 3600,
     });
@@ -77,7 +82,15 @@ export class StorageController {
    * Delete a report
    */
   @Delete(':key(*.)')
-  async deleteFile(@Param('key') key: string) {
+  async deleteFile(
+    @Request() req: AuthenticatedRequest,
+    @Param('key') key: string,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId || !key.startsWith(`reports/${userId}/`)) {
+      throw new ForbiddenException('Access denied: you do not own this file');
+    }
+
     await this.storageService.delete(key);
     return { message: 'File deleted successfully' };
   }
@@ -87,7 +100,7 @@ export class StorageController {
    */
   @Get()
   async listFiles(@Request() req: AuthenticatedRequest) {
-    const prefix = `reports/${req.user?.userId ?? ''}`;
+    const prefix = `reports/${req.user?.sub ?? ''}`;
     const files = await this.storageService.list(prefix);
 
     return {

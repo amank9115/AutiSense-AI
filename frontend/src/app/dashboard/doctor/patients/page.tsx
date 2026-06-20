@@ -1,56 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Button, Input } from "@/components/ui/StitchUI";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { screeningApi, ChildProfile } from "@/services/api/screeningApi";
-
-interface PatientRecord extends ChildProfile {
-  screeningSessions?: {
-    id: string;
-    status: string;
-    createdAt: string;
-    results?: {
-      riskLevel: string;
-    };
-  }[];
-  parent?: {
-    name: string;
-  };
-}
+import { screeningApi } from "@/services/api/screeningApi";
+import { useProtectedData } from "@/hooks/useProtectedData";
+import { calculateAge } from "@/lib/date";
+import { filterPatients, type PatientRecord } from "@/lib/patients";
 
 export default function PatientsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
-  const [patients, setPatients] = useState<PatientRecord[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [riskFilter, setRiskFilter] = useState<string>("All");
   const [statusFilter, setStatusFilter] = useState<string>("All");
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const fetchPatients = async () => {
-      try {
-        const data = await screeningApi.getChildren();
-        setPatients(data as unknown as PatientRecord[]);
-      } catch (err) {
-        console.error("Failed to fetch patients", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPatients();
-  }, [user, router]);
+  const { data, loading } = useProtectedData<PatientRecord[]>(async () => {
+    const children = await screeningApi.getChildren();
+    return children as unknown as PatientRecord[];
+  });
+  const patients = data ?? [];
 
   if (!user || loading) {
     return (
@@ -63,33 +36,7 @@ export default function PatientsPage() {
     );
   }
 
-  const filteredPatients = patients.filter((patient) => {
-    const latestSession = patient.screeningSessions?.[0];
-    const riskLevel = latestSession?.results?.riskLevel || "Low";
-    const status = latestSession?.status || "Reviewed";
-
-    const matchesSearch =
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.parent?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRisk = riskFilter === "All" || riskLevel.toLowerCase() === riskFilter.toLowerCase();
-    const matchesStatus = statusFilter === "All" || status.toLowerCase() === statusFilter.toLowerCase();
-    
-    return matchesSearch && matchesRisk && matchesStatus;
-  });
-
-  const calculateAge = (dob: string) => {
-    const birth = new Date(dob);
-    const today = new Date();
-    let years = today.getFullYear() - birth.getFullYear();
-    let months = today.getMonth() - birth.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    return `${years}y ${months}m`;
-  };
+  const filteredPatients = filterPatients(patients, { searchTerm, riskFilter, statusFilter });
 
   const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
@@ -128,7 +75,7 @@ export default function PatientsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
-          <h2 className="font-headline font-extrabold text-5xl text-on-surface tracking-tighter mb-2">
+          <h2 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-5xl text-on-surface tracking-tighter mb-2">
             Patient List
           </h2>
           <p className="text-on-surface-muted text-lg">

@@ -26,7 +26,7 @@ interface RequestWithUser extends Request {
 }
 
 interface AuthenticatedRequest extends Request {
-  user: { userId: string; email: string; role: string };
+  user: { sub: string; email: string; role: string };
   cookies?: Record<string, string>;
 }
 
@@ -131,7 +131,7 @@ export class AuthController {
     @Request() req: AuthenticatedRequest,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.logoutAllSessions(req.user.userId);
+    const result = await this.authService.logoutAllSessions(req.user.sub);
     res.clearCookie('refresh_token');
     return result;
   }
@@ -140,7 +140,7 @@ export class AuthController {
   async resendVerification(
     @Body() resendVerificationDto: ResendVerificationDto,
   ) {
-    return this.authService.resendVerification(resendVerificationDto.email);
+    return this.authService.resendVerification(resendVerificationDto.email, resendVerificationDto.baseUrl);
   }
 
   // DEV ONLY: Direct email verification for development

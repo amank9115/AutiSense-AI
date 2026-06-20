@@ -31,7 +31,7 @@ export class CacheInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const userId = request.user?.userId ?? 'anonymous';
+    const userId = request.user?.sub ?? 'anonymous';
     const { prefix, ttl = 300 } = cacheOptions;
 
     // Build cache key from prefix and userId

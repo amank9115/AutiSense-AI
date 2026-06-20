@@ -35,7 +35,7 @@ export default function AssessmentIntroPage() {
                 <span className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
                 AI-Powered Behavioral Screening
               </span>
-              <h1 className="font-headline text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+              <h1 className="font-headline text-3xl sm:text-4xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
                 Understand Your Child&apos;s{" "}
                 <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Development

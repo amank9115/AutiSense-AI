@@ -1,6 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
@@ -8,21 +7,18 @@ import { DocumentProcessor } from './document.processor';
 import { Prisma } from '@prisma/client';
 import { RiskLevel } from '../common/types/prisma-json';
 
+/** Injection token for the chat model, so tests can supply a fake. */
+export const CHAT_MODEL = 'CHAT_MODEL';
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private llm: BaseChatModel;
 
   constructor(
     private prisma: PrismaService,
     private documentProcessor: DocumentProcessor,
-  ) {
-    this.llm = new ChatGoogleGenerativeAI({
-      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
-      apiKey: process.env.GEMINI_API_KEY,
-      maxRetries: 2,
-    });
-  }
+    @Inject(CHAT_MODEL) private readonly llm: BaseChatModel,
+  ) {}
 
   queueDocumentForIngestion(
     documentId: string,
@@ -52,7 +48,7 @@ export class AiService {
     });
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new NotFoundException('Chat session not found');
     }
 
     // Save user message
@@ -93,6 +89,19 @@ export class AiService {
     });
 
     return stream; // This is an async generator
+  }
+
+  async globalSearch(query: string): Promise<string> {
+    const prompt = ChatPromptTemplate.fromMessages([
+      [
+        'system',
+        'You are a helpful assistant for parents and clinicians using an autism screening platform. Answer the question concisely based on your general knowledge about autism support. Do not provide medical diagnoses.',
+      ],
+      ['user', '{input}'] as ['user', string],
+    ]);
+
+    const chain = prompt.pipe(this.llm).pipe(new StringOutputParser());
+    return chain.invoke({ input: query });
   }
 
   async saveAssistantMessage(sessionId: string, content: string) {

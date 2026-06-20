@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/StitchUI";
 import { useAppStore } from "@/store";
@@ -12,6 +12,7 @@ export default function VerifyEmailPage() {
   const [message, setMessage] = useState("");
   const setAuth = useAppStore((state) => state.setAuth);
   const [token, setToken] = useState<string | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const verificationToken = searchParams?.get("token");
@@ -22,6 +23,9 @@ export default function VerifyEmailPage() {
       setStatus("error");
       setMessage("No verification token found in the URL.");
     }
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -37,7 +41,7 @@ export default function VerifyEmailPage() {
       if (response.ok && data.access_token && data.user) {
         setAuth(data.user, data.access_token);
         setStatus("success");
-        setTimeout(() => {
+        redirectTimerRef.current = setTimeout(() => {
           router.replace(data.user.role === "doctor" ? "/dashboard/doctor" : "/dashboard/parent");
         }, 1500);
       } else {

@@ -57,7 +57,7 @@ export class AccountLockedException extends AppException {
     super(
       message ||
         'Account is temporarily locked due to too many failed attempts',
-      423, // Locked
+      HttpStatus.TOO_MANY_REQUESTS, // 429
       ErrorCode.ACCOUNT_LOCKED,
     );
   }

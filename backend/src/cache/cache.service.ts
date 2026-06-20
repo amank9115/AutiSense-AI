@@ -68,7 +68,9 @@ export class CacheService implements OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    await this.client.quit();
+    if (this.isConnected) {
+      await this.client.quit();
+    }
     this.logger.log('Cache service Redis connection closed');
   }
 

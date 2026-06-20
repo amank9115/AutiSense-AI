@@ -9,7 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailModule } from '../email/email.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AppConfigService } from '../config/config.service';
-import { RedisModule } from '../redis/redis.module';
+import { CacheModule } from '../cache/cache.module';
 import { LockoutService } from './lockout.service';
 import { RefreshTokenService } from './refresh-token.service';
 
@@ -29,7 +29,7 @@ import { RefreshTokenService } from './refresh-token.service';
     }),
     EmailModule,
     PrismaModule,
-    RedisModule,
+    CacheModule,
   ],
   controllers: [AuthController],
   providers: [

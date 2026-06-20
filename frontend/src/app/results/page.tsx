@@ -47,8 +47,29 @@ export default function ResultsPage() {
     router.push("/professionals");
   };
 
-  const handleDownloadReport = () => {
-    alert("Download feature coming soon! Your report will be available as a PDF for you to share with healthcare providers.");
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadReport = async () => {
+    if (!sessionId) {
+      alert("Save this screening first to download a report.");
+      return;
+    }
+    setDownloading(true);
+    try {
+      const blob = await screeningApi.generateReport(sessionId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `screening-report-${sessionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to download report.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleViewProfile = () => {
@@ -82,10 +103,10 @@ export default function ResultsPage() {
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 lg:py-40">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-32 lg:py-40">
         {/* Hero Section */}
         <div className="mb-12 sm:mb-20">
-          <h2 className="font-headline font-extrabold text-4xl sm:text-5xl lg:text-8xl text-primary leading-tight mb-4 sm:mb-6 tracking-tighter">Discovery Results</h2>
+          <h2 className="font-headline font-extrabold text-3xl sm:text-5xl lg:text-7xl text-primary leading-tight mb-4 sm:mb-6 tracking-tighter">Discovery Results</h2>
           <p className="text-base sm:text-lg lg:text-xl text-on-surface-variant max-w-2xl leading-relaxed font-medium opacity-80">A detailed overview of {session?.child?.name || "your child"}&apos;s sensory profile and developmental milestones.</p>
         </div>
 
@@ -190,9 +211,9 @@ export default function ResultsPage() {
                   <span className="material-symbols-outlined text-lg sm:text-xl">calendar_month</span>
                   Book Consultation
                 </button>
-                <button onClick={handleDownloadReport} className="bg-primary-dim text-white font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-black/20 transition-all border border-white/20 active:scale-95 text-xs uppercase tracking-widest cursor-pointer">
+                <button onClick={handleDownloadReport} disabled={downloading} className="bg-primary-dim text-white font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-black/20 transition-all border border-white/20 active:scale-95 text-xs uppercase tracking-widest cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   <span className="material-symbols-outlined text-lg sm:text-xl">download</span>
-                  Download Report
+                  {downloading ? "Generating..." : "Download Report"}
                 </button>
               </div>
               <div className="mt-8 sm:mt-10 flex items-center gap-3 sm:gap-4 bg-white/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/5">

@@ -1,18 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Resend } from 'resend';
+import { AppConfigService } from '../config/config.service';
+
+/** Injection token for the Resend client, so tests can supply a mock. */
+export const RESEND_CLIENT = 'RESEND_CLIENT';
 
 @Injectable()
 export class EmailService {
-  private resend: Resend;
   private readonly logger = new Logger(EmailService.name);
   private readonly fromEmail: string;
+  private readonly apiKeyConfigured: boolean;
 
-  constructor() {
-    this.resend = new Resend(
-      process.env.RESEND_API_KEY || 're_mock_key_for_dev',
-    );
-    this.fromEmail =
-      process.env.EMAIL_FROM || 'MannSaathi <noreply@mannsaathi.com>';
+  constructor(
+    @Inject(RESEND_CLIENT) private readonly resend: Resend,
+    config: AppConfigService,
+  ) {
+    this.fromEmail = config.email.from;
+    this.apiKeyConfigured = Boolean(config.email.resendApiKey);
   }
 
   async sendVerificationEmail(
@@ -75,7 +79,7 @@ export class EmailService {
     `;
 
     try {
-      if (!process.env.RESEND_API_KEY) {
+      if (!this.apiKeyConfigured) {
         this.logger.warn(
           `Resend API Key missing. Simulating sending email to ${to}`,
         );
@@ -174,7 +178,7 @@ export class EmailService {
     `;
 
     try {
-      if (!process.env.RESEND_API_KEY) {
+      if (!this.apiKeyConfigured) {
         this.logger.warn(
           `Resend API Key missing. Simulating sending password reset email to ${to}`,
         );
@@ -234,7 +238,7 @@ export class EmailService {
     `;
 
     try {
-      if (!process.env.RESEND_API_KEY) {
+      if (!this.apiKeyConfigured) {
         this.logger.warn(
           `Resend API Key missing. Simulating sending report to ${to}`,
         );

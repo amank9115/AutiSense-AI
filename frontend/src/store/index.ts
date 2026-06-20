@@ -84,7 +84,9 @@ export const useAppStore = create<AppState>()(
       name: 'autisense-storage',
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
+        // token is intentionally excluded: access tokens must not be stored in
+        // localStorage (XSS risk). The HttpOnly refresh-token cookie is used to
+        // obtain a fresh access token on page load via /api/v1/auth/refresh.
         isGuest: state.isGuest,
         theme: state.theme,
       }),

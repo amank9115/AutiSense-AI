@@ -300,7 +300,7 @@ export default function ScreeningPage() {
               <motion.div 
                 key={`child-${currentModuleIndex}`}
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                className="flex-grow min-h-[300px] bg-gradient-to-br from-primary-container/40 to-secondary-container/20 rounded-3xl p-8 border border-primary/10 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden"
+                className="flex-grow min-h-[200px] sm:min-h-[300px] bg-gradient-to-br from-primary-container/40 to-secondary-container/20 rounded-3xl p-6 sm:p-8 border border-primary/10 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden"
               >
                 {/* Visual Stimulus depending on module */}
                 {activeModule?.id === 'calibration' && (
@@ -313,16 +313,16 @@ export default function ScreeningPage() {
                     <motion.div 
                       animate={{ x: [-100, 100, -100], y: [-20, 20, -20] }} 
                       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute top-1/2 left-1/2 w-16 h-16 -ml-8 -mt-8 bg-gradient-to-r from-secondary to-tertiary rounded-full shadow-lg shadow-secondary/40 flex items-center justify-center"
+                      className="absolute top-1/2 left-1/2 w-12 h-12 -ml-6 -mt-6 sm:w-16 sm:h-16 sm:-ml-8 sm:-mt-8 bg-gradient-to-r from-secondary to-tertiary rounded-full shadow-lg shadow-secondary/40 flex items-center justify-center"
                     >
-                      <div className="w-8 h-8 bg-white/30 rounded-full blur-sm" />
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/30 rounded-full blur-sm" />
                     </motion.div>
                   </div>
                 )}
                  {activeModule?.id === 'joint_attention' && (
                    <div className="relative w-full h-full flex items-center justify-center">
                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }} className="text-primary">
-                        <span className="material-symbols-outlined text-6xl">waving_hand</span>
+                        <span className="material-symbols-outlined text-4xl sm:text-6xl">waving_hand</span>
                      </motion.div>
                    </div>
                  )}
@@ -344,7 +344,7 @@ export default function ScreeningPage() {
                  )}
 
                 {activeModule?.childPrompt && (
-                  <h3 className="text-2xl font-headline font-bold text-primary mt-8">
+                  <h3 className="text-xl sm:text-2xl font-headline font-bold text-primary mt-6 sm:mt-8">
                     {activeModule.childPrompt}
                   </h3>
                 )}

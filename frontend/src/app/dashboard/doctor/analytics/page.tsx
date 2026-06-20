@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import React, { useState } from "react";
 import { Card, EmptyState } from "@/components/ui/StitchUI";
 import { DashboardStatsSkeleton } from "@/components/ui/SkeletonLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -16,86 +14,21 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
+import { screeningApi } from "@/services/api/screeningApi";
 import { fetchJson } from "@/api/client";
-
-interface DashboardStats {
-  totalSessions: number;
-  completedSessions: number;
-  averageRiskScore: number;
-  successRate: string;
-}
-
-interface MonthBucket {
-  month: string;
-  screenings: number;
-  avgRisk: number;
-}
-
-function deriveAnalytics(stats: DashboardStats, sessions: ScreeningSession[]) {
-  // Bucket sessions by month for the trend chart
-  const buckets: Record<string, { count: number; riskSum: number; riskCount: number }> = {};
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  sessions.forEach((s) => {
-    const d = new Date(s.createdAt);
-    const key = MONTHS[d.getMonth()];
-    if (!buckets[key]) buckets[key] = { count: 0, riskSum: 0, riskCount: 0 };
-    buckets[key].count++;
-    if (s.riskScore !== null) {
-      buckets[key].riskSum += s.riskScore * 100;
-      buckets[key].riskCount++;
-    }
-  });
-
-  const trends: MonthBucket[] = Object.entries(buckets)
-    .slice(-6)
-    .map(([month, v]) => ({
-      month,
-      screenings: v.count,
-      avgRisk: v.riskCount > 0 ? Math.round(v.riskSum / v.riskCount) : 0,
-    }));
-
-  // Risk distribution
-  const low = sessions.filter((s) => s.riskScore !== null && s.riskScore < 0.3).length;
-  const moderate = sessions.filter((s) => s.riskScore !== null && s.riskScore >= 0.3 && s.riskScore < 0.6).length;
-  const elevated = sessions.filter((s) => s.riskScore !== null && s.riskScore >= 0.6).length;
-  const total = low + moderate + elevated;
-
-  return { stats, trends, low, moderate, elevated, total };
-}
+import { useProtectedData } from "@/hooks/useProtectedData";
+import { deriveAnalytics, type DashboardStats } from "@/lib/analytics";
 
 export default function AnalyticsPage() {
-  const { user } = useAuth();
-  const router = useRouter();
   const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter">("month");
-  const [loading, setLoading] = useState(true);
-  const [analytics, setAnalytics] = useState<ReturnType<typeof deriveAnalytics> | null>(null);
-
-  useEffect(() => {
-    if (!user) { 
-      router.push("/login"); 
-      return; 
-    }
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const limitMap = { week: 50, month: 200, quarter: 500 };
-        const [statsRes, sessionsRes] = await Promise.all([
-          fetchJson<DashboardStats>("/api/v1/screening/statistics"),
-          screeningApi.getSessions(1, limitMap[timeRange]),
-        ]);
-        setAnalytics(deriveAnalytics(statsRes, sessionsRes.data));
-      } catch (err) {
-        console.error("Failed to fetch analytics data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user, router, timeRange]);
+  const { data: analytics, loading } = useProtectedData(async () => {
+    const limitMap = { week: 50, month: 200, quarter: 500 };
+    const [statsRes, sessionsRes] = await Promise.all([
+      fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+      screeningApi.getSessions(1, limitMap[timeRange]),
+    ]);
+    return deriveAnalytics(statsRes, sessionsRes.data);
+  }, [timeRange]);
 
   const stats = analytics?.stats;
 

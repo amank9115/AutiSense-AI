@@ -11,12 +11,33 @@ export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAppStore();
+  const [inHero, setInHero] = useState(pathname === "/");
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
+    const onScroll = () => {
+      const y = window.scrollY;
+      const vh = window.innerHeight;
+      // Past hero region (or any scroll on non-landing routes) → opaque
+      setInHero(y < 80);
+      setScrolled(y > 16 || vh < y);
+    };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
+
+  // Re-evaluate inHero when route changes (only landing has a transparent hero region)
+  useEffect(() => {
+    setInHero(window.scrollY < 80);
+  }, [pathname]);
+
+  const isLanding = pathname === "/";
+  // Show transparent + light text when over the dark hero on landing.
+  const overHero = isLanding && inHero && !scrolled;
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -42,9 +63,11 @@ export const Navbar: React.FC = () => {
       {/* Floating pill container */}
       <div
         className={`mx-auto max-w-6xl relative rounded-[1.25rem] border transition-all duration-500 ${
-          scrolled
-            ? "border-outline-variant/25 bg-surface/92 shadow-[0_8px_40px_rgba(23,104,118,0.11),inset_0_1px_0_rgba(255,255,255,0.8)]"
-            : "border-outline-variant/15 bg-surface/80 shadow-[0_4px_20px_rgba(23,104,118,0.06),inset_0_1px_0_rgba(255,255,255,0.6)]"
+          overHero
+            ? "border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_4px_30px_rgba(139,92,246,0.10)]"
+            : scrolled
+              ? "border-outline-variant/25 bg-surface/92 shadow-[0_8px_40px_rgba(23,104,118,0.11),inset_0_1px_0_rgba(255,255,255,0.8)]"
+              : "border-outline-variant/15 bg-surface/80 shadow-[0_4px_20px_rgba(23,104,118,0.06),inset_0_1px_0_rgba(255,255,255,0.6)]"
         } backdrop-blur-2xl px-3 py-2`}
       >
         {/* Subtle inner colour wash */}

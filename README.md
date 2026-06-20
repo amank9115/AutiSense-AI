@@ -10,12 +10,14 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19" />
-  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white" alt="Redis" />
   <img src="https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/PostgreSQL-pgvector-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white" alt="Prisma" />
 </p>
 
 ---
@@ -24,18 +26,18 @@
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   React + Vite  │────▶│  Express.js API  │────▶│  FastAPI + ML   │
+│   Next.js 15    │────▶│    NestJS API    │────▶│  FastAPI + ML   │
 │   (frontend/)   │     │   (backend/)     │     │  (ml-service/)  │
 │                 │     │                  │     │                 │
 │  • Camera UI    │     │  • Auth (JWT)    │     │  • scikit-learn │
 │  • Dashboards   │     │  • REST API      │     │  • MediaPipe    │
-│  • Charts       │     │  • MongoDB ODM   │     │  • PDF Reports  │
-│  • AI Assistant │     │  • Gateway proxy  │     │  • OpenCV       │
+│  • Charts       │     │  • Prisma ORM    │     │  • PDF Reports  │
+│  • AI Assistant │     │  • Redis Cache   │     │  • OpenCV       │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
                                 │
-                        ┌───────┴───────┐
-                        │  MongoDB Atlas │
-                        └───────────────┘
+                        ┌───────┴────────────┐
+                        │ PostgreSQL + pgvector │
+                        └─────────────────────┘
 ```
 
 ---
@@ -47,7 +49,7 @@ AutiSense-AI/
 │
 ├── .github/workflows/ci.yml       # CI pipeline (lint → build → check)
 │
-├── frontend/                       # React 19 + Vite + TypeScript
+├── frontend/                       # React 19 + Next.js 15 (App Router) + TypeScript
 │   ├── src/
 │   │   ├── pages/                  # 23 page components
 │   │   ├── components/
@@ -65,14 +67,15 @@ AutiSense-AI/
 │   │   └── types/                  # TypeScript definitions
 │   └── public/                     # Static assets
 │
-├── backend/                        # Node.js + Express API
+├── backend/                        # NestJS 11 + Prisma + PostgreSQL
+│   ├── prisma/                     # Prisma schema, migrations, seed
 │   └── src/
-│       ├── server.js               # Express bootstrap (routes, middleware)
-│       ├── db.js                   # MongoDB connection + Mongoose models
-│       ├── ml.js                   # JS-based ML scoring fallback
-│       ├── config/                 # Environment configuration
-│       ├── gateway/                # Proxy to Python ML & AI Engine
-│       └── data/                   # ML dataset loader
+│       ├── main.ts                 # Nest bootstrap (CORS, pipes, Swagger)
+│       ├── auth/                   # JWT auth, refresh tokens, lockout
+│       ├── ml/                     # Proxy/gateway to Python ML service
+│       ├── ai/                     # LangChain assistant + document ingest
+│       ├── screening/ users/ tenant/ billing/   # Domain modules
+│       └── common/                 # Filters, interceptors, exceptions
 │
 ├── ml-service/                     # Python FastAPI + ML Models
 │   ├── app/
@@ -99,7 +102,7 @@ AutiSense-AI/
 
 ### Prerequisites
 
-- **Node.js** ≥ 18 &nbsp;|&nbsp; **Python** ≥ 3.10 &nbsp;|&nbsp; **MongoDB Atlas** account (or local via Docker)
+- **Node.js** ≥ 18 &nbsp;|&nbsp; **Python** ≥ 3.10 &nbsp;|&nbsp; **PostgreSQL** (with pgvector — local via `docker compose up -d`)
 
 ### 1. Clone & Install
 
@@ -119,7 +122,7 @@ cp .env.example backend/.env
 cp .env.example frontend/.env
 ```
 
-Edit `backend/.env` with your MongoDB Atlas URI and optional API keys.
+Edit `backend/.env` with your PostgreSQL `DATABASE_URL` and optional API keys.
 
 ### 3. Start All Services
 
@@ -131,7 +134,7 @@ This starts all three services concurrently:
 
 | Service       | URL                        | Color   |
 |---------------|----------------------------|---------|
-| **Frontend**  | http://localhost:5173       | 🟦 Cyan    |
+| **Frontend**  | http://localhost:3000       | 🟦 Cyan    |
 | **Backend**   | http://localhost:4000       | 🟩 Green   |
 | **ML Service**| http://localhost:8001       | 🟪 Magenta |
 

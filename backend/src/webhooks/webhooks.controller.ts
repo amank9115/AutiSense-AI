@@ -10,11 +10,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { OrgMembershipGuard } from '../tenant/org-membership.guard';
 import { WebhooksService } from './webhooks.service';
 import { RegisterWebhookDto } from './dto/register-webhook.dto';
 
 @Controller('api/v1/webhooks')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, OrgMembershipGuard)
 export class WebhooksController {
   constructor(private webhooks: WebhooksService) {}
 

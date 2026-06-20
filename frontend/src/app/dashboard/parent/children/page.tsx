@@ -1,60 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Card } from "@/components/ui/StitchUI";
 import Image from "next/image";
 import { screeningApi, ChildProfile } from "@/services/api/screeningApi";
+import { useProtectedData } from "@/hooks/useProtectedData";
+import { calculateAge } from "@/lib/date";
 
 export default function ChildrenPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [children, setChildren] = useState<ChildProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const fetchChildren = async () => {
-      try {
-        const data = await screeningApi.getChildren();
-        setChildren(data);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to load children profiles";
-        setError(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchChildren();
-  }, [user, router]);
+  const { data, loading, error } = useProtectedData<ChildProfile[]>(() =>
+    screeningApi.getChildren(),
+  );
+  const children = data ?? [];
 
   if (!user) return null;
-
-  const calculateAge = (dob: string) => {
-    const birth = new Date(dob);
-    const today = new Date();
-    let years = today.getFullYear() - birth.getFullYear();
-    let months = today.getMonth() - birth.getMonth();
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    return `${years}y ${months}m`;
-  };
 
   return (
     <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="font-headline font-extrabold text-4xl text-primary tracking-tight mb-2">
+            <h1 className="font-headline font-extrabold text-3xl sm:text-4xl text-primary tracking-tight mb-2">
               My Children
             </h1>
             <p className="text-on-surface-variant font-medium">
@@ -87,18 +57,18 @@ export default function ChildrenPage() {
             {children.map((child) => (
               <Card
                 key={child.id}
-                className="p-8 border border-outline-variant/10 bg-surface-container-low hover:shadow-2xl transition-all duration-500 group cursor-pointer"
+                className="p-6 sm:p-8 border border-outline-variant/10 bg-surface-container-low hover:shadow-2xl transition-all duration-500 group cursor-pointer"
                 onClick={() => router.push(`/dashboard/parent/history?childId=${child.id}`)}
               >
-                <div className="flex items-start gap-6">
-                  <div className="w-20 h-20 rounded-full bg-primary-container flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                    <span className="material-symbols-outlined text-4xl text-primary">
+                <div className="flex items-start gap-4 sm:gap-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary-container flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform shrink-0">
+                    <span className="material-symbols-outlined text-3xl sm:text-4xl text-primary">
                       child_care
                     </span>
                   </div>
-                  <div className="flex-grow">
+                  <div className="flex-grow min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-headline font-extrabold text-2xl text-on-surface group-hover:text-primary transition-colors">
+                      <h3 className="font-headline font-extrabold text-xl sm:text-2xl text-on-surface group-hover:text-primary transition-colors">
                         {child.name}
                       </h3>
                       <span

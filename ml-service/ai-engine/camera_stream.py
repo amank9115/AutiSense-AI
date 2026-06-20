@@ -1,5 +1,5 @@
 ﻿import time
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import cv2
 
@@ -13,7 +13,7 @@ class CameraStream:
         if not self.cap.isOpened():
             raise RuntimeError("Unable to open webcam. Check camera permissions and index.")
 
-    def read_frame(self) -> Tuple[Optional[any], Optional[any]]:
+    def read_frame(self) -> Tuple[Optional[Any], Optional[Any]]:
         ok, frame_bgr = self.cap.read()
         if not ok:
             return None, None

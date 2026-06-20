@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import { Button, Card, EmptyState } from "@/components/ui/StitchUI";
 import { DashboardStatsSkeleton, PatientListSkeleton } from "@/components/ui/SkeletonLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DoctorTopBar } from "@/components/layout/DoctorTopBar";
 import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
 import { fetchJson } from "@/api/client";
+import { useProtectedData } from "@/hooks/useProtectedData";
+import { calculateAge } from "@/lib/date";
+import type { DashboardStats } from "@/lib/analytics";
 
 const PatientRow = ({
   name, id, age, status, date, sessionId,
@@ -47,48 +49,23 @@ const PatientRow = ({
   );
 };
 
-interface DashboardStats {
-  totalSessions: number;
-  completedSessions: number;
-  averageRiskScore: number;
-  successRate: string;
+interface DoctorDashboardData {
+  sessions: ScreeningSession[];
+  stats: DashboardStats;
 }
 
 export default function DoctorDashboard() {
-  const { user } = useAuth();
   const router = useRouter();
-  const [sessions, setSessions] = useState<ScreeningSession[]>([]);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading } = useProtectedData<DoctorDashboardData>(async () => {
+    const [sessionsRes, statsRes] = await Promise.all([
+      screeningApi.getSessions(1, 5),
+      fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+    ]);
+    return { sessions: sessionsRes.data, stats: statsRes };
+  });
 
-  useEffect(() => {
-    if (!user) { router.push("/login"); return; }
-
-    const fetchData = async () => {
-      try {
-        const [sessionsRes, statsRes] = await Promise.all([
-          screeningApi.getSessions(1, 5),
-          fetchJson<DashboardStats>("/api/v1/screening/statistics"),
-        ]);
-        setSessions(sessionsRes.data);
-        setStats(statsRes);
-      } catch (err) {
-        console.error("Failed to fetch doctor dashboard data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [user, router]);
-
-  const calculateAge = (dob: string) => {
-    const birth = new Date(dob);
-    const today = new Date();
-    let years = today.getFullYear() - birth.getFullYear();
-    let months = today.getMonth() - birth.getMonth();
-    if (months < 0) { years--; months += 12; }
-    return `${years}y ${months}m`;
-  };
+  const sessions = data?.sessions ?? [];
+  const stats = data?.stats ?? null;
 
   const hasPendingSessions = sessions.some((s) => s.status === "pending");
 
@@ -99,8 +76,8 @@ export default function DoctorDashboard() {
       {loading ? (
         <div className="space-y-8">
           <DashboardStatsSkeleton />
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            <div className="xl:col-span-2 bg-surface-container-lowest rounded-3xl p-8 space-y-4" style={{ boxShadow: "var(--shadow-card)" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-surface-container-lowest rounded-3xl p-8 space-y-4" style={{ boxShadow: "var(--shadow-card)" }}>
               <div className="h-6 w-36 skeleton-shimmer rounded-full" />
               <PatientListSkeleton rows={5} />
             </div>
@@ -113,16 +90,16 @@ export default function DoctorDashboard() {
       ) : (
         <>
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <StatCard icon="assignment"      label="Total Screenings" value={stats?.totalSessions?.toString() ?? "0"}                             iconColor="bg-primary text-on-primary" />
             <StatCard icon="pending_actions" label="Completed"        value={stats?.completedSessions?.toString() ?? "0"}                         iconColor="bg-secondary text-on-secondary" />
             <StatCard icon="verified"        label="Avg Risk"         value={stats?.averageRiskScore ? `${stats.averageRiskScore.toFixed(1)}%` : "0%"} iconColor="bg-tertiary-container text-on-tertiary-container" />
             <StatCard icon="schedule"        label="Success Rate"     value={stats?.successRate ? `${parseFloat(stats.successRate).toFixed(0)}%` : "0%"} iconColor="bg-surface-container-highest text-on-surface" />
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Recent Patients */}
-            <Card className="xl:col-span-2 p-6 lg:p-8 border-none bg-surface-container-lowest rounded-3xl" style={{ boxShadow: "var(--shadow-card-raised)" }}>
+            <Card className="lg:col-span-2 p-6 lg:p-8 border-none bg-surface-container-lowest rounded-3xl" style={{ boxShadow: "var(--shadow-card-raised)" }}>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-headline font-bold text-xl text-on-surface">Recent Activity</h3>
                 <button

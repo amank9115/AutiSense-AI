@@ -1,5 +1,5 @@
 "use client";
-﻿import { motion } from "framer-motion"
+import { motion } from "framer-motion"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Button from "../ui/Button"
 
@@ -10,6 +10,31 @@ export type CameraLiveMetrics = {
   gestureAnalysis: number
   confidence: number
   imageBase64?: string
+}
+
+// Metric calculation configuration
+const METRIC_CONFIG = {
+  // Face detection weights
+  faceCenteredWeight: 0.6,
+  faceSizeWeight: 0.4,
+
+  // Attention calculation
+  eyeContactWeight: 0.7,
+  motionWeight: 0.3,
+
+  // Emotion signals
+  baseEmotion: 50,
+  stabilityWeight: 0.4,
+  motionPenaltyWeight: 0.8,
+  optimalMotion: 15,
+
+  // Gesture analysis
+  baseGesture: 30,
+  motionSensitivity: 1.2,
+
+  // Confidence
+  baseConfidence: 40,
+  confidenceStabilityWeight: 0.3,
 }
 
 type CameraPreviewProps = {
@@ -28,7 +53,10 @@ type FaceBoundingBox = { x: number; y: number; width: number; height: number }
 type FaceDetectionResult = { boundingBox?: FaceBoundingBox }
 type FaceDetectorLike = { detect: (source: HTMLCanvasElement) => Promise<FaceDetectionResult[]> }
 
-type FaceDetectorCtor = new () => FaceDetectorLike
+type FaceDetectorCtor = new (options?: {
+  fastMode?: boolean
+  maxDetectedFaces?: number
+}) => FaceDetectorLike
 
 const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
 
@@ -109,31 +137,71 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
       let faceCenteredScore = 0
       let faceSizeScore = 0
       let confidence = 54
+      let hasFaceDetection = false
 
+      // Proper FaceDetector API detection
       if (!detectorRef.current && "FaceDetector" in window) {
-        const FaceDetectorImpl = (window as unknown as { FaceDetector?: FaceDetectorCtor }).FaceDetector
-        if (FaceDetectorImpl) detectorRef.current = new FaceDetectorImpl()
-      }
-
-      if (detectorRef.current) {
-        const faces = await detectorRef.current.detect(canvas)
-        const box = faces?.[0]?.boundingBox
-        if (box) {
-          const centerX = box.x + box.width / 2
-          const centerY = box.y + box.height / 2
-          const nx = Math.abs(centerX - canvas.width / 2) / (canvas.width / 2)
-          const ny = Math.abs(centerY - canvas.height / 2) / (canvas.height / 2)
-          faceCenteredScore = clamp(100 - (nx * 65 + ny * 35))
-          const areaRatio = (box.width * box.height) / (canvas.width * canvas.height)
-          faceSizeScore = clamp(areaRatio * 700)
-          confidence = clamp(70 + Math.min(25, faceSizeScore / 4))
+        try {
+          const FaceDetectorImpl = (window as unknown as { FaceDetector?: FaceDetectorCtor }).FaceDetector
+          if (FaceDetectorImpl) {
+            detectorRef.current = new FaceDetectorImpl({ fastMode: true, maxDetectedFaces: 1 })
+          }
+        } catch {
+          detectorRef.current = null
         }
       }
 
-      const eyeContact = detectorRef.current ? clamp(faceCenteredScore * 0.75 + faceSizeScore * 0.25) : clamp(78 - motion * 0.85)
-      const attention = clamp(eyeContact * 0.6 + (100 - motion) * 0.4)
-      const emotionSignals = clamp(72 - Math.abs(motion - 12) * 1.6 + (brightness > 40 ? 6 : -6))
-      const gestureAnalysis = clamp(20 + motion * 1.5)
+      // Attempt face detection if available
+      if (detectorRef.current) {
+        try {
+          const faces = await detectorRef.current.detect(canvas)
+          const box = faces?.[0]?.boundingBox
+          if (box) {
+            hasFaceDetection = true
+            const centerX = box.x + box.width / 2
+            const centerY = box.y + box.height / 2
+            const nx = Math.abs(centerX - canvas.width / 2) / (canvas.width / 2)
+            const ny = Math.abs(centerY - canvas.height / 2) / (canvas.height / 2)
+            faceCenteredScore = clamp(100 - (nx * 50 + ny * 50)) // More balanced weighting
+            const areaRatio = (box.width * box.height) / (canvas.width * canvas.height)
+            faceSizeScore = clamp(areaRatio * 500) // More reasonable scaling
+            confidence = clamp(60 + Math.min(40, faceSizeScore / 3))
+          }
+        } catch {
+          // Face detection failed, fall through to alternative
+        }
+      }
+
+      // Consistent fallback when face detection fails or unavailable
+      let stabilityScore = 0
+      if (!hasFaceDetection) {
+        // Use brightness and motion as indicators when face detection fails
+        stabilityScore = clamp(100 - motion * 2)
+        const focusScore = clamp(80 - Math.abs(brightness - 60) * 0.5)
+        faceCenteredScore = stabilityScore * 0.7 + focusScore * 0.3
+        faceSizeScore = stabilityScore * 0.5 + focusScore * 0.5
+        confidence = clamp(METRIC_CONFIG.baseConfidence + stabilityScore * METRIC_CONFIG.confidenceStabilityWeight)
+      } else {
+        stabilityScore = clamp(100 - motion)
+      }
+
+      const eyeContact = clamp(
+        faceCenteredScore * METRIC_CONFIG.faceCenteredWeight + 
+        faceSizeScore * METRIC_CONFIG.faceSizeWeight
+      )
+      const attention = clamp(
+        eyeContact * METRIC_CONFIG.eyeContactWeight + 
+        (100 - motion) * METRIC_CONFIG.motionWeight
+      )
+      const emotionSignals = clamp(
+        METRIC_CONFIG.baseEmotion + 
+        stabilityScore * METRIC_CONFIG.stabilityWeight - 
+        Math.abs(motion - METRIC_CONFIG.optimalMotion) * METRIC_CONFIG.motionPenaltyWeight
+      )
+      const gestureAnalysis = clamp(
+        METRIC_CONFIG.baseGesture + 
+        motion * METRIC_CONFIG.motionSensitivity
+      )
 
       const alpha = 0.38
       const prev = smoothedRef.current
@@ -219,10 +287,22 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
 
   useEffect(() => {
     const video = videoRef.current
+    const currentRecordingUrl = recordingUrl
+    
     return () => {
+      // Clean up media stream
       const stream = video?.srcObject as MediaStream | null
       stream?.getTracks().forEach((track) => track.stop())
-      if (recordingUrl) URL.revokeObjectURL(recordingUrl)
+      
+      // Clean up recording URL
+      if (currentRecordingUrl) {
+        URL.revokeObjectURL(currentRecordingUrl)
+      }
+      
+      // Clean up media recorder
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop()
+      }
     }
   }, [recordingUrl])
 
@@ -253,7 +333,7 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
         <div className="absolute left-[38%] top-[56%] h-14 w-14 rounded-full bg-indigo-400/20 blur-xl" />
 
         <div className="absolute bottom-4 left-4 rounded-md bg-slate-950/80 px-3 py-2 text-xs text-cyan-100">
-          Face signal | Eye contact {resolvedMetrics.eyeContact}% | Attention {resolvedMetrics.attention}%
+          Face signal | Eye contact {smoothedRef.current.eyeContact}% | Attention {smoothedRef.current.attention}%
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AccountLockedException } from '../common/exceptions';
 import { LockoutService } from './lockout.service';
-import { RedisService } from '../redis/redis.service';
+import { CacheService } from '../cache/cache.service';
 
 describe('LockoutService', () => {
   let service: LockoutService;
@@ -12,7 +12,7 @@ describe('LockoutService', () => {
       providers: [
         LockoutService,
         {
-          provide: RedisService,
+          provide: CacheService,
           useValue: {
             get: jest.fn(),
             set: jest.fn(),
@@ -26,7 +26,7 @@ describe('LockoutService', () => {
     }).compile();
 
     service = module.get<LockoutService>(LockoutService);
-    redisService = module.get(RedisService);
+    redisService = module.get(CacheService);
   });
 
   afterEach(() => {

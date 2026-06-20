@@ -259,7 +259,7 @@ def save_model(pipeline: object, metadata: dict, feature_names: list[str]) -> No
     os.makedirs(os.path.dirname(MODEL_OUTPUT), exist_ok=True)
 
     joblib.dump(pipeline, MODEL_OUTPUT)
-    joblib.dump({"feature_names": feature_names, **metadata}, METADATA_OUTPUT)
+    joblib.dump({"model_version": "manassaathi-rf-uci-asd-v1", "feature_names": feature_names, **metadata}, METADATA_OUTPUT)
 
     print(f"      [OK] Model saved    -> {MODEL_OUTPUT}")
     print(f"      [OK] Metadata saved -> {METADATA_OUTPUT}")

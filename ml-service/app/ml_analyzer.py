@@ -35,7 +35,8 @@ def clamp(value: float, low: float = 0.0, high: float = 100.0) -> float:
     return float(max(low, min(high, value)))
 
 def calculate_distance(p1, p2) -> float:
-    return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2 + getattr(p1, 'z', 0)**2 - getattr(p2, 'z', 0)**2)
+    dz = getattr(p1, 'z', 0) - getattr(p2, 'z', 0)
+    return math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2 + dz**2)
 
 def analyze_frame(image: np.ndarray, frame_data: Dict[str, Any]) -> Dict[str, float]:
     """
@@ -53,9 +54,17 @@ def analyze_frame(image: np.ndarray, frame_data: Dict[str, Any]) -> Dict[str, fl
     if cv2 is None or mp is None or image is None or face_mesh is None or hands is None:
         return default_scores
 
+    if getattr(image, "ndim", 0) < 2:
+        return default_scores
+
     h, w = image.shape[:2]
-    # MediaPipe requires RGB images
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # MediaPipe requires 3-channel RGB images; normalize grayscale / RGBA inputs.
+    if image.ndim == 2:
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+    elif image.shape[2] == 4:
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
+    else:
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
     # 1. Process Face Mesh for Head Pose, Eye Contact, and Emotion
     face_results = face_mesh.process(image_rgb)

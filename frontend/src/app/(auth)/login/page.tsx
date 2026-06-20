@@ -43,8 +43,6 @@ export default function LoginPage() {
   useEffect(() => {
     const verified = searchParams?.get("verified");
     if (verified === "false") {
-      const storedEmail = localStorage.getItem("pendingVerificationEmail");
-      if (storedEmail) setPendingEmail(storedEmail);
       setServerError("Account created! Please check your email to verify your account before logging in.");
     }
   }, [searchParams]);

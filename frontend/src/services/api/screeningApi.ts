@@ -1,5 +1,30 @@
-import { fetchJson } from "../../api/client"
+import { fetchJson, getApiBaseUrl } from "../../api/client"
+import { useAppStore } from "../../store"
 import type { ChildProfileForm } from "../../context/ScreeningContext"
+
+// Enhanced ML error handling
+const withMLErrorHandling = async <T>(fetchPromise: Promise<T>, operation: string): Promise<T> => {
+  try {
+    return await fetchPromise
+  } catch (error) {
+    console.error(`ML Operation failed: ${operation}`, error)
+    
+    // Check if this is a network error vs ML service error
+    if (error instanceof Error) {
+      if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        throw new Error(`ML service unreachable. Please check if the ML service is running on port 8001.`)
+      }
+      
+      // Check for specific ML service errors
+      if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+        throw new Error(`ML processing failed. The ML service encountered an internal error.`)
+      }
+    }
+    
+    // Re-throw with enhanced context
+    throw new Error(`ML ${operation} failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
 
 export type ChildProfile = {
   id: string
@@ -64,6 +89,30 @@ export const screeningApi = {
 
   getSessionDetails: async (sessionId: string) => {
     return fetchJson<ScreeningSession & { results?: Record<string, unknown>; analysisData?: Record<string, unknown>; report?: Record<string, unknown> }>(`/api/v1/screening/sessions/${sessionId}`)
+  },
+
+  // Generates the PDF report on the ML service and returns it as a Blob so the
+  // caller can trigger a browser download. The backend streams raw PDF bytes,
+  // so we use fetch directly rather than the JSON helper.
+  generateReport: async (sessionId: string): Promise<Blob> => {
+    return withMLErrorHandling(
+      (async () => {
+        const token = useAppStore.getState().token
+        const headers: Record<string, string> = {}
+        if (token && token !== "guest-token") {
+          headers["Authorization"] = `Bearer ${token}`
+        }
+        const response = await fetch(
+          `${getApiBaseUrl()}/api/v1/ml/report/${sessionId}`,
+          { method: "POST", headers, credentials: "include" },
+        )
+        if (!response.ok) {
+          throw new Error(`Request failed (${response.status})`)
+        }
+        return response.blob()
+      })(),
+      "PDF report generation",
+    )
   },
 }
 

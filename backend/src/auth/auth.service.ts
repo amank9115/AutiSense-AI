@@ -163,7 +163,7 @@ export class AuthService {
       name: data.name,
       phone: data.phone || '',
       passwordHash,
-      role: (data.role as Role) || Role.parent,
+      role: Role.parent,
       emailVerified: false,
       emailVerificationToken: verificationToken,
       tokenExpiresAt: tokenExpiresAt,
@@ -215,15 +215,17 @@ export class AuthService {
       tokenExpiresAt: null,
     });
 
-    // Generate login token for auto-login
+    // Generate login tokens for auto-login after verification
     const payload = { email: user.email, sub: user.id, role: user.role };
     const access_token = this.jwtService.sign(payload);
-    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    // Persist the refresh token in the database so rotation and revocation work
+    const refreshTokenData = await this.refreshTokenService.createToken(user.id);
 
     return {
       message: 'Email verified successfully!',
       access_token,
-      refresh_token,
+      refresh_token: refreshTokenData.token,
       user: {
         id: user.id,
         email: user.email,

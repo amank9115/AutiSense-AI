@@ -55,6 +55,35 @@ export class MlService {
     });
   }
 
+  /**
+   * Maps camelCase childInfo from the API layer to the snake_case keys the
+   * Python ML service expects. Unknown keys are dropped.
+   */
+  private mapChildInfo(
+    childInfo?: Record<string, string>,
+  ): Record<string, string> {
+    if (!childInfo) {
+      return {};
+    }
+    const keyMap: Record<string, string> = {
+      childName: 'child_name',
+      parentName: 'parent_name',
+      parentEmail: 'parent_email',
+      parentPhone: 'parent_phone',
+      dateOfBirth: 'date_of_birth',
+      gender: 'gender',
+      age: 'age',
+      city: 'city',
+      state: 'state',
+    };
+    const mapped: Record<string, string> = {};
+    for (const [key, value] of Object.entries(childInfo)) {
+      if (value === undefined || value === null) continue;
+      mapped[keyMap[key] ?? key] = value;
+    }
+    return mapped;
+  }
+
   private async sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -197,7 +226,11 @@ export class MlService {
 
     return this.request<MlPredictResponse>('/predict/window', {
       method: 'POST',
-      body: JSON.stringify({ session_key: sessionKey, frames, ...childInfo }),
+      body: JSON.stringify({
+        session_key: sessionKey,
+        frames,
+        ...this.mapChildInfo(childInfo),
+      }),
     });
   }
 
@@ -223,7 +256,10 @@ export class MlService {
     try {
       const response = await fetch(`${this.baseUrl}/report/generate`, {
         method: 'POST',
-        body: JSON.stringify({ session_key: sessionKey, ...childInfo }),
+        body: JSON.stringify({
+          session_key: sessionKey,
+          ...this.mapChildInfo(childInfo),
+        }),
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
       });
