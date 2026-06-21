@@ -208,7 +208,7 @@ export default function DoctorDashboard() {
                       >
                         <div>
                           <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                            {(share.session as any)?.child?.name ?? "Patient"}
+                            {share.session?.child?.name ?? "Patient"}
                           </p>
                           <p className="text-[10px] text-on-surface-muted uppercase tracking-widest">
                             From {share.sharedBy?.name ?? "Parent"} · {new Date(share.createdAt).toLocaleDateString()}

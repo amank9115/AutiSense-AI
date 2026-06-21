@@ -75,10 +75,10 @@ export default function DoctorReportPage() {
   }, [shareId, notes]);
 
   // Derive display data
-  const session = share?.session as any;
-  const results = session?.results as any;
+  const session = share?.session;
+  const results = session?.results as Record<string, unknown> | undefined;
   const child = session?.child;
-  const behaviors: Record<string, number> = results?.behaviors ?? {};
+  const behaviors: Record<string, number> = (results?.behaviors as Record<string, number>) ?? {};
 
   if (loading) {
     return (
@@ -112,11 +112,11 @@ export default function DoctorReportPage() {
     );
   }
 
-  const riskScore = results?.riskScore ?? session?.riskScore ?? 0;
+  const riskScore = ((results?.riskScore ?? session?.riskScore ?? 0) as number);
   const riskLevel = (results?.riskLevel ?? session?.riskLevel ?? "low") as string;
-  const confidence = results?.confidence ?? null;
-  const modelVersion = results?.modelVersion ?? "—";
-  const recommendations: string[] = results?.recommendations ?? [];
+  const confidence = (results?.confidence ?? null) as number | null;
+  const modelVersion = (results?.modelVersion ?? "—") as string;
+  const recommendations: string[] = (results?.recommendations as string[]) ?? [];
 
   const riskColor =
     riskLevel === "low" ? "text-secondary" :
@@ -172,14 +172,17 @@ export default function DoctorReportPage() {
             Back
           </button>
           <button
-            onClick={() => screeningApi.generateReport(session?.id).then((blob) => {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `report-${child?.name ?? "patient"}.pdf`;
-              a.click();
-              URL.revokeObjectURL(url);
-            })}
+            onClick={() => {
+              if (!session?.id) return;
+              screeningApi.generateReport(session.id).then((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `report-${child?.name ?? "patient"}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              });
+            }}
             className="flex items-center gap-2 px-5 py-3 bg-surface-container-low rounded-2xl text-[10px] font-extrabold uppercase tracking-widest text-on-surface hover:bg-surface-container-high transition-all border border-outline-variant/10"
           >
             <span className="material-symbols-outlined text-lg">download</span>
