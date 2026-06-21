@@ -256,7 +256,7 @@ def generate_pdf_report(session_data: Dict[str, Any]) -> bytes:
         style=TableStyle([
             ("BOX",         (0, 0), (-1, -1), 0.5, COLOR_BORDER),
             ("INNERGRID",   (0, 0), (-1, -1), 0.25, COLOR_BORDER),
-            ("BACKGROUND",  (0, 0), (-1, 0),  1,    COLOR_LIGHT_BG),
+            ("BACKGROUND",  (0, 0), (-1, 0),  COLOR_LIGHT_BG),
             ("VALIGN",      (0, 0), (-1, -1), "TOP"),
             ("TOPPADDING",  (0, 0), (-1, -1), 6),
             ("BOTTOMPADDING",(0, 0), (-1, -1), 6),
@@ -316,15 +316,18 @@ def generate_pdf_report(session_data: Dict[str, Any]) -> bytes:
         metrics_legend,
         colWidths=[4 * cm, 2 * cm, 11 * cm],
         style=TableStyle([
-            ("BACKGROUND",   (0, 0), (-1, 0),  1, COLOR_BRAND_BLUE),
-            ("TEXTCOLOR",    (0, 0), (-1, 0),  1, COLOR_WHITE),
-            ("FONTNAME",     (0, 0), (-1, 0),  "Helvetica-Bold"),
-            ("FONTSIZE",     (0, 0), (-1, -1), 8),
-            ("ROWBACKGROUNDS",(0, 1),(-1, -1), [COLOR_WHITE, COLOR_LIGHT_BG]),
-            ("GRID",         (0, 0), (-1, -1), 0.25, COLOR_BORDER),
-            ("TOPPADDING",   (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING",(0, 0), (-1, -1), 4),
-            ("LEFTPADDING",  (0, 0), (-1, -1), 6),
+            ("BACKGROUND",    (0, 0), (-1, 0),  COLOR_BRAND_BLUE),
+            ("TEXTCOLOR",     (0, 0), (-1, 0),  COLOR_WHITE),
+            ("FONTNAME",      (0, 0), (-1, 0),  "Helvetica-Bold"),
+            ("FONTSIZE",      (0, 0), (-1, -1), 8),
+            ("BACKGROUND",    (0, 1), (-1, 1),  COLOR_WHITE),
+            ("BACKGROUND",    (0, 2), (-1, 2),  COLOR_LIGHT_BG),
+            ("BACKGROUND",    (0, 3), (-1, 3),  COLOR_WHITE),
+            ("BACKGROUND",    (0, 4), (-1, 4),  COLOR_LIGHT_BG),
+            ("GRID",          (0, 0), (-1, -1), 0.25, COLOR_BORDER),
+            ("TOPPADDING",    (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 6),
         ]),
     )
     story.append(ml_table)
@@ -358,19 +361,23 @@ def generate_pdf_report(session_data: Dict[str, Any]) -> bytes:
             concern_color = COLOR_DANGER if val >= 0.5 else COLOR_BRAND_GREEN
             aq_data.append([key, desc, f"{int(val)}", concern])
 
+        aq_row_styles = [
+            ("BACKGROUND", (0, i), (-1, i), COLOR_WHITE if i % 2 == 1 else COLOR_LIGHT_BG)
+            for i in range(1, len(aq_data))
+        ]
         aq_table = Table(
             aq_data,
             colWidths=[1.5 * cm, 8.5 * cm, 2 * cm, 2 * cm],
             style=TableStyle([
-                ("BACKGROUND",   (0, 0), (-1, 0),  1, COLOR_DARK),
-                ("TEXTCOLOR",    (0, 0), (-1, 0),  1, COLOR_WHITE),
-                ("FONTNAME",     (0, 0), (-1, 0),  "Helvetica-Bold"),
-                ("FONTSIZE",     (0, 0), (-1, -1), 8),
-                ("ROWBACKGROUNDS",(0, 1),(-1, -1), [COLOR_WHITE, COLOR_LIGHT_BG]),
-                ("GRID",         (0, 0), (-1, -1), 0.25, COLOR_BORDER),
-                ("TOPPADDING",   (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING",(0, 0), (-1, -1), 4),
-                ("LEFTPADDING",  (0, 0), (-1, -1), 6),
+                ("BACKGROUND",    (0, 0), (-1, 0),  COLOR_DARK),
+                ("TEXTCOLOR",     (0, 0), (-1, 0),  COLOR_WHITE),
+                ("FONTNAME",      (0, 0), (-1, 0),  "Helvetica-Bold"),
+                ("FONTSIZE",      (0, 0), (-1, -1), 8),
+                ("GRID",          (0, 0), (-1, -1), 0.25, COLOR_BORDER),
+                ("TOPPADDING",    (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING",   (0, 0), (-1, -1), 6),
+                *aq_row_styles,
             ]),
         )
         story.append(aq_table)

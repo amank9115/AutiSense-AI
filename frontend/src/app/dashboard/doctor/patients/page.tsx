@@ -1,40 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Button, Input } from "@/components/ui/StitchUI";
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { screeningApi } from "@/services/api/screeningApi";
 import { useProtectedData } from "@/hooks/useProtectedData";
+import { CardGridSkeleton } from "@/components/ui/SkeletonLoader";
 import { calculateAge } from "@/lib/date";
 import { filterPatients, type PatientRecord } from "@/lib/patients";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
+
+const RISK_LABELS: Record<string, string> = {
+  low: "Low Risk",
+  medium: "Moderate Risk",
+  high: "Elevated Risk",
+  very_high: "High Risk",
+};
 
 export default function PatientsPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const shouldReduceMotion = useReducedMotion();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [riskFilter, setRiskFilter] = useState<string>("All");
-  const [statusFilter, setStatusFilter] = useState<string>("All");
+
+  // URL-synced filters — shareable and survive refresh
+  const searchTerm = searchParams.get("q") ?? "";
+  const riskFilter = searchParams.get("risk") ?? "All";
+  const statusFilter = searchParams.get("status") ?? "All";
+
+  const setParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "All") params.set(key, value);
+    else params.delete(key);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const { data, loading } = useProtectedData<PatientRecord[]>(async () => {
     const children = await screeningApi.getChildren();
     return children as unknown as PatientRecord[];
   });
   const patients = data ?? [];
-
-  if (!user || loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-          <p className="text-on-surface-variant text-sm font-medium animate-pulse">Loading patients...</p>
-        </div>
-      </div>
-    );
-  }
 
   const filteredPatients = filterPatients(patients, { searchTerm, riskFilter, statusFilter });
 
@@ -70,8 +77,11 @@ export default function PatientsPage() {
     }
   };
 
+  if (!user) return null;
+
   return (
     <div className="text-on-surface font-body antialiased p-6 lg:p-10">
+      <Breadcrumb className="mb-6" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
@@ -79,11 +89,12 @@ export default function PatientsPage() {
             Patient List
           </h2>
           <p className="text-on-surface-muted text-lg">
-            {filteredPatients.length} patients registered under your care
+            {loading ? "Loading patients..." : `${filteredPatients.length} patients registered under your care`}
           </p>
         </div>
         <Button
           variant="primary"
+          onClick={() => router.push("/dashboard/parent/children/add")}
           className="px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg"
         >
           <span className="material-symbols-outlined mr-2">person_add</span>
@@ -98,7 +109,7 @@ export default function PatientsPage() {
             className="w-full pl-12 bg-surface-container-highest border-none rounded-2xl shadow-inner"
             placeholder="Search by name, patient ID, or parent..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => setParam("q", e.target.value)}
           />
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
             search
@@ -106,40 +117,44 @@ export default function PatientsPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {/* Risk Level Filter */}
+          {/* Risk Level Filter — values match API riskLevel enum */}
           <select
             value={riskFilter}
-            onChange={(e) => setRiskFilter(e.target.value as typeof riskFilter)}
+            onChange={(e) => setParam("risk", e.target.value)}
             className="bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm font-bold shadow-inner cursor-pointer"
           >
             <option value="All">All Risk Levels</option>
-            <option value="Low">Low Risk</option>
-            <option value="Moderate">Moderate Risk</option>
-            <option value="Elevated">Elevated Risk</option>
+            <option value="low">Low Risk</option>
+            <option value="medium">Moderate Risk</option>
+            <option value="high">Elevated Risk</option>
+            <option value="very_high">High Risk</option>
           </select>
 
-          {/* Status Filter */}
+          {/* Status Filter — values match API status enum */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            onChange={(e) => setParam("status", e.target.value)}
             className="bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm font-bold shadow-inner cursor-pointer"
           >
             <option value="All">All Status</option>
-            <option value="Reviewed">Reviewed</option>
-            <option value="Pending">Pending</option>
-            <option value="Escalated">Escalated</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
           </select>
         </div>
       </div>
 
       {/* Patient Grid */}
-      {filteredPatients.length > 0 ? (
+      {loading ? (
+        <CardGridSkeleton cols={3} cards={6} />
+      ) : filteredPatients.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredPatients.map((patient) => {
             const latestSession = patient.screeningSessions?.[0];
             const riskLevel = latestSession?.results?.riskLevel || "N/A";
             const status = latestSession?.status || "None";
             const lastSessionDate = latestSession ? new Date(latestSession.createdAt).toLocaleDateString() : "Never";
+            const riskLabel = RISK_LABELS[riskLevel.toLowerCase()] ?? `${riskLevel} Risk`;
 
             return (
               <motion.div
@@ -157,7 +172,7 @@ export default function PatientsPage() {
                         child_care
                       </span>
                     </div>
-                    <div className="flex-grow">
+                    <div className="grow">
                       <h4 className="font-headline font-extrabold text-lg text-on-surface group-hover:text-primary transition-colors">
                         {patient.name}
                       </h4>
@@ -182,7 +197,7 @@ export default function PatientsPage() {
 
                   <div className="flex gap-2 flex-wrap">
                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${getRiskColor(riskLevel)} border`}>
-                      {riskLevel} Risk
+                      {riskLabel}
                     </span>
                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${getStatusColor(status)}`}>
                       {status}
@@ -198,14 +213,15 @@ export default function PatientsPage() {
                       }}
                       className="flex-1 py-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-widest"
                       disabled={!latestSession}
+                      title={latestSession ? "View screening report" : "No screening sessions recorded yet"}
                     >
-                      View Report
+                      {latestSession ? "View Report" : "No Report Yet"}
                     </Button>
                     <Button
                       variant="primary"
                       onClick={(e) => {
                         e.stopPropagation();
-                        alert(`Scheduling appointment with ${patient.parent?.name || "Parent"}...`);
+                        router.push("/dashboard/doctor/appointments");
                       }}
                       className="flex-1 py-2.5 rounded-xl text-[10px] font-extrabold uppercase tracking-widest"
                     >
@@ -232,11 +248,7 @@ export default function PatientsPage() {
           </p>
           <Button
             variant="primary"
-            onClick={() => {
-              setSearchTerm("");
-              setRiskFilter("All");
-              setStatusFilter("All");
-            }}
+            onClick={() => router.replace("?", { scroll: false })}
             className="px-8 py-4 rounded-2xl font-bold"
           >
             Clear Filters

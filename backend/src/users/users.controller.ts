@@ -52,14 +52,24 @@ export class UsersController {
     @Request() req: RequestWithUser,
     @Body() updateData: UpdateProfileDto,
   ) {
-    if (!updateData.name && !updateData.phone) {
+    // Only persist fields that were actually provided.
+    const allowed = [
+      'name',
+      'phone',
+      'licenseNumber',
+      'specialization',
+      'hospital',
+      'yearsExperience',
+    ] as const;
+    const data: Record<string, unknown> = {};
+    for (const key of allowed) {
+      if (updateData[key] !== undefined) data[key] = updateData[key];
+    }
+    if (Object.keys(data).length === 0) {
       throw new ValidationException('At least one field must be provided');
     }
 
-    const updatedUser = await this.usersService.update(req.user.sub, {
-      name: updateData.name,
-      phone: updateData.phone,
-    });
+    const updatedUser = await this.usersService.update(req.user.sub, data);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...result } = updatedUser;
@@ -76,6 +86,15 @@ export class UsersController {
     // For now, we'll just remove the user
     await this.usersService.delete(req.user.sub);
     return { message: 'Account deleted successfully' };
+  }
+
+  /**
+   * List all doctors/clinicians (for parents to select when sharing reports)
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('doctors')
+  async listDoctors() {
+    return this.usersService.findDoctors();
   }
 
   /**

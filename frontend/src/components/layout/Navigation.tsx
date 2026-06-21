@@ -62,19 +62,19 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-3 z-50 w-full px-4 sm:px-6 lg:px-8">
       {/* Floating pill container */}
       <div
-        className={`mx-auto max-w-6xl relative rounded-[1.25rem] border transition-all duration-500 ${
+        className={`mx-auto max-w-6xl relative rounded-screen border transition-all duration-500 ${
           overHero
-            ? "border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_4px_30px_rgba(139,92,246,0.10)]"
+            ? "border-white/10 bg-white/4 backdrop-blur-2xl shadow-[0_4px_30px_rgba(139,92,246,0.10)]"
             : scrolled
               ? "border-outline-variant/25 bg-surface/92 shadow-[0_8px_40px_rgba(23,104,118,0.11),inset_0_1px_0_rgba(255,255,255,0.8)]"
               : "border-outline-variant/15 bg-surface/80 shadow-[0_4px_20px_rgba(23,104,118,0.06),inset_0_1px_0_rgba(255,255,255,0.6)]"
         } backdrop-blur-2xl px-3 py-2`}
       >
         {/* Subtle inner colour wash */}
-        <div className="pointer-events-none absolute inset-0 rounded-[1.25rem] overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-container/12 via-transparent to-secondary-container/8" />
+        <div className="pointer-events-none absolute inset-0 rounded-screen overflow-hidden">
+          <div className="absolute inset-0 bg-linear-to-r from-primary-container/12 via-transparent to-secondary-container/8" />
           {/* Top shimmer line */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-accent/30 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary-accent/30 to-transparent" />
         </div>
 
         <div className="relative flex items-center justify-between gap-4">
@@ -86,7 +86,7 @@ export const Navbar: React.FC = () => {
             aria-label="MannSaathi home"
           >
             {/* Icon mark */}
-            <div className="w-8 h-8 rounded-[0.6rem] bg-gradient-to-br from-primary to-primary-accent flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
+            <div className="w-8 h-8 rounded-[0.6rem] bg-linear-to-br from-primary to-primary-accent flex items-center justify-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M10 3C10 3 6 5.5 6 9.2C6 11.5 7.5 13.4 9.2 14.2V17.5H10.8V14.2C12.5 13.4 14 11.5 14 9.2C14 5.5 10 3 10 3Z" fill="rgba(255,255,255,0.92)" />
                 <path d="M8 9.5C8 9.5 7.2 7.8 8.2 6" stroke="rgba(255,255,255,0.45)" strokeWidth="1.2" strokeLinecap="round" />
@@ -275,7 +275,7 @@ export const Footer: React.FC = () => {
               </div>
               <span className="font-headline font-bold text-primary text-base tracking-tight">MannSaathi</span>
             </Link>
-            <p className="text-xs text-on-surface-muted leading-relaxed max-w-[200px]">
+            <p className="text-xs text-on-surface-muted leading-relaxed max-w-50">
               AI-powered autism screening built for sensory comfort and neurodivergent accessibility.
             </p>
             <div className="flex items-center gap-1.5 text-xs text-on-surface-muted">

@@ -5,107 +5,61 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Button } from "@/components/ui/StitchUI";
 import { motion, useReducedMotion } from "framer-motion";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { PatientListSkeleton } from "@/components/ui/SkeletonLoader";
+import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
+import { useProtectedData } from "@/hooks/useProtectedData";
 
-interface ArchivedRecord {
-  id: string;
-  patientName: string;
-  parentName: string;
-  archivedDate: string;
-  reason: string;
-  finalRiskScore: number;
-  finalRiskLabel: string;
-  status: "Archived - Completed" | "Archived - Transferred" | "Archived - Inactive";
-}
+const FILTERS = ["All", "archived", "failed"] as const;
+type FilterValue = typeof FILTERS[number];
 
-const mockArchives: ArchivedRecord[] = [
-  {
-    id: "ARCH-001",
-    patientName: "Sophie Chen",
-    parentName: "Emily Chen",
-    archivedDate: "May 15, 2026",
-    reason: "Care transferred to Dr. Williams",
-    finalRiskScore: 0.18,
-    finalRiskLabel: "Low",
-    status: "Archived - Transferred",
-  },
-  {
-    id: "ARCH-002",
-    patientName: "Liam Patel",
-    parentName: "Anita Patel",
-    archivedDate: "Apr 28, 2026",
-    reason: "No activity for 90+ days",
-    finalRiskScore: 0.31,
-    finalRiskLabel: "Low",
-    status: "Archived - Inactive",
-  },
-  {
-    id: "ARCH-003",
-    patientName: "Emma Rodriguez",
-    parentName: "Carlos Rodriguez",
-    archivedDate: "Apr 10, 2026",
-    reason: "Treatment completed successfully",
-    finalRiskScore: 0.12,
-    finalRiskLabel: "Low",
-    status: "Archived - Completed",
-  },
-  {
-    id: "ARCH-004",
-    patientName: "Oliver Kim",
-    parentName: "Jennifer Kim",
-    archivedDate: "Mar 25, 2026",
-    reason: "Care transferred to specialist clinic",
-    finalRiskScore: 0.45,
-    finalRiskLabel: "Moderate",
-    status: "Archived - Transferred",
-  },
-  {
-    id: "ARCH-005",
-    patientName: "Isabella Torres",
-    parentName: "Maria Torres",
-    archivedDate: "Mar 15, 2026",
-    reason: "Family relocated",
-    finalRiskScore: 0.22,
-    finalRiskLabel: "Low",
-    status: "Archived - Transferred",
-  },
-];
+const FILTER_LABELS: Record<FilterValue, string> = {
+  All: "All",
+  archived: "Archived",
+  failed: "Failed",
+};
 
 export default function ArchivePage() {
   const { user } = useAuth();
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
-  const [archives] = useState<ArchivedRecord[]>(mockArchives);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"All" | "Completed" | "Transferred" | "Inactive">("All");
+  const [statusFilter, setStatusFilter] = useState<FilterValue>("All");
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  const { data, loading, error } = useProtectedData<ScreeningSession[]>(async () => {
+    const res = await screeningApi.getSessions(1, 200);
+    return res.data.filter((s) => s.status === "archived" || s.status === "failed");
+  });
+
+  const archives = data ?? [];
 
   const filteredArchives = archives.filter((record) => {
+    const name = record.child?.name?.toLowerCase() ?? "";
     const matchesSearch =
-      record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.parentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      name.includes(searchTerm.toLowerCase()) ||
       record.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || record.status.includes(statusFilter);
+    const matchesStatus = statusFilter === "All" || record.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusColor = (status: ArchivedRecord["status"]) => {
-    if (status.includes("Completed")) return "bg-secondary-container text-on-secondary-container";
-    if (status.includes("Transferred")) return "bg-tertiary-container text-on-tertiary-container";
+  const getStatusColor = (status: string) => {
+    if (status === "archived") return "bg-tertiary-container text-on-tertiary-container";
+    if (status === "failed") return "bg-error-container text-on-error-container";
     return "bg-surface-container-high text-on-surface-variant";
   };
 
-  const getRiskColor = (score: number) => {
-    if (score < 0.3) return "text-secondary";
-    if (score < 0.6) return "text-tertiary";
+  const getRiskColor = (score: number | null) => {
+    if (score === null) return "text-on-surface-variant";
+    if (score < 30) return "text-secondary";
+    if (score < 60) return "text-tertiary";
     return "text-error";
   };
 
+  if (!user) return null;
+
   return (
     <div className="text-on-surface font-body antialiased p-6 lg:p-10">
+      <Breadcrumb className="mb-6" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
@@ -113,7 +67,7 @@ export default function ArchivePage() {
             Archive
           </h2>
           <p className="text-on-surface-muted text-lg">
-            {archives.length} archived patient records
+            {loading ? "Loading archive..." : `${archives.length} archived session records`}
           </p>
         </div>
       </div>
@@ -126,7 +80,7 @@ export default function ArchivePage() {
           </span>
           <input
             type="text"
-            placeholder="Search by name or archive ID..."
+            placeholder="Search by patient name or session ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3.5 bg-surface-container-low border-none rounded-2xl text-sm shadow-inner"
@@ -134,7 +88,7 @@ export default function ArchivePage() {
         </div>
 
         <div className="flex gap-2">
-          {(["All", "Completed", "Transferred", "Inactive"] as const).map((status) => (
+          {FILTERS.map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -144,21 +98,27 @@ export default function ArchivePage() {
                   : "bg-surface-container-low text-on-surface-variant"
               }`}
             >
-              {status}
+              {FILTER_LABELS[status]}
             </button>
           ))}
         </div>
       </div>
 
       {/* Archives Table */}
-      {filteredArchives.length > 0 ? (
+      {error ? (
+        <div className="bg-error/10 border border-error/20 text-error p-6 rounded-2xl text-center">
+          <p className="font-bold">{error}</p>
+          <Button variant="secondary" onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+        </div>
+      ) : loading ? (
+        <PatientListSkeleton rows={6} />
+      ) : filteredArchives.length > 0 ? (
         <Card className="border-none shadow-2xl rounded-3xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-surface-container-low">
                   <th className="text-left px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Patient</th>
-                  <th className="text-left px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest hidden md:table-cell">Parent</th>
                   <th className="text-left px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest hidden lg:table-cell">Archived</th>
                   <th className="text-left px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest hidden sm:table-cell">Final Risk</th>
                   <th className="text-left px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-widest">Status</th>
@@ -171,50 +131,55 @@ export default function ArchivePage() {
                     key={record.id}
                     initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
                     animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                    transition={shouldReduceMotion ? undefined : { delay: i * 0.05 }}
+                    transition={shouldReduceMotion ? undefined : { delay: Math.min(i * 0.05, 0.4) }}
                     className="border-t border-outline-variant/10 hover:bg-surface-container-low transition-colors"
                   >
                     <td className="px-6 py-5">
                       <div>
-                        <p className="font-headline font-extrabold text-on-surface">{record.patientName}</p>
-                        <p className="text-[10px] text-on-surface-muted">{record.id}</p>
+                        <p className="font-headline font-extrabold text-on-surface">{record.child?.name ?? "Unknown Patient"}</p>
+                        <p className="text-[10px] text-on-surface-muted">{record.id.slice(0, 8)}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-5 hidden md:table-cell">
-                      <span className="font-medium text-on-surface">{record.parentName}</span>
-                    </td>
                     <td className="px-6 py-5 hidden lg:table-cell">
-                      <span className="text-sm text-on-surface-variant">{record.archivedDate}</span>
+                      <span className="text-sm text-on-surface-variant">
+                        {new Date(record.completedAt ?? record.createdAt).toLocaleDateString()}
+                      </span>
                     </td>
                     <td className="px-6 py-5 hidden sm:table-cell">
                       <div className="flex items-center gap-2">
-                        <span className={`text-lg font-headline font-extrabold ${getRiskColor(record.finalRiskScore)}`}>
-                          {(record.finalRiskScore * 100).toFixed(0)}%
+                        <span className={`text-lg font-headline font-extrabold ${getRiskColor(record.riskScore)}`}>
+                          {record.riskScore !== null ? `${record.riskScore.toFixed(0)}%` : "--"}
                         </span>
-                        <span className={`text-xs font-bold ${
-                          record.finalRiskLabel === "Low" ? "text-secondary" : record.finalRiskLabel === "Moderate" ? "text-tertiary" : "text-error"
-                        }`}>
-                          {record.finalRiskLabel}
-                        </span>
+                        {record.riskLevel && (
+                          <span className={`text-xs font-bold ${getRiskColor(record.riskScore)}`}>
+                            {record.riskLevel}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-5">
                       <span className={`px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest ${getStatusColor(record.status)}`}>
-                        {record.status.replace("Archived - ", "")}
+                        {record.status}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
-                          onClick={() => router.push(`/reports/${record.id}`)}
+                          onClick={() => router.push(`/results?sessionId=${record.id}`)}
                           className="py-2 px-4 rounded-xl text-[10px] font-extrabold uppercase tracking-widest"
                         >
                           View
                         </Button>
                         <Button
                           variant="primary"
-                          onClick={() => alert(`Reactivating record for ${record.patientName}...`)}
+                          onClick={() => {
+                            if (confirm(`Restore session for ${record.child?.name ?? "this patient"}? This will reactivate the record.`)) {
+                              // TODO: wire to a restore endpoint when the backend supports it
+                              console.warn("Restore not yet supported by API:", record.id);
+                              alert("Restore feature coming soon.");
+                            }
+                          }}
                           className="py-2 px-4 rounded-xl text-[10px] font-extrabold uppercase tracking-widest"
                         >
                           Restore
@@ -233,12 +198,12 @@ export default function ArchivePage() {
             archive
           </span>
           <h3 className="font-headline font-bold text-2xl text-on-surface mb-4">
-            No Archives Found
+            No Archived Sessions Found
           </h3>
           <p className="text-on-surface-variant max-w-md mx-auto">
             {searchTerm || statusFilter !== "All"
               ? "No archived records match your search criteria."
-              : "No patient records have been archived yet."}
+              : "No sessions have been archived yet."}
           </p>
         </div>
       )}

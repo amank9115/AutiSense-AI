@@ -223,6 +223,65 @@ export class EmailService {
     }
   }
 
+  async notifyDoctorOfReport(
+    doctorEmail: string,
+    doctorName: string,
+    parentName: string,
+    childName: string,
+    shareUrl: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const htmlContent = `
+      <html><body style="font-family:'Segoe UI',sans-serif;background:#f4f4f4;padding:20px;">
+        <div style="max-width:600px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1);">
+          <div style="background:linear-gradient(135deg,#3e684a 0%,#176876 100%);color:white;padding:30px;text-align:center;">
+            <h1 style="margin:0;font-size:24px;">MannSaathi</h1>
+            <p style="margin:8px 0 0;opacity:0.9;">Provider Portal</p>
+          </div>
+          <div style="padding:40px 30px;">
+            <p>Dear Dr. ${doctorName},</p>
+            <p><strong>${parentName}</strong> has shared a developmental screening report for their child <strong>${childName}</strong> with you.</p>
+            <p>Please log in to the MannSaathi Provider Portal to review the results and add your clinical notes.</p>
+            <a href="${shareUrl}" style="display:inline-block;background:linear-gradient(135deg,#3e684a 0%,#176876 100%);color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:20px 0;">
+              Review Report
+            </a>
+            <p style="color:#666;font-size:12px;margin-top:32px;border-top:1px solid #eee;padding-top:16px;">
+              This report is for clinical review only. MannSaathi is a screening tool — results must be confirmed through a comprehensive clinical assessment.
+            </p>
+          </div>
+        </div>
+      </body></html>
+    `;
+
+    try {
+      if (!this.apiKeyConfigured) {
+        this.logger.warn(
+          `Resend API Key missing. Simulating doctor notification to ${doctorEmail}`,
+        );
+        return { success: true, message: 'Simulated doctor notification sent' };
+      }
+
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [doctorEmail],
+        subject: `New Screening Report Shared — ${childName}`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        this.logger.error('Failed to send doctor notification:', error);
+        return { success: false, message: error.message };
+      }
+
+      this.logger.log(
+        `Doctor notification sent to ${doctorEmail}. Message ID: ${data?.id}`,
+      );
+      return { success: true, message: 'Doctor notified successfully' };
+    } catch (error: any) {
+      this.logger.error('Unexpected error sending doctor notification:', error);
+      return { success: false, message: 'Internal error occurred' };
+    }
+  }
+
   async sendReport(
     to: string,
     childName: string,

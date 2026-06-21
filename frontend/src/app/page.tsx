@@ -31,7 +31,7 @@ export default function LandingPage() {
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col">
       <Navbar />
 
-      <main className="overflow-x-hidden flex-grow">
+      <main className="overflow-x-hidden grow">
         <HeroSection />
         <TrustedByStrip />
         <StatsBand />

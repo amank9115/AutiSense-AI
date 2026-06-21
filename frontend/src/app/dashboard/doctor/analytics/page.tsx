@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, EmptyState } from "@/components/ui/StitchUI";
+import { Card, EmptyState, Button } from "@/components/ui/StitchUI";
 import { DashboardStatsSkeleton } from "@/components/ui/SkeletonLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DoctorTopBar } from "@/components/layout/DoctorTopBar";
@@ -18,10 +18,11 @@ import { screeningApi } from "@/services/api/screeningApi";
 import { fetchJson } from "@/api/client";
 import { useProtectedData } from "@/hooks/useProtectedData";
 import { deriveAnalytics, type DashboardStats } from "@/lib/analytics";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<"week" | "month" | "quarter">("month");
-  const { data: analytics, loading } = useProtectedData(async () => {
+  const { data: analytics, loading, error } = useProtectedData(async () => {
     const limitMap = { week: 50, month: 200, quarter: 500 };
     const [statsRes, sessionsRes] = await Promise.all([
       fetchJson<DashboardStats>("/api/v1/screening/statistics"),
@@ -32,8 +33,14 @@ export default function AnalyticsPage() {
 
   const stats = analytics?.stats;
 
+  // Derived Quick Stats — replaces hardcoded demo values
+  const lowPct = analytics && analytics.total > 0 ? Math.round((analytics.low / analytics.total) * 100) : 0;
+  const elevatedPct = analytics && analytics.total > 0 ? Math.round((analytics.elevated / analytics.total) * 100) : 0;
+  const periodSessions = analytics ? analytics.trends.reduce((a, b) => a + b.screenings, 0) : 0;
+
   return (
     <div className="text-on-surface font-body antialiased p-6 lg:p-10">
+      <Breadcrumb className="mb-6" />
       <DoctorTopBar
         greeting="Clinical Insights"
         subtitle="Analytics and trends across your screening data"
@@ -56,7 +63,13 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className="bg-error/10 border border-error/20 text-error p-6 rounded-2xl">
+          <p className="font-bold">Failed to load analytics</p>
+          <p className="text-sm mt-1 opacity-80">{error}</p>
+          <Button variant="secondary" onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+        </div>
+      ) : loading ? (
         <div className="space-y-8">
           <DashboardStatsSkeleton />
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -132,14 +145,14 @@ export default function AnalyticsPage() {
               )}
             </Card>
 
-            {/* Quick Stats */}
+            {/* Quick Stats — derived from real session data */}
             <Card className="p-6 border-none bg-surface-container-lowest rounded-3xl xl:col-span-1" style={{ boxShadow: "var(--shadow-card)" }}>
               <h3 className="font-headline font-bold text-xl text-on-surface mb-6">Quick Stats</h3>
               <div className="space-y-4">
                 {[
-                  { label: "Avg Response Time", value: "4.2h", color: "text-primary" },
-                  { label: "Parent Satisfaction", value: "91%", color: "text-secondary" },
-                  { label: "Follow-up Rate",      value: "87%", color: "text-tertiary" },
+                  { label: "Low Risk Sessions",    value: `${lowPct}%`,             color: "text-secondary" },
+                  { label: "Elevated Risk",        value: `${elevatedPct}%`,        color: "text-error" },
+                  { label: "Sessions This Period", value: String(periodSessions),   color: "text-primary" },
                 ].map((item) => (
                   <div key={item.label} className="text-center p-4 bg-surface-container-low rounded-2xl">
                     <p className={`text-4xl font-headline font-extrabold ${item.color} mb-1`}>{item.value}</p>

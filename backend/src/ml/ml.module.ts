@@ -3,9 +3,10 @@ import { MlService } from './ml.service';
 import { MlController } from './ml.controller';
 import { ConfigModule } from '../config/config.module';
 import { CircuitBreakerModule } from '../common/circuit-breaker/circuit-breaker.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [ConfigModule, CircuitBreakerModule],
+  imports: [ConfigModule, CircuitBreakerModule, PrismaModule],
   controllers: [MlController],
   providers: [MlService],
   exports: [MlService],

@@ -57,6 +57,17 @@ enum SubscriptionStatus {
   incomplete
 }
 
+enum ReviewStatus {
+  pending
+  reviewed
+}
+
+enum AppointmentStatus {
+  scheduled
+  completed
+  cancelled
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Core User Models
 // ──────────────────────────────────────────────────────────────────────────────
@@ -74,6 +85,13 @@ model User {
   tokenExpiresAt         DateTime?
   resetPasswordToken     String?
   resetPasswordExpiresAt DateTime?
+
+  // Doctor professional profile (nullable; only relevant for doctor/clinician roles)
+  licenseNumber          String?
+  specialization         String?
+  hospital               String?
+  yearsExperience        Int?
+
   createdAt              DateTime              @default(now())
   updatedAt              DateTime              @updatedAt
 
@@ -84,6 +102,10 @@ model User {
   refreshTokens          RefreshToken[]        @relation("UserRefreshTokens")
   organizationMemberships OrganizationMember[] @relation("UserOrgMemberships")
   ownedOrganizations     Organization[]        @relation("OrgOwner")
+  sharedReports          ReportShare[]         @relation("SharedReports")
+  receivedReports        ReportShare[]         @relation("ReceivedReports")
+  doctorAppointments     Appointment[]         @relation("DoctorAppointments")
+  parentAppointments     Appointment[]         @relation("ParentAppointments")
 
   @@index([email])
   @@index([role])
@@ -122,6 +144,7 @@ model Child {
   parent             User                @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
   organization       Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   screeningSessions  ScreeningSession[]  @relation("ChildScreeningSessions")
+  appointments       Appointment[]       @relation("ChildAppointments")
 
   @@index([parentId])
   @@index([organizationId])
@@ -162,6 +185,7 @@ model ScreeningSession {
   analysisData       AnalysisData?       @relation("SessionAnalysisData")
   results            ScreeningResult?    @relation("SessionResults")
   report             Report?             @relation("SessionReport")
+  reportShares       ReportShare[]
 
   @@index([userId])
   @@index([childId])
@@ -242,6 +266,51 @@ model Report {
   session            ScreeningSession    @relation("SessionReport", fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+}
+
+model ReportShare {
+  id          String       @id @default(uuid())
+  sessionId   String
+  sharedById  String
+  doctorId    String
+  status      ReviewStatus @default(pending)
+  doctorNotes String?
+  reviewedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  session     ScreeningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sharedBy    User             @relation("SharedReports", fields: [sharedById], references: [id])
+  doctor      User             @relation("ReceivedReports", fields: [doctorId], references: [id])
+
+  @@unique([sessionId, doctorId])
+  @@index([doctorId])
+  @@index([sharedById])
+  @@index([status])
+}
+
+model Appointment {
+  id           String            @id @default(uuid())
+  doctorId     String
+  parentId     String
+  childId      String
+  scheduledAt  DateTime
+  durationMins Int               @default(30)
+  reason       String?
+  status       AppointmentStatus @default(scheduled)
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  doctor       User              @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  parent       User              @relation("ParentAppointments", fields: [parentId], references: [id], onDelete: Cascade)
+  child        Child             @relation("ChildAppointments", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId])
+  @@index([parentId])
+  @@index([childId])
+  @@index([scheduledAt])
+  @@index([status])
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

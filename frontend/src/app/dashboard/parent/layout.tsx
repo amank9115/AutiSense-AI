@@ -1,5 +1,5 @@
 import React from "react";
-import { ParentNav } from "@/components/layout/ParentNav";
+import { ParentSidebar } from "@/components/layout/ParentSidebar";
 
 export default function ParentDashboardLayout({
   children,
@@ -7,9 +7,9 @@ export default function ParentDashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      <ParentNav />
-      <main className="flex-1 pb-20 md:pb-0">
+    <div className="flex min-h-screen bg-surface">
+      <ParentSidebar />
+      <main className="flex-1 min-w-0 pb-20 lg:pb-0">
         {children}
       </main>
     </div>

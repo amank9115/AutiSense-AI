@@ -237,6 +237,13 @@ export class MlService {
   async generateReport(
     sessionKey: string,
     childInfo?: Record<string, string>,
+    reportData?: {
+      riskScore?: number;
+      riskLabel?: string;
+      featureAverages?: Record<string, number>;
+      recommendations?: string[];
+      modelVersion?: string;
+    },
   ): Promise<ArrayBuffer> {
     if (!this.enabled) {
       throw new MLServiceUnavailableException('Python ML service is disabled');
@@ -254,12 +261,21 @@ export class MlService {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
+      const payload: Record<string, unknown> = {
+        session_key: sessionKey,
+        ...this.mapChildInfo(childInfo),
+      };
+      if (reportData) {
+        if (reportData.riskScore !== undefined) payload.risk_score = reportData.riskScore;
+        if (reportData.riskLabel)               payload.risk_label = reportData.riskLabel;
+        if (reportData.featureAverages)         payload.feature_averages = reportData.featureAverages;
+        if (reportData.recommendations)         payload.recommendations = reportData.recommendations;
+        if (reportData.modelVersion)            payload.model_version = reportData.modelVersion;
+      }
+
       const response = await fetch(`${this.baseUrl}/report/generate`, {
         method: 'POST',
-        body: JSON.stringify({
-          session_key: sessionKey,
-          ...this.mapChildInfo(childInfo),
-        }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
       });

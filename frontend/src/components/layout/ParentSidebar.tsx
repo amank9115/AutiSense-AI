@@ -4,23 +4,28 @@ import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAppStore } from "@/store";
+import GlobalSearch from "@/components/search/GlobalSearch";
 
 const NAV_ITEMS = [
-  { icon: "dashboard",       label: "Overview",          href: "/dashboard/doctor" },
-  { icon: "group",           label: "Patient List",       href: "/dashboard/doctor/patients" },
-  { icon: "calendar_month",  label: "Appointments",       href: "/dashboard/doctor/appointments" },
-  { icon: "analytics",       label: "Clinical Insights",  href: "/dashboard/doctor/analytics" },
-  { icon: "folder_shared",   label: "Archive",            href: "/dashboard/doctor/archive" },
+  { icon: "dashboard",      label: "Overview",     href: "/dashboard/parent" },
+  { icon: "child_care",     label: "My Children",  href: "/dashboard/parent/children" },
+  { icon: "calendar_month", label: "Appointments", href: "/dashboard/parent/appointments" },
+  { icon: "history",        label: "History",      href: "/dashboard/parent/history" },
 ];
 
-export function DoctorSidebar() {
+const MOBILE_ITEMS = [
+  ...NAV_ITEMS,
+  { icon: "account_circle", label: "Profile", href: "/dashboard/parent/profile" },
+];
+
+export function ParentSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
 
   const isActive = (href: string) =>
-    href === "/dashboard/doctor" ? pathname === href : pathname.startsWith(href);
+    href === "/dashboard/parent" ? pathname === href : pathname.startsWith(href);
 
   return (
     <>
@@ -38,8 +43,23 @@ export function DoctorSidebar() {
           {!sidebarCollapsed && (
             <div>
               <p className="font-headline font-bold text-primary text-base tracking-tight leading-none">MannSaathi</p>
-              <p className="text-[9px] font-bold text-primary/50 uppercase tracking-[0.3em]">Provider Portal</p>
+              <p className="text-[9px] font-bold text-primary/50 uppercase tracking-[0.3em]">Parent Portal</p>
             </div>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className={`px-3 mb-4 ${sidebarCollapsed ? "flex justify-center" : ""}`}>
+          {sidebarCollapsed ? (
+            <button
+              onClick={toggleSidebar}
+              title="Search (expand sidebar)"
+              className="flex items-center justify-center w-10 h-10 rounded-xl text-on-surface-muted hover:text-on-surface hover:bg-surface-container transition-all"
+            >
+              <span className="material-symbols-outlined text-xl">search</span>
+            </button>
+          ) : (
+            <GlobalSearch />
           )}
         </div>
 
@@ -72,10 +92,10 @@ export function DoctorSidebar() {
         </nav>
 
         {/* User + collapse */}
-        <div className={`mt-auto border-t border-outline-variant/10 px-3 py-4 space-y-2`}>
+        <div className="mt-auto border-t border-outline-variant/10 px-3 py-4 space-y-2">
           {/* User profile button */}
           <button
-            onClick={() => router.push("/dashboard/doctor/profile")}
+            onClick={() => router.push("/dashboard/parent/profile")}
             title={sidebarCollapsed ? user?.name ?? "Profile" : undefined}
             className={`w-full flex items-center gap-3 bg-surface-container rounded-2xl hover:bg-surface-container-high transition-all ${
               sidebarCollapsed ? "justify-center p-2.5" : "p-3"
@@ -88,7 +108,7 @@ export function DoctorSidebar() {
               <div className="overflow-hidden text-left">
                 <p className="text-sm font-bold text-on-surface truncate">{user?.name}</p>
                 <p className="text-[9px] font-bold text-on-surface-muted uppercase tracking-widest">
-                  Healthcare Provider
+                  Parent / Caregiver
                 </p>
               </div>
             )}
@@ -123,15 +143,15 @@ export function DoctorSidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-low border-t border-outline-variant/10 flex items-center justify-around px-2 py-2 safe-area-pb">
-        {NAV_ITEMS.map((item) => {
+      <nav aria-label="Parent dashboard navigation" className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-low border-t border-outline-variant/10 flex items-center justify-around px-2 py-2 safe-area-pb">
+        {MOBILE_ITEMS.map((item) => {
           const active = isActive(item.href);
           return (
             <button
               key={item.href}
               onClick={() => router.push(item.href)}
               aria-label={item.label}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
+              className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl transition-all ${
                 active ? "text-primary" : "text-on-surface-muted hover:text-on-surface"
               }`}
             >
@@ -141,6 +161,7 @@ export function DoctorSidebar() {
               >
                 {item.icon}
               </span>
+              <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
             </button>
           );
         })}

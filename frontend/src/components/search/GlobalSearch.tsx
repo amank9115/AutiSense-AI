@@ -34,23 +34,26 @@ const GlobalSearch = () => {
   }, [query])
 
   return (
-    <div className="relative hidden lg:block" data-cursor="interactive">
+    <div className="relative w-full" data-cursor="interactive">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-muted pointer-events-none">
+        search
+      </span>
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search doctors, reports, help"
-        className="w-64 rounded-xl border border-slate-300/45 bg-white/55 px-4 py-2 text-sm text-slate-700 outline-none backdrop-blur-xl placeholder:text-slate-500 dark:border-slate-600/65 dark:bg-slate-900/50 dark:text-slate-100 dark:placeholder:text-slate-400"
+        placeholder="Search..."
+        className="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-2.5 pl-10 text-sm text-on-surface placeholder:text-on-surface-muted outline-none focus:ring-2 focus:ring-primary/20 transition-all"
       />
       {query.trim().length >= 2 && (
-        <div className="absolute top-12 left-0 z-30 w-full rounded-xl border border-slate-200/70 bg-white/95 p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900/95">
+        <div className="absolute top-12 left-0 z-30 w-full rounded-2xl border border-outline-variant/10 bg-surface-container-lowest p-2 shadow-(--shadow-card)">
           {loading ? (
-            <p className="px-2 py-1 text-xs text-slate-500">Searching...</p>
+            <p className="px-2 py-1.5 text-xs text-on-surface-muted">Searching...</p>
           ) : error ? (
-            <p className="px-2 py-1 text-xs text-rose-500">{error}</p>
+            <p className="px-2 py-1.5 text-xs text-error">{error}</p>
           ) : answer ? (
-            <p className="px-2 py-1 text-xs text-slate-700 dark:text-slate-200">{answer}</p>
+            <p className="px-2 py-1.5 text-xs text-on-surface">{answer}</p>
           ) : (
-            <p className="px-2 py-1 text-xs text-slate-500">No response</p>
+            <p className="px-2 py-1.5 text-xs text-on-surface-muted">No results found</p>
           )}
         </div>
       )}

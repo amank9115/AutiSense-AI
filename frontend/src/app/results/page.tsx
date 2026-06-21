@@ -1,53 +1,101 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
-import { Card, Button } from "@/components/ui/StitchUI";
-import Image from "next/image";
-import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
-
+import { screeningApi, ScreeningSession, DoctorProfile } from "@/services/api/screeningApi";
 import { useAppStore } from "@/store";
+
+type RiskLevel = "low" | "medium" | "high" | "very_high";
+
+function getStrengths(riskLevel: string): string[] {
+  const level = riskLevel?.toLowerCase() as RiskLevel;
+  const map: Record<RiskLevel, string[]> = {
+    low: ["Strong eye contact patterns observed", "Responsive to social cues", "Good joint attention skills"],
+    medium: ["Shows interest in environmental stimuli", "Demonstrates intentional communication", "Responds to familiar voices consistently"],
+    high: ["Engages with preferred objects and routines", "Shows awareness of caregivers", "Demonstrates self-regulation strategies"],
+    very_high: ["Maintains comfort in structured environments", "Shows recognition of familiar people", "Responds to sensory input in predictable ways"],
+  };
+  return map[level] ?? map.medium;
+}
+
+function getResources(riskLevel: string): Array<{ icon: string; title: string; desc: string }> {
+  const level = riskLevel?.toLowerCase() as RiskLevel;
+  const map: Record<RiskLevel, Array<{ icon: string; title: string; desc: string }>> = {
+    low: [
+      { icon: "emoji_people", title: "Nurturing Social Play", desc: "Activities to build on strong social foundations." },
+      { icon: "child_care", title: "Communication Milestones", desc: "Age-appropriate language development guides." },
+      { icon: "sports_esports", title: "Enrichment Through Play", desc: "Stimulating activities for typical development." },
+    ],
+    medium: [
+      { icon: "support_agent", title: "Early Intervention Guide", desc: "Understanding when and how to seek support." },
+      { icon: "psychology", title: "Sensory Strategies at Home", desc: "Practical techniques for everyday regulation." },
+      { icon: "calendar_month", title: "Building Consistent Routines", desc: "How structure supports developmental growth." },
+    ],
+    high: [
+      { icon: "health_and_safety", title: "Accessing Professional Support", desc: "How to connect with developmental specialists." },
+      { icon: "family_history", title: "Parent Coping & Wellbeing", desc: "Resources for caregivers navigating this journey." },
+      { icon: "school", title: "Inclusive Education Options", desc: "Understanding your child's educational rights." },
+    ],
+    very_high: [
+      { icon: "medical_services", title: "Clinical Assessment Pathways", desc: "Next steps for comprehensive diagnostic evaluation." },
+      { icon: "group", title: "Support Groups & Community", desc: "Connecting with families on similar journeys." },
+      { icon: "volunteer_activism", title: "Therapeutic Interventions", desc: "Overview of ABA, OT, speech, and other therapies." },
+    ],
+  };
+  return map[level] ?? map.medium;
+}
 
 export default function ResultsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get("sessionId");
   const mlResultsFromStore = useAppStore((state) => state.mlResults);
+  const authToken = useAppStore((state) => state.token);
+  const isAuthenticated = !!authToken && authToken !== "guest-token";
+
   const [session, setSession] = useState<(ScreeningSession & { results?: Record<string, unknown> }) | null>(null);
   const [loading, setLoading] = useState(!!sessionId);
+  const [downloading, setDownloading] = useState(false);
+
+  // Share with doctor state
+  const [doctors, setDoctors] = useState<DoctorProfile[]>([]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState<string | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   useEffect(() => {
     if (sessionId) {
-      const fetchSession = async () => {
-        try {
-          const data = await screeningApi.getSessionDetails(sessionId);
-          setSession(data);
-        } catch (err) {
-          console.error("Failed to fetch session", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchSession();
+      screeningApi.getSessionDetails(sessionId)
+        .then(setSession)
+        .catch((err) => console.error("Failed to fetch session", err))
+        .finally(() => setLoading(false));
     }
-  }, [sessionId]);
+    if (isAuthenticated) {
+      screeningApi.getDoctors()
+        .then(setDoctors)
+        .catch(() => {/* non-fatal — hide doctor panel if unavailable */});
+    }
+  }, [sessionId, isAuthenticated]);
 
-  // Use session results if available, otherwise fallback to store (for immediate post-screening view)
   const displayResults = session?.results ? {
     riskScore: session.results.riskScore as number,
-    riskLabel: (session.results.riskLevel as string) || "Low",
-    modelVersion: (session.results.modelVersion as string) || "2.1.0",
-    summary: (session.results.behaviors as Record<string, number>) || {},
-    recommendations: (session.results.recommendations as string[]) || [],
-  } : mlResultsFromStore;
+    riskLabel: (session.results.riskLevel as string) ?? "low",
+    modelVersion: (session.results.modelVersion as string) ?? "2.1.0",
+    behaviors: (session.results.behaviors as Record<string, number>) ?? {},
+    recommendations: (session.results.recommendations as string[]) ?? [],
+  } : mlResultsFromStore ? {
+    riskScore: mlResultsFromStore.riskScore,
+    riskLabel: mlResultsFromStore.riskLabel ?? "low",
+    modelVersion: mlResultsFromStore.modelVersion ?? "2.1.0",
+    behaviors: (mlResultsFromStore.summary as unknown as Record<string, number>) ?? {},
+    recommendations: mlResultsFromStore.recommendations ?? [],
+  } : null;
 
-  const handleBookConsultation = () => {
-    router.push("/professionals");
-  };
-
-  const [downloading, setDownloading] = useState(false);
+  const riskLabel = displayResults?.riskLabel ?? "low";
+  const strengths = getStrengths(riskLabel);
+  const resources = getResources(riskLabel);
 
   const handleDownloadReport = async () => {
     if (!sessionId) {
@@ -72,18 +120,32 @@ export default function ResultsPage() {
     }
   };
 
-  const handleViewProfile = () => {
-    router.push("/professionals");
+  const handleShareWithDoctor = async () => {
+    if (!sessionId || !selectedDoctorId) return;
+    setSharing(true);
+    setShareError(null);
+    try {
+      await screeningApi.shareWithDoctor(sessionId, selectedDoctorId);
+      const doctor = doctors.find((d) => d.id === selectedDoctorId);
+      setShareSuccess(`Report sent to ${doctor?.name ?? "the doctor"} successfully.`);
+    } catch {
+      setShareError("Failed to share report. Please try again.");
+    } finally {
+      setSharing(false);
+    }
   };
 
-  const MilestoneProgress = ({ label, status, progress, color }: { label: string, status: string, progress: string, color: string }) => (
-    <div className="space-y-4">
-      <div className="flex justify-between mb-1 items-end">
-        <label className="font-headline font-bold text-lg text-on-surface">{label}</label>
-        <span className="text-primary font-extrabold text-xs uppercase tracking-widest">{status}</span>
+  const MilestoneBar = ({ label, value, status }: { label: string; value: number; status: string }) => (
+    <div className="space-y-3">
+      <div className="flex justify-between items-end">
+        <span className="font-headline font-bold text-base text-on-surface">{label}</span>
+        <span className="text-primary font-extrabold text-[10px] uppercase tracking-widest">{status}</span>
       </div>
-      <div className="w-full bg-surface-container-highest h-4 rounded-full overflow-hidden shadow-inner">
-        <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: progress }}></div>
+      <div className="w-full bg-surface-container-highest h-3 rounded-full overflow-hidden shadow-inner">
+        <div
+          className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-secondary to-secondary-fixed-dim"
+          style={{ width: `${Math.min(value, 100)}%` }}
+        />
       </div>
     </div>
   );
@@ -103,96 +165,118 @@ export default function ResultsPage() {
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-32 lg:py-40">
-        {/* Hero Section */}
-        <div className="mb-12 sm:mb-20">
-          <h2 className="font-headline font-extrabold text-3xl sm:text-5xl lg:text-7xl text-primary leading-tight mb-4 sm:mb-6 tracking-tighter">Discovery Results</h2>
-          <p className="text-base sm:text-lg lg:text-xl text-on-surface-variant max-w-2xl leading-relaxed font-medium opacity-80">A detailed overview of {session?.child?.name || "your child"}&apos;s sensory profile and developmental milestones.</p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
+        {/* Page header */}
+        <div className="mb-12">
+          <h2 className="font-headline font-extrabold text-4xl sm:text-6xl text-primary leading-tight mb-3 tracking-tighter">
+            Discovery Results
+          </h2>
+          <p className="text-base sm:text-lg text-on-surface-variant max-w-2xl font-medium opacity-80">
+            A detailed overview of {session?.child?.name ?? "your child"}&apos;s developmental screening.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
-          {/* Main Results Column */}
-          <div className="lg:col-span-8 space-y-8 sm:space-y-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* ── Main column ── */}
+          <div className="lg:col-span-8 space-y-8">
 
-            {/* Explorer Profile Card */}
-            <div className="bg-surface-container-low rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col md:flex-row gap-8 sm:gap-12 items-center overflow-hidden relative shadow-2xl border border-outline-variant/5">
-              <div className="w-full md:w-1/3 max-w-[200px] md:max-w-none aspect-square rounded-full bg-secondary-container flex items-center justify-center overflow-hidden shadow-xl border-4 border-white/20 relative">
-                <Image
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXpxb1GGff2XImHpeE_qhQOQYmphYx5QGdsv84MkBrdPmyORFbp5wPn81q_f79U1Y1e6XIsKHgzndTok7PPZMRNgl4FyZt-7TRRo-Ci_-ROYtGIuMX3pv_Qf0XIofxQSUG3fVRHMRMPl48_B0CklL5S42S9PlyAjnO8FvhLo8xf4Ke1G_MJqojEY993MdA8XSnO44bdTYfHBFTVfAR_hYoeNgkBymfO0HRI0a6rH4Wd5YTJTkBJnvvYztSBYWVnh6wZ_frlGhOvF0"
-                  alt="Unique Explorer"
-                  fill
-                  className="object-cover"
-                />
+            {/* Risk summary card */}
+            <div className="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10 shadow-xl">
+              <div className="flex items-center gap-6">
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ${
+                  riskLabel === "low" ? "bg-secondary-container" :
+                  riskLabel === "medium" ? "bg-tertiary-container" :
+                  "bg-error/10"
+                }`}>
+                  <span className={`font-headline font-extrabold text-2xl ${
+                    riskLabel === "low" ? "text-secondary" :
+                    riskLabel === "medium" ? "text-tertiary" :
+                    "text-error"
+                  }`}>
+                    {displayResults ? `${Math.round(displayResults.riskScore)}%` : "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-2 shadow-sm">
+                    {displayResults ? "Analysis Complete" : "Awaiting Data"}
+                  </span>
+                  <h3 className="font-headline font-extrabold text-2xl text-on-surface tracking-tight capitalize">
+                    {riskLabel.replace("_", " ")} Risk Level
+                  </h3>
+                  {displayResults && (
+                    <p className="text-xs text-on-surface-muted mt-1">ML model v{displayResults.modelVersion}</p>
+                  )}
+                </div>
               </div>
-              <div className="md:w-2/3 relative z-10 text-center md:text-left">
-                <span className="bg-tertiary-container text-on-tertiary-container px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest mb-3 sm:mb-4 inline-block shadow-sm">
-                  {displayResults ? "Analysis Complete" : "Profile Identified"}
-                </span>
-                <h3 className="font-headline font-extrabold text-2xl sm:text-3xl lg:text-4xl text-on-surface mb-3 sm:mb-4 tracking-tight">
-                  {displayResults ? displayResults.riskLabel : "The Thoughtful Observer"}
-                </h3>
-                <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-on-surface-variant italic font-body border-l-4 border-primary/20 pl-4 sm:pl-6 opacity-80">
-                  {displayResults ? `"Based on ML v${displayResults.modelVersion}, the overall risk score is ${(displayResults.riskScore * 100).toFixed(0)}%."` : `"Your child finds deep meaning in quiet details and prefers structured environments."`}
-                </p>
-              </div>
-              <div className="absolute -top-12 -right-12 w-48 sm:w-64 h-48 sm:h-64 bg-secondary-container opacity-20 rounded-full blur-3xl"></div>
             </div>
 
-            {/* Developmental Milestones */}
-            <div className="bg-surface-container-lowest rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-12 shadow-xl border-t-8 border-primary relative overflow-hidden">
-              <h4 className="font-headline font-extrabold text-2xl sm:text-3xl mb-8 sm:mb-12 text-on-surface tracking-tight">AI Observation Summary</h4>
-              <div className="space-y-8 sm:space-y-12">
+            {/* AI Observation Summary */}
+            <div className="bg-surface-container-lowest rounded-3xl p-8 border-t-4 border-primary shadow-lg">
+              <h4 className="font-headline font-extrabold text-2xl mb-8 text-on-surface tracking-tight">
+                AI Observation Summary
+              </h4>
+              <div className="space-y-8">
                 {displayResults ? (
                   <>
-                    <MilestoneProgress label="Eye Contact" status={displayResults.summary.EyeContact > 80 ? "Typical" : "Developing"} progress={`${displayResults.summary.EyeContact}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
-                    <MilestoneProgress label="Joint Attention" status={displayResults.summary.JointAttention > 80 ? "Typical" : "Developing"} progress={`${displayResults.summary.JointAttention}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
-                    <MilestoneProgress label="Facial Expression" status={displayResults.summary.FacialExpression > 80 ? "Typical" : "Developing"} progress={`${displayResults.summary.FacialExpression}%`} color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
+                    <MilestoneBar
+                      label="Eye Contact"
+                      value={displayResults.behaviors.EyeContact ?? 0}
+                      status={displayResults.behaviors.EyeContact > 80 ? "Typical" : "Developing"}
+                    />
+                    <MilestoneBar
+                      label="Joint Attention"
+                      value={displayResults.behaviors.JointAttention ?? 0}
+                      status={displayResults.behaviors.JointAttention > 80 ? "Typical" : "Developing"}
+                    />
+                    <MilestoneBar
+                      label="Facial Expression"
+                      value={displayResults.behaviors.FacialExpression ?? 0}
+                      status={displayResults.behaviors.FacialExpression > 80 ? "Typical" : "Developing"}
+                    />
                   </>
                 ) : (
                   <>
-                    <MilestoneProgress label="Sensory Modulation" status="High Focus" progress="82%" color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
-                    <MilestoneProgress label="Social Communication" status="Developing" progress="65%" color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
-                    <MilestoneProgress label="Motor Planning" status="Emergent" progress="45%" color="bg-gradient-to-r from-secondary to-secondary-fixed-dim" />
+                    <MilestoneBar label="Eye Contact" value={60} status="Developing" />
+                    <MilestoneBar label="Joint Attention" value={55} status="Developing" />
+                    <MilestoneBar label="Facial Expression" value={70} status="Developing" />
                   </>
                 )}
               </div>
-              <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-surface-container-low rounded-xl sm:rounded-2xl flex items-start gap-3 sm:gap-4 border border-outline-variant/10">
-                <span className="material-symbols-outlined text-primary">info</span>
-                <p className="text-xs sm:text-sm text-on-surface-variant font-medium leading-relaxed opacity-60">These results are based on clinical AI observations. Review with your pediatrician.</p>
+              <div className="mt-6 p-4 bg-surface-container-low rounded-2xl flex items-start gap-3 border border-outline-variant/10">
+                <span className="material-symbols-outlined text-primary text-lg shrink-0">info</span>
+                <p className="text-xs text-on-surface-variant font-medium leading-relaxed opacity-70">
+                  These results are based on AI observations. Always review with a qualified pediatrician or developmental specialist.
+                </p>
               </div>
             </div>
 
-            {/* Strengths & Support Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              <div className="bg-secondary-container/40 rounded-2xl sm:rounded-3xl p-6 sm:p-10 border border-secondary/10 shadow-sm">
-                <span className="material-symbols-outlined text-secondary text-4xl sm:text-5xl mb-4 sm:mb-6 block">lightbulb</span>
-                <h5 className="font-headline font-bold text-xl sm:text-2xl mb-3 sm:mb-4 text-on-secondary-fixed">Key Strengths</h5>
-                <ul className="space-y-3 sm:space-y-4 text-on-secondary-container font-medium opacity-80">
-                  {[
-                    "Exceptional attention to visual detail",
-                    "Strong memory for patterns",
-                    "Calm in predictable settings"
-                  ].map((s, i) => (
-                    <li key={i} className="flex items-start gap-2 sm:gap-3">
-                      <span className="material-symbols-outlined text-secondary text-sm mt-1">check_circle</span>
-                      <span className="font-body text-xs sm:text-sm uppercase tracking-wide">{s}</span>
+            {/* Strengths & Recommendations */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-secondary-container/40 rounded-3xl p-8 border border-secondary/10 shadow-sm">
+                <span className="material-symbols-outlined text-secondary text-4xl mb-4 block">lightbulb</span>
+                <h5 className="font-headline font-bold text-xl mb-4 text-on-secondary-fixed">Key Strengths</h5>
+                <ul className="space-y-3">
+                  {strengths.map((s, i) => (
+                    <li key={i} className="flex items-start gap-2 text-on-secondary-container font-medium opacity-80">
+                      <span className="material-symbols-outlined text-secondary text-sm mt-0.5 shrink-0">check_circle</span>
+                      <span className="text-xs leading-relaxed">{s}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="bg-tertiary-container/40 rounded-2xl sm:rounded-3xl p-6 sm:p-10 border border-tertiary/10 shadow-sm">
-                <span className="material-symbols-outlined text-tertiary text-4xl sm:text-5xl mb-4 sm:mb-6 block">support_agent</span>
-                <h5 className="font-headline font-bold text-xl sm:text-2xl mb-3 sm:mb-4 text-on-tertiary-fixed">Recommendations</h5>
-                <ul className="space-y-3 sm:space-y-4 text-on-tertiary-container font-medium opacity-80">
-                  {(displayResults ? displayResults.recommendations : [
-                    "Transitioning between activities",
-                    "Managing auditory stimuli",
-                    "Initiating social interactions"
-                  ]).map((rec: string, i: number) => (
 
-                    <li key={i} className="flex items-start gap-2 sm:gap-3">
-                      <span className="material-symbols-outlined text-tertiary text-sm mt-1">error_outline</span>
-                      <span className="font-body text-xs sm:text-sm uppercase tracking-wide">{rec}</span>
+              <div className="bg-tertiary-container/40 rounded-3xl p-8 border border-tertiary/10 shadow-sm">
+                <span className="material-symbols-outlined text-tertiary text-4xl mb-4 block">support_agent</span>
+                <h5 className="font-headline font-bold text-xl mb-4 text-on-tertiary-fixed">Recommendations</h5>
+                <ul className="space-y-3">
+                  {(displayResults?.recommendations?.length ? displayResults.recommendations : [
+                    "Consult a developmental pediatrician",
+                    "Consider early intervention services",
+                    "Monitor developmental milestones monthly",
+                  ]).map((rec: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-on-tertiary-container font-medium opacity-80">
+                      <span className="material-symbols-outlined text-tertiary text-sm mt-0.5 shrink-0">arrow_forward</span>
+                      <span className="text-xs leading-relaxed">{rec}</span>
                     </li>
                   ))}
                 </ul>
@@ -200,67 +284,100 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* Sidebar Column */}
-          <aside className="lg:col-span-4 space-y-8 sm:space-y-12">
-            {/* Sticky Next Steps */}
-            <div className="bg-primary text-on-primary rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-2xl sticky top-32 border border-white/10">
-              <h4 className="font-headline font-bold text-2xl sm:text-3xl mb-4 sm:mb-6 tracking-tight">Next Steps</h4>
-              <p className="mb-8 sm:mb-10 opacity-80 leading-relaxed font-medium text-sm sm:text-base lg:text-lg">Discuss these results with a certified child development specialist.</p>
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <button onClick={handleBookConsultation} className="bg-white text-primary font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-surface-bright transition-all shadow-lg active:scale-95 text-xs uppercase tracking-widest cursor-pointer">
-                  <span className="material-symbols-outlined text-lg sm:text-xl">calendar_month</span>
+          {/* ── Sidebar column ── */}
+          <aside className="lg:col-span-4 space-y-6">
+
+            {/* Next steps */}
+            <div className="bg-primary text-on-primary rounded-3xl p-8 shadow-2xl sticky top-32 border border-white/10">
+              <h4 className="font-headline font-bold text-2xl mb-3 tracking-tight">Next Steps</h4>
+              <p className="mb-6 opacity-80 leading-relaxed font-medium text-sm">
+                Discuss these results with a certified child development specialist.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => router.push("/professionals")}
+                  className="bg-white text-primary font-extrabold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-surface-bright transition-all shadow-lg active:scale-95 text-[10px] uppercase tracking-widest"
+                >
+                  <span className="material-symbols-outlined text-lg">calendar_month</span>
                   Book Consultation
                 </button>
-                <button onClick={handleDownloadReport} disabled={downloading} className="bg-primary-dim text-white font-extrabold py-4 sm:py-5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 hover:bg-black/20 transition-all border border-white/20 active:scale-95 text-xs uppercase tracking-widest cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span className="material-symbols-outlined text-lg sm:text-xl">download</span>
-                  {downloading ? "Generating..." : "Download Report"}
+                <button
+                  onClick={handleDownloadReport}
+                  disabled={downloading || !sessionId}
+                  className="bg-primary-dim text-white font-extrabold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-black/20 transition-all border border-white/20 active:scale-95 text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-lg">download</span>
+                  {downloading ? "Generating…" : "Download PDF"}
                 </button>
               </div>
-              <div className="mt-8 sm:mt-10 flex items-center gap-3 sm:gap-4 bg-white/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/5">
-                <span className="material-symbols-outlined text-tertiary-fixed">shield_with_heart</span>
+              <div className="mt-6 flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/5">
+                <span className="material-symbols-outlined text-tertiary-fixed text-sm">shield_with_heart</span>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest opacity-80">HIPAA Secured</span>
               </div>
             </div>
 
-            {/* Expert Recommendation */}
-            <div className="bg-surface-container-high rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-outline-variant/10 shadow-sm">
-              <h5 className="font-headline font-bold text-base sm:text-lg mb-4 sm:mb-6 text-on-surface uppercase tracking-widest opacity-40">Recommended Expert</h5>
-              <div className="flex items-center gap-4 sm:gap-5 mb-4 sm:mb-6">
-                <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-full overflow-hidden border-2 border-primary/20 relative">
-                  <Image src="https://lh3.googleusercontent.com/aida-public/AB6AXuALVyW70yo3izlVQ2BQGcBonXRFLBz5II35OWUchu1yeKTTJQSBDUVqPrkvK4a76ZoTfYx4wzpQKlxat9cm-0r6nl1wSuNyZpWgfGC_he_CurbkloHDrmz1xLHL61tGgkvMdtwxcex5Afr5RHG3g2LI7wVKr1uH41uFKFeQ5X1PIWrlUrTlKYI00_KinP3bYSIkpYwPmwanDGnZojt8stGuPngHO5cdu21vISS7uVLzQCnZl-VM9q-DV-qn0igql71PljXeruLR50E" alt="Dr. Sarah Chen" fill className="object-cover" />
-                </div>
-                <div>
-                  <h6 className="font-extrabold text-on-surface text-sm sm:text-base">Dr. Sarah Chen</h6>
-                  <p className="text-[10px] text-on-surface-variant font-extrabold uppercase tracking-widest opacity-60">Pediatric OT</p>
-                </div>
+            {/* Share with Doctor */}
+            <div className="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="material-symbols-outlined text-primary">send</span>
+                <h5 className="font-headline font-bold text-base text-on-surface">Share with a Doctor</h5>
               </div>
-              <p className="text-xs sm:text-sm text-on-surface-variant mb-4 sm:mb-6 font-medium leading-relaxed opacity-60">Specializes in sensory processing support.</p>
-              <button
-              onClick={handleViewProfile}
-              className="text-primary font-extrabold text-[10px] flex items-center gap-2 hover:underline uppercase tracking-widest bg-transparent border-none cursor-pointer"
-            >
-                View Profile
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
+
+              {!sessionId ? (
+                <p className="text-xs text-on-surface-muted">Complete a screening session first to share results.</p>
+              ) : shareSuccess ? (
+                <div className="flex items-start gap-2 bg-secondary-container/40 p-3 rounded-xl">
+                  <span className="material-symbols-outlined text-secondary text-lg shrink-0">check_circle</span>
+                  <p className="text-xs text-on-secondary-container font-medium">{shareSuccess}</p>
+                </div>
+              ) : (
+                <>
+                  {doctors.length === 0 ? (
+                    <p className="text-xs text-on-surface-muted">No registered doctors available yet.</p>
+                  ) : (
+                    <>
+                      <select
+                        value={selectedDoctorId}
+                        onChange={(e) => setSelectedDoctorId(e.target.value)}
+                        className="w-full bg-surface-container border border-outline-variant/20 rounded-xl px-3 py-2.5 text-sm text-on-surface mb-3 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">Select a doctor…</option>
+                        {doctors.map((d) => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleShareWithDoctor}
+                        disabled={!selectedDoctorId || sharing}
+                        className="w-full bg-primary text-on-primary font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-95 text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <span className="material-symbols-outlined text-sm">send</span>
+                        {sharing ? "Sending…" : "Send Report"}
+                      </button>
+                      {shareError && (
+                        <p className="text-xs text-error mt-2">{shareError}</p>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </aside>
         </div>
 
         {/* Curated Resources */}
-        <div className="mt-24 sm:mt-32 lg:mt-40">
-          <h3 className="font-headline font-extrabold text-3xl sm:text-4xl lg:text-6xl mb-10 sm:mb-16 tracking-tighter text-primary">Curated Resources</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-10">
-            {[
-              { title: "Building a Home Sensory Haven", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAfFGuSXR_iodvByMIVAU1pCXe7mLfrsVNd_IV42vtLskk_amT6u70Y3A-P-Ev_BR5ZQoFd_doA4lgiEVzeuRBjLeuYvKyAln4uAewDH5rmBgBYwRpYuLxrao52Befg5p-qcKaHP_pyoLSDCIsYYtYb_3FcdXhmkMPiucpQbDnfBRdWvtQOeqlcyanIOCivtPKH8ygmlNTvCc2g4Gf_-HgNETCd-ctufHlZx1244Frp_y2xw9ArXrvi9cPzjIDDVQLPtXD5sMh9aRo", desc: "Simple adjustments for a low-arousal environment." },
-              { title: "The Art of Gentle Transitions", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB6EFi9Bpyxu63kdK5PwQ949MoUtkGp7tKfWv70kLvDS2whfK3H-HK5Gd1_007MjK_-eIfYL0lm1NesG3KE--Y3OgcYuSTJHTC9fRyPE6kIjY-20Og2ic8dSIaC3Ydo3PoWzEf5CB4NkYXCb8vV9Ft6k54PYmkXehQyxuo2MU3OnwHwaE3xuSOKJjsD3QKfhAs5tjlpLkOK7P1erCdDkkQh-_nq54ijRTnxOGMN1LxCfM5zdyovjNlXyn_vdE_mFv5UWQ9rf7asMrQ", desc: "Moving between activities without overwhelm." },
-              { title: "Sensory Snacks for Daily Life", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBK0ZEi9DyHphi1q5F44iV4PvSQgenqKrKEBP_wrl037m3EvRRZ7NiWcGgRnzfKC4BC3wvtlgRjrBP0BObCg1UjaeAkkCC4r1P42ZwlwtCX_TDmTI0H_-RyWmfy_erxK6nriviCatR9YaJbjSMUN-Sb-CIuKkFV8eOOvJ7XCbtbUI__E8m_4r9XcpS373qFI5m0cOMN625Py0-YAANAd8crI3WzmLV2BB0XpoenBYmbmwoawyAQ2oolv8k_PhjCaCmQZ8mjSVi0QLY", desc: "Quick activities to regulate throughout the day." }
-            ].map((res, i) => (
-              <div key={i} className="group cursor-pointer">
-                <div className="aspect-video rounded-2xl sm:rounded-3xl overflow-hidden mb-4 sm:mb-6 bg-surface-container-highest relative shadow-lg border border-outline-variant/5">
-                  <Image src={res.img} alt={res.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-                <h4 className="font-headline font-bold text-lg sm:text-xl lg:text-2xl group-hover:text-primary transition-colors mb-2 sm:mb-3 tracking-tight">{res.title}</h4>
-                <p className="text-xs sm:text-sm text-on-surface-variant font-medium leading-relaxed opacity-60">{res.desc}</p>
+        <div className="mt-24 sm:mt-32">
+          <h3 className="font-headline font-extrabold text-3xl sm:text-5xl mb-10 tracking-tighter text-primary">
+            Curated Resources
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {resources.map((res, i) => (
+              <div key={i} className="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10 shadow-sm hover:shadow-md transition-shadow">
+                <span className="material-symbols-outlined text-primary text-4xl mb-4 block" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {res.icon}
+                </span>
+                <h4 className="font-headline font-bold text-lg mb-2 text-on-surface tracking-tight">{res.title}</h4>
+                <p className="text-xs text-on-surface-variant font-medium leading-relaxed opacity-70">{res.desc}</p>
               </div>
             ))}
           </div>

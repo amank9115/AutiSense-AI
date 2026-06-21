@@ -26,6 +26,27 @@ const withMLErrorHandling = async <T>(fetchPromise: Promise<T>, operation: strin
   }
 }
 
+export type DoctorProfile = {
+  id: string
+  name: string
+  email: string
+}
+
+export type ReportShare = {
+  id: string
+  sessionId: string
+  doctorId: string
+  status: "pending" | "reviewed"
+  doctorNotes: string | null
+  reviewedAt: string | null
+  createdAt: string
+  session?: ScreeningSession & {
+    results?: Record<string, unknown>
+    analysisData?: Record<string, unknown>
+  }
+  sharedBy?: { id: string; name: string; email: string }
+}
+
 export type ChildProfile = {
   id: string
   name: string
@@ -91,6 +112,35 @@ export const screeningApi = {
     return fetchJson<ScreeningSession & { results?: Record<string, unknown>; analysisData?: Record<string, unknown>; report?: Record<string, unknown> }>(`/api/v1/screening/sessions/${sessionId}`)
   },
 
+  getDoctors: async () => {
+    return fetchJson<DoctorProfile[]>("/api/v1/users/doctors")
+  },
+
+  shareWithDoctor: async (sessionId: string, doctorId: string) => {
+    return fetchJson<ReportShare>(`/api/v1/screening/sessions/${sessionId}/share`, {
+      method: "POST",
+      body: JSON.stringify({ doctorId }),
+    })
+  },
+
+  getReceivedReports: async (page = 1, limit = 10) => {
+    return fetchJson<{
+      data: ReportShare[]
+      pagination: { total: number; page: number; limit: number; pages: number }
+    }>(`/api/v1/screening/reports/received?page=${page}&limit=${limit}`)
+  },
+
+  getReportShare: async (shareId: string) => {
+    return fetchJson<ReportShare>(`/api/v1/screening/reports/${shareId}`)
+  },
+
+  reviewReport: async (shareId: string, notes: string, markReviewed = false) => {
+    return fetchJson<ReportShare>(`/api/v1/screening/reports/${shareId}/review`, {
+      method: "PUT",
+      body: JSON.stringify({ notes, markReviewed }),
+    })
+  },
+
   // Generates the PDF report on the ML service and returns it as a Blob so the
   // caller can trigger a browser download. The backend streams raw PDF bytes,
   // so we use fetch directly rather than the JSON helper.
@@ -103,7 +153,7 @@ export const screeningApi = {
           headers["Authorization"] = `Bearer ${token}`
         }
         const response = await fetch(
-          `${getApiBaseUrl()}/api/v1/ml/report/${sessionId}`,
+          `${getApiBaseUrl()}/ml/report/${sessionId}`,
           { method: "POST", headers, credentials: "include" },
         )
         if (!response.ok) {

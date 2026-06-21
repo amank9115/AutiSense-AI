@@ -6,7 +6,7 @@ import { Button, Card, EmptyState } from "@/components/ui/StitchUI";
 import { DashboardStatsSkeleton, PatientListSkeleton } from "@/components/ui/SkeletonLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { DoctorTopBar } from "@/components/layout/DoctorTopBar";
-import { screeningApi, ScreeningSession } from "@/services/api/screeningApi";
+import { screeningApi, ScreeningSession, ReportShare } from "@/services/api/screeningApi";
 import { fetchJson } from "@/api/client";
 import { useProtectedData } from "@/hooks/useProtectedData";
 import { calculateAge } from "@/lib/date";
@@ -52,26 +52,39 @@ const PatientRow = ({
 interface DoctorDashboardData {
   sessions: ScreeningSession[];
   stats: DashboardStats;
+  pendingReports: ReportShare[];
 }
 
 export default function DoctorDashboard() {
   const router = useRouter();
   const { data, loading } = useProtectedData<DoctorDashboardData>(async () => {
-    const [sessionsRes, statsRes] = await Promise.all([
+    const [sessionsRes, statsRes, reportsRes] = await Promise.all([
       screeningApi.getSessions(1, 5),
       fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+      screeningApi.getReceivedReports(1, 5),
     ]);
-    return { sessions: sessionsRes.data, stats: statsRes };
+    const allReports = (reportsRes as { data: ReportShare[] }).data ?? [];
+    return {
+      sessions: sessionsRes.data,
+      stats: statsRes,
+      pendingReports: allReports.filter((r) => r.status === "pending"),
+    };
   });
 
   const sessions = data?.sessions ?? [];
   const stats = data?.stats ?? null;
+  const pendingReports = data?.pendingReports ?? [];
 
-  const hasPendingSessions = sessions.some((s) => s.status === "pending");
+  const pendingSessions = sessions.filter((s) => s.status === "pending");
+  const hasPendingSessions = pendingSessions.length > 0;
+  const pendingCount = stats ? Math.max(0, stats.totalSessions - stats.completedSessions) : 0;
 
   return (
     <div className="p-6 lg:p-10 text-on-surface font-body antialiased">
-      <DoctorTopBar subtitle="You have pending screenings requiring your review." />
+      <DoctorTopBar
+        subtitle={hasPendingSessions ? "You have pending screenings requiring your review." : "All caught up — no pending reviews."}
+        pendingCount={pendingCount}
+      />
 
       {loading ? (
         <div className="space-y-8">
@@ -172,29 +185,68 @@ export default function DoctorDashboard() {
                 </div>
               )}
 
-              {/* Clinical Roadmap */}
+              {/* Reports Awaiting Review */}
               <div className="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/10" style={{ boxShadow: "var(--shadow-card)" }}>
-                <h4 className="font-headline font-bold text-base text-on-surface mb-4">
-                  Clinical Roadmap
-                  <span className="ml-2 text-[9px] font-bold bg-surface-container-highest text-on-surface-muted px-2 py-0.5 rounded-full uppercase tracking-wider align-middle">Demo</span>
-                </h4>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary text-lg">folder_shared</span>
+                  <h4 className="font-headline font-bold text-base text-on-surface">Reports Awaiting Review</h4>
+                  {pendingReports.length > 0 && (
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-primary text-on-primary text-[10px] font-extrabold">
+                      {pendingReports.length}
+                    </span>
+                  )}
+                </div>
+                {pendingReports.length === 0 ? (
+                  <p className="text-xs text-on-surface-muted">No reports shared with you yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingReports.slice(0, 3).map((share) => (
+                      <div
+                        key={share.id}
+                        onClick={() => router.push(`/dashboard/doctor/reports/${share.id}`)}
+                        className="flex items-center justify-between p-3 bg-surface-container rounded-2xl hover:bg-surface-container-high transition-all cursor-pointer group"
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+                            {(share.session as any)?.child?.name ?? "Patient"}
+                          </p>
+                          <p className="text-[10px] text-on-surface-muted uppercase tracking-widest">
+                            From {share.sharedBy?.name ?? "Parent"} · {new Date(share.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-lg transition-colors">chevron_right</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Session Summary — real data */}
+              <div className="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/10" style={{ boxShadow: "var(--shadow-card)" }}>
+                <h4 className="font-headline font-bold text-base text-on-surface mb-4">Session Summary</h4>
                 <div className="space-y-4">
                   {[
-                    { label: "Quarterly Audit",  date: "Oct 30", status: "Upcoming" },
-                    { label: "Staff Training",   date: "Nov 02", status: "Mandatory" },
-                    { label: "Policy Update",    date: "Nov 15", status: "Review" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex justify-between items-center">
-                      <div>
+                    { label: "Pending Review",   value: pendingSessions.length, icon: "pending_actions", color: "text-tertiary" },
+                    { label: "Completed",        value: sessions.filter((s) => s.status === "completed").length, icon: "task_alt", color: "text-secondary" },
+                    { label: "Total Loaded",     value: sessions.length, icon: "assignment", color: "text-primary" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <span className={`material-symbols-outlined text-lg ${item.color}`}>{item.icon}</span>
                         <p className="font-semibold text-on-surface text-sm">{item.label}</p>
-                        <p className="text-xs text-on-surface-muted">{item.date}</p>
                       </div>
                       <span className="px-2.5 py-1 rounded-full bg-surface-container text-xs font-bold text-on-surface-muted uppercase tracking-widest">
-                        {item.status}
+                        {item.value}
                       </span>
                     </div>
                   ))}
                 </div>
+                <button
+                  onClick={() => router.push("/dashboard/doctor/analytics")}
+                  className="w-full mt-5 text-xs font-bold text-primary hover:underline uppercase tracking-widest text-center"
+                >
+                  View Clinical Insights
+                </button>
               </div>
             </div>
           </div>

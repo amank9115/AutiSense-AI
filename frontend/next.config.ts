@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
         source: '/ml/:path*',
         destination: 'http://localhost:4000/ml/:path*',
       },
+      // AI proxy routes (AiController uses @Controller('ai'), no /api/v1 prefix)
+      {
+        source: '/ai/:path*',
+        destination: 'http://localhost:4000/ai/:path*',
+      },
     ];
   },
   experimental: {

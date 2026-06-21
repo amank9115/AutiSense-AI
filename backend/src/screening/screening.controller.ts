@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Put,
   Body,
   Get,
   Param,
@@ -12,7 +13,9 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ScreeningService } from './screening.service';
 import { CreateSessionDto, SaveResultDto, SaveAnalysisDto } from './dto';
-import { Role } from '@prisma/client';
+import { ShareReportDto } from './dto/share-report.dto';
+import { ReviewReportDto } from './dto/review-report.dto';
+import { Role, ReviewStatus } from '@prisma/client';
 
 interface RequestWithUser {
   user: { sub: string; role: Role };
@@ -114,5 +117,72 @@ export class ScreeningController {
   @Get('statistics')
   async getStatistics(@Request() req: RequestWithUser) {
     return this.screeningService.getUserStatistics(req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('doctor/statistics')
+  async getDoctorStatistics(@Request() req: RequestWithUser) {
+    return this.screeningService.getDoctorStatistics(req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('doctor/patients')
+  async getDoctorPatients(@Request() req: RequestWithUser) {
+    return this.screeningService.getDoctorPatients(req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('sessions/:sessionId/share')
+  async shareReport(
+    @Param('sessionId') sessionId: string,
+    @Request() req: RequestWithUser,
+    @Body() body: ShareReportDto,
+  ) {
+    return this.screeningService.shareReport(sessionId, req.user.sub, body.doctorId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('reports/received')
+  async getReceivedReports(
+    @Request() req: RequestWithUser,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+  ) {
+    const statusFilter =
+      status === ReviewStatus.pending || status === ReviewStatus.reviewed
+        ? (status as ReviewStatus)
+        : undefined;
+    return this.screeningService.getDoctorReceivedReports(
+      req.user.sub,
+      parseInt(page || '1'),
+      parseInt(limit || '10'),
+      statusFilter,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('reports/:shareId')
+  async getReportShare(
+    @Param('shareId') shareId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    return this.screeningService.getReportShareById(shareId, req.user.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('reports/:shareId/review')
+  async reviewReport(
+    @Param('shareId') shareId: string,
+    @Request() req: RequestWithUser,
+    @Body() body: ReviewReportDto,
+  ) {
+    return this.screeningService.reviewReport(
+      shareId,
+      req.user.sub,
+      body.notes,
+      body.markReviewed ?? false,
+      body.reopen ?? false,
+    );
   }
 }

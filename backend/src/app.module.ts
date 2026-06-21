@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AiModule } from './ai/ai.module';
 import { ScreeningModule } from './screening/screening.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 import { MlModule } from './ml/ml.module';
 import { QueueModule } from './queue/queue.module';
 import { HealthModule } from './health/health.module';
@@ -55,6 +56,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     AuthModule,
     AiModule,
     ScreeningModule,
+    AppointmentsModule,
     MlModule,
     HealthModule,
     EmailModule,

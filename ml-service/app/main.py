@@ -132,6 +132,12 @@ class ReportRequest(BaseModel):
     parent_phone: Optional[str] = None
     city: Optional[str] = None
     state: Optional[str] = None
+    # DB-sourced data — overrides stale in-memory SESSION_DATA when provided
+    risk_score: Optional[float] = None
+    risk_label: Optional[str] = None
+    feature_averages: Optional[Dict[str, float]] = None
+    recommendations: Optional[List[str]] = None
+    model_version: Optional[str] = None
 
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
@@ -446,19 +452,20 @@ def generate_report(payload: ReportRequest) -> Response:
     stored = SESSION_DATA.get(session_key, {})
 
     session_data = {
-        "child_name":     payload.child_name or stored.get("child_name", "Unknown"),
-        "parent_name":    payload.parent_name or stored.get("parent_name", "—"),
-        "parent_email":   payload.parent_email or stored.get("parent_email", "—"),
-        "parent_phone":   payload.parent_phone or stored.get("parent_phone", "—"),
-        "city":           payload.city or stored.get("city", "—"),
-        "state":          payload.state or stored.get("state", "—"),
-        "session_id":     session_key,
-        "session_date":   stored.get("session_date", datetime.now().strftime("%d %B %Y, %I:%M %p")),
-        "risk_score":     stored.get("risk_score", 0),
-        "risk_label":     stored.get("risk_label", "low"),
-        "feature_averages": stored.get("feature_averages", {}),
-        "recommendations":  stored.get("recommendations", []),
-        "model_version":    stored.get("model_version", _model_version),
+        "child_name":       payload.child_name or stored.get("child_name", "Unknown"),
+        "parent_name":      payload.parent_name or stored.get("parent_name", "—"),
+        "parent_email":     payload.parent_email or stored.get("parent_email", "—"),
+        "parent_phone":     payload.parent_phone or stored.get("parent_phone", "—"),
+        "city":             payload.city or stored.get("city", "—"),
+        "state":            payload.state or stored.get("state", "—"),
+        "session_id":       session_key,
+        "session_date":     stored.get("session_date", datetime.now().strftime("%d %B %Y, %I:%M %p")),
+        # DB-sourced values take priority over in-memory cache
+        "risk_score":       payload.risk_score if payload.risk_score is not None else stored.get("risk_score", 0),
+        "risk_label":       payload.risk_label or stored.get("risk_label", "low"),
+        "feature_averages": payload.feature_averages if payload.feature_averages is not None else stored.get("feature_averages", {}),
+        "recommendations":  payload.recommendations if payload.recommendations is not None else stored.get("recommendations", []),
+        "model_version":    payload.model_version or stored.get("model_version", _model_version),
         "aq_scores":        stored.get("aq_scores", {}),
     }
 

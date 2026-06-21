@@ -6,15 +6,25 @@ import {
   Param,
   Res,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { MlService } from './ml.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CameraScreeningDto, LiveInferenceDto } from './dto';
+import { Role } from '@prisma/client';
+
+interface RequestWithUser {
+  user: { sub: string; role: Role };
+}
 
 @Controller('ml')
 export class MlController {
-  constructor(private readonly mlService: MlService) {}
+  constructor(
+    private readonly mlService: MlService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('camera-screening')
@@ -81,12 +91,39 @@ export class MlController {
   @Post('report/:sessionId')
   async generateReport(
     @Param('sessionId') sessionId: string,
+    @Request() req: RequestWithUser,
     @Res() res: Response,
   ) {
-    const pdf = await this.mlService.generateReport(sessionId);
+    // Fetch session + results + child from DB so the PDF is always populated
+    const session = await this.prisma.screeningSession.findUnique({
+      where: { id: sessionId },
+      include: { child: true, results: true },
+    });
+
+    const childInfo: Record<string, string> = {};
+    if (session?.child?.name) childInfo.childName = session.child.name;
+
+    const results = session?.results as any;
+    const behaviors: Record<string, number> = results?.behaviors ?? {};
+    const featureAverages: Record<string, number> = {};
+    for (const [k, v] of Object.entries(behaviors)) {
+      featureAverages[k] = typeof v === 'number' ? v / 100 : 0;
+    }
+
+    const reportData = results ? {
+      riskScore:       results.riskScore ?? session?.riskScore ?? 0,
+      riskLabel:       results.riskLevel ?? session?.riskLevel ?? 'low',
+      featureAverages,
+      recommendations: (results.recommendations as string[]) ?? [],
+      modelVersion:    (results as any).modelVersion ?? undefined,
+    } : undefined;
+
+    const pdf = await this.mlService.generateReport(sessionId, childInfo, reportData);
+
+    const childName = session?.child?.name?.replace(/\s+/g, '_') ?? 'report';
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="screening-report-${sessionId}.pdf"`,
+      'Content-Disposition': `attachment; filename="MannSaathi_${childName}_${sessionId.slice(0, 8)}.pdf"`,
     });
     res.send(Buffer.from(pdf));
   }

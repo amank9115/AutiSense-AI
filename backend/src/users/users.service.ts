@@ -12,6 +12,14 @@ import {
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  async findDoctors(): Promise<Array<{ id: string; name: string; email: string }>> {
+    return this.prisma.user.findMany({
+      where: { role: { in: [Role.doctor, Role.clinician] } },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findOne(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { email } });
   }
