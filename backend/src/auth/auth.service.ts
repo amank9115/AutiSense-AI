@@ -220,7 +220,9 @@ export class AuthService {
     const access_token = this.jwtService.sign(payload);
 
     // Persist the refresh token in the database so rotation and revocation work
-    const refreshTokenData = await this.refreshTokenService.createToken(user.id);
+    const refreshTokenData = await this.refreshTokenService.createToken(
+      user.id,
+    );
 
     return {
       message: 'Email verified successfully!',

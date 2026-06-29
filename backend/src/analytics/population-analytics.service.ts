@@ -27,7 +27,7 @@ export class PopulationAnalyticsService {
   async getPopulationMetrics(
     options: { startDate?: Date; endDate?: Date; region?: string } = {},
   ): Promise<PopulationMetrics> {
-    const { startDate, endDate, region } = options;
+    const { startDate, endDate } = options;
 
     // Build date filter
     const dateFilter: any = {};
@@ -70,7 +70,8 @@ export class PopulationAnalyticsService {
     const riskDistribution = {
       low: sessions.filter((s) => s.results?.riskLevel === 'low').length,
       moderate: sessions.filter(
-        (s) => s.results?.riskLevel === 'medium' || s.results?.riskLevel === 'high',
+        (s) =>
+          s.results?.riskLevel === 'medium' || s.results?.riskLevel === 'high',
       ).length,
       high: sessions.filter((s) => s.results?.riskLevel === 'very_high').length,
     };
@@ -116,8 +117,10 @@ export class PopulationAnalyticsService {
     );
 
     // Monthly trends
-    const monthlyData: Record<string, { screenings: number; totalRisk: number }> =
-      {};
+    const monthlyData: Record<
+      string,
+      { screenings: number; totalRisk: number }
+    > = {};
     sessions.forEach((s) => {
       if (s.completedAt) {
         const month = s.completedAt.toISOString().slice(0, 7);
@@ -135,8 +138,7 @@ export class PopulationAnalyticsService {
       .map(([month, data]) => ({
         month,
         screenings: data.screenings,
-        avgRisk:
-          data.screenings > 0 ? data.totalRisk / data.screenings : 0,
+        avgRisk: data.screenings > 0 ? data.totalRisk / data.screenings : 0,
       }));
 
     // Intervention success rate (from treatment plans)
@@ -216,8 +218,11 @@ export class PopulationAnalyticsService {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- async placeholder; will aggregate real geographic data
   async getHeatmapData(
-    options: { metric: 'screenings' | 'riskScore' | 'age' } = { metric: 'screenings' },
+    _options: { metric: 'screenings' | 'riskScore' | 'age' } = {
+      metric: 'screenings',
+    },
   ): Promise<{ region: string; value: number; lat?: number; lng?: number }[]> {
     // Placeholder for geographic heatmap data
     // In production, this would aggregate by actual geographic regions
@@ -255,7 +260,9 @@ export class PopulationAnalyticsService {
 
     // Simple moving average prediction
     const avgRisk = recentRisks.reduce((a, b) => a + b, 0) / recentRisks.length;
-    const trend = (recentRisks[recentRisks.length - 1] - recentRisks[0]) / recentRisks.length;
+    const trend =
+      (recentRisks[recentRisks.length - 1] - recentRisks[0]) /
+      recentRisks.length;
 
     const predictions = [];
     const now = new Date();

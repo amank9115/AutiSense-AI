@@ -138,7 +138,11 @@ export class ScreeningController {
     @Request() req: RequestWithUser,
     @Body() body: ShareReportDto,
   ) {
-    return this.screeningService.shareReport(sessionId, req.user.sub, body.doctorId);
+    return this.screeningService.shareReport(
+      sessionId,
+      req.user.sub,
+      body.doctorId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -151,7 +155,7 @@ export class ScreeningController {
   ) {
     const statusFilter =
       status === ReviewStatus.pending || status === ReviewStatus.reviewed
-        ? (status as ReviewStatus)
+        ? status
         : undefined;
     return this.screeningService.getDoctorReceivedReports(
       req.user.sub,

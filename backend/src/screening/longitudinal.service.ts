@@ -10,20 +10,6 @@ interface SessionMetrics {
   riskScore: number;
 }
 
-interface TrendResult {
-  periodStart: Date;
-  periodEnd: Date;
-  periodType: 'week' | 'month' | 'quarter';
-  metrics: SessionMetrics;
-  trends: {
-    eyeContact?: number;
-    attention?: number;
-    emotion?: number;
-    riskScore?: number;
-  };
-  sessionCount: number;
-}
-
 @Injectable()
 export class LongitudinalService {
   private readonly logger = new Logger(LongitudinalService.name);
@@ -78,7 +64,10 @@ export class LongitudinalService {
     const metrics = this.calculateAverageMetrics(sessions);
 
     // Get previous period trend for comparison
-    const previousPeriodStart = this.getPreviousPeriodStart(periodStart, periodType);
+    const previousPeriodStart = this.getPreviousPeriodStart(
+      periodStart,
+      periodType,
+    );
     const previousTrend = await this.prisma.behavioralTrend.findUnique({
       where: {
         childId_periodStart_periodType: {
@@ -206,7 +195,8 @@ export class LongitudinalService {
     const recentMetrics = this.calculateAverageMetrics(recent);
     const previousMetrics = this.calculateAverageMetrics(previous);
 
-    const eyeContactChange = recentMetrics.eyeContact - previousMetrics.eyeContact;
+    const eyeContactChange =
+      recentMetrics.eyeContact - previousMetrics.eyeContact;
     const attentionChange = recentMetrics.attention - previousMetrics.attention;
     const riskChange = recentMetrics.riskScore - previousMetrics.riskScore;
 
@@ -239,7 +229,9 @@ export class LongitudinalService {
     };
   }
 
-  private calculateAverageMetrics(sessions: ScreeningSession[]): SessionMetrics {
+  private calculateAverageMetrics(
+    sessions: ScreeningSession[],
+  ): SessionMetrics {
     let totalEye = 0,
       totalAttention = 0,
       totalEmotion = 0,
@@ -288,7 +280,10 @@ export class LongitudinalService {
     return end;
   }
 
-  private getPreviousPeriodStart(start: Date, type: 'week' | 'month' | 'quarter'): Date {
+  private getPreviousPeriodStart(
+    start: Date,
+    type: 'week' | 'month' | 'quarter',
+  ): Date {
     const previous = new Date(start);
     switch (type) {
       case 'week':

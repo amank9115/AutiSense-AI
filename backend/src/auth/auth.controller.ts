@@ -140,7 +140,10 @@ export class AuthController {
   async resendVerification(
     @Body() resendVerificationDto: ResendVerificationDto,
   ) {
-    return this.authService.resendVerification(resendVerificationDto.email, resendVerificationDto.baseUrl);
+    return this.authService.resendVerification(
+      resendVerificationDto.email,
+      resendVerificationDto.baseUrl,
+    );
   }
 
   // DEV ONLY: Direct email verification for development

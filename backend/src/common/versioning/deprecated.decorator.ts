@@ -10,7 +10,11 @@ export const SUNSET_DATE_KEY = 'sunsetDate';
  */
 export function Deprecated(sunsetDate?: string, message?: string) {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
-    SetMetadata(DEPRECATED_KEY, { deprecated: true, sunsetDate, message })(target, propertyKey, descriptor);
+    SetMetadata(DEPRECATED_KEY, { deprecated: true, sunsetDate, message })(
+      target,
+      propertyKey,
+      descriptor,
+    );
   };
 }
 

@@ -266,11 +266,15 @@ export class MlService {
         ...this.mapChildInfo(childInfo),
       };
       if (reportData) {
-        if (reportData.riskScore !== undefined) payload.risk_score = reportData.riskScore;
-        if (reportData.riskLabel)               payload.risk_label = reportData.riskLabel;
-        if (reportData.featureAverages)         payload.feature_averages = reportData.featureAverages;
-        if (reportData.recommendations)         payload.recommendations = reportData.recommendations;
-        if (reportData.modelVersion)            payload.model_version = reportData.modelVersion;
+        if (reportData.riskScore !== undefined)
+          payload.risk_score = reportData.riskScore;
+        if (reportData.riskLabel) payload.risk_label = reportData.riskLabel;
+        if (reportData.featureAverages)
+          payload.feature_averages = reportData.featureAverages;
+        if (reportData.recommendations)
+          payload.recommendations = reportData.recommendations;
+        if (reportData.modelVersion)
+          payload.model_version = reportData.modelVersion;
       }
 
       const response = await fetch(`${this.baseUrl}/report/generate`, {

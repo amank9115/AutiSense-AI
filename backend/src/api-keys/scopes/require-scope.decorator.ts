@@ -7,4 +7,5 @@ export const SCOPES_KEY = 'requiredScopes';
  * Decorator to specify required scopes for an endpoint
  * @param scopes - One or more required scopes (user must have ALL)
  */
-export const RequireScopes = (...scopes: ApiScope[]) => SetMetadata(SCOPES_KEY, scopes);
+export const RequireScopes = (...scopes: ApiScope[]) =>
+  SetMetadata(SCOPES_KEY, scopes);

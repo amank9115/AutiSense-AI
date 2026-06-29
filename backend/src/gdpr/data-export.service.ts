@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ExportStatus, ExportFormat } from '@prisma/client';
+import { ExportFormat } from '@prisma/client';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import * as zlib from 'zlib';
 
 @Injectable()
 export class DataExportService {
@@ -168,10 +167,15 @@ export class DataExportService {
     };
   }
 
-  private async createArchive(exportPath: string, data: Record<string, any>): Promise<void> {
+  private async createArchive(
+    exportPath: string,
+    data: Record<string, any>,
+  ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- archiver/fs loaded lazily so exports stay opt-in
     const fsSync = require('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const archiver = require('archiver');
-    
+
     return new Promise((resolve, reject) => {
       const output = fsSync.createWriteStream(`${exportPath}.zip`);
       const archive = archiver('zip', { zlib: { level: 9 } });
@@ -180,13 +184,27 @@ export class DataExportService {
       archive.on('error', (err: Error) => reject(err));
 
       archive.pipe(output);
-      archive.append(JSON.stringify(data.manifest, null, 2), { name: 'manifest.json' });
-      archive.append(JSON.stringify(data.profile, null, 2), { name: 'profile/user-profile.json' });
-      archive.append(JSON.stringify(data.children, null, 2), { name: 'children/children.json' });
-      archive.append(JSON.stringify(data.screeningSessions, null, 2), { name: 'screenings/sessions.json' });
-      archive.append(JSON.stringify(data.chatSessions, null, 2), { name: 'chat/sessions.json' });
-      archive.append(JSON.stringify(data.sharedReports, null, 2), { name: 'shared-reports/reports.json' });
-      archive.append(JSON.stringify(data.achievements, null, 2), { name: 'achievements/achievements.json' });
+      archive.append(JSON.stringify(data.manifest, null, 2), {
+        name: 'manifest.json',
+      });
+      archive.append(JSON.stringify(data.profile, null, 2), {
+        name: 'profile/user-profile.json',
+      });
+      archive.append(JSON.stringify(data.children, null, 2), {
+        name: 'children/children.json',
+      });
+      archive.append(JSON.stringify(data.screeningSessions, null, 2), {
+        name: 'screenings/sessions.json',
+      });
+      archive.append(JSON.stringify(data.chatSessions, null, 2), {
+        name: 'chat/sessions.json',
+      });
+      archive.append(JSON.stringify(data.sharedReports, null, 2), {
+        name: 'shared-reports/reports.json',
+      });
+      archive.append(JSON.stringify(data.achievements, null, 2), {
+        name: 'achievements/achievements.json',
+      });
       archive.finalize();
     });
   }

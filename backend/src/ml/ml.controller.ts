@@ -76,7 +76,11 @@ export class MlController {
       image_base64: body.frame.imageBase64,
     };
 
-    const result = await this.mlService.predictLive(body.sessionKey, frame, body.childInfo);
+    const result = await this.mlService.predictLive(
+      body.sessionKey,
+      frame,
+      body.childInfo,
+    );
 
     return {
       success: result.success,
@@ -115,15 +119,21 @@ export class MlController {
       featureAverages[k] = typeof v === 'number' ? v / 100 : 0;
     }
 
-    const reportData = results ? {
-      riskScore:       results.riskScore ?? session?.riskScore ?? 0,
-      riskLabel:       results.riskLevel ?? session?.riskLevel ?? 'low',
-      featureAverages,
-      recommendations: (results.recommendations as string[]) ?? [],
-      modelVersion:    (results as any).modelVersion ?? undefined,
-    } : undefined;
+    const reportData = results
+      ? {
+          riskScore: results.riskScore ?? session?.riskScore ?? 0,
+          riskLabel: results.riskLevel ?? session?.riskLevel ?? 'low',
+          featureAverages,
+          recommendations: (results.recommendations as string[]) ?? [],
+          modelVersion: results.modelVersion ?? undefined,
+        }
+      : undefined;
 
-    const pdf = await this.mlService.generateReport(sessionId, childInfo, reportData);
+    const pdf = await this.mlService.generateReport(
+      sessionId,
+      childInfo,
+      reportData,
+    );
 
     const childName = session?.child?.name?.replace(/\s+/g, '_') ?? 'report';
     res.set({

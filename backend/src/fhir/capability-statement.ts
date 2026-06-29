@@ -21,7 +21,8 @@ export const CAPABILITY_STATEMENT = {
           {
             coding: [
               {
-                system: 'http://terminology.hl7.org/CodeSystem/restful-security-service',
+                system:
+                  'http://terminology.hl7.org/CodeSystem/restful-security-service',
                 code: 'SMART-on-FHIR',
                 display: 'SMART on FHIR',
               },
@@ -35,10 +36,7 @@ export const CAPABILITY_STATEMENT = {
         {
           type: 'Patient',
           profile: 'http://hl7.org/fhir/StructureDefinition/Patient',
-          interaction: [
-            { code: 'read' },
-            { code: 'search-type' },
-          ],
+          interaction: [{ code: 'read' }, { code: 'search-type' }],
           searchParam: [
             {
               name: 'identifier',
@@ -76,10 +74,7 @@ export const CAPABILITY_STATEMENT = {
         {
           type: 'DiagnosticReport',
           profile: 'http://hl7.org/fhir/StructureDefinition/DiagnosticReport',
-          interaction: [
-            { code: 'read' },
-            { code: 'search-type' },
-          ],
+          interaction: [{ code: 'read' }, { code: 'search-type' }],
           searchParam: [
             {
               name: 'patient',

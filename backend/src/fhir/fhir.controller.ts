@@ -67,7 +67,19 @@ export class FhirController {
     });
 
     if (!child) {
-      throw new HttpException({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code: 'not-found', diagnostics: 'Patient not found' }] }, HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        {
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'not-found',
+              diagnostics: 'Patient not found',
+            },
+          ],
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return this.mapper.toPatient(child as any);
@@ -110,7 +122,19 @@ export class FhirController {
     });
 
     if (!session) {
-      throw new HttpException({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code: 'not-found', diagnostics: 'Observation not found' }] }, HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        {
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'not-found',
+              diagnostics: 'Observation not found',
+            },
+          ],
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return this.mapper.toObservation(session as any);
@@ -154,7 +178,19 @@ export class FhirController {
     });
 
     if (!session) {
-      throw new HttpException({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code: 'not-found', diagnostics: 'DiagnosticReport not found' }] }, HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        {
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'not-found',
+              diagnostics: 'DiagnosticReport not found',
+            },
+          ],
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return this.mapper.toDiagnosticReport(session as any);
@@ -162,6 +198,7 @@ export class FhirController {
 
   @Post('Observation')
   @RequireScopes(ApiScope.FHIR_WRITE)
+  // eslint-disable-next-line @typescript-eslint/require-await -- async stub; will validate + persist later
   async createObservation(@Body() resource: any) {
     // Accept external FHIR observations (e.g., from partner systems)
     // This is a stub - actual implementation would validate and store the observation

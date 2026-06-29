@@ -417,7 +417,10 @@ export class ScreeningService {
       where: { id: doctorId },
       select: { id: true, name: true, email: true, role: true },
     });
-    if (!doctor || (doctor.role !== Role.doctor && doctor.role !== Role.clinician)) {
+    if (
+      !doctor ||
+      (doctor.role !== Role.doctor && doctor.role !== Role.clinician)
+    ) {
       throw new NotFoundException('Doctor not found');
     }
 
@@ -433,7 +436,12 @@ export class ScreeningService {
 
     const share = await this.prisma.reportShare.upsert({
       where: { sessionId_doctorId: { sessionId, doctorId } },
-      create: { sessionId, sharedById: userId, doctorId, status: ReviewStatus.pending },
+      create: {
+        sessionId,
+        sharedById: userId,
+        doctorId,
+        status: ReviewStatus.pending,
+      },
       update: { status: ReviewStatus.pending, reviewedAt: null },
     });
 
@@ -507,7 +515,9 @@ export class ScreeningService {
 
     if (!share) throw new NotFoundException('Report share not found');
     if (share.doctorId !== doctorId) {
-      throw new InsufficientPermissionsException('You do not have access to this report');
+      throw new InsufficientPermissionsException(
+        'You do not have access to this report',
+      );
     }
 
     return share;
@@ -525,10 +535,14 @@ export class ScreeningService {
     markReviewed = false,
     reopen = false,
   ) {
-    const share = await this.prisma.reportShare.findUnique({ where: { id: shareId } });
+    const share = await this.prisma.reportShare.findUnique({
+      where: { id: shareId },
+    });
     if (!share) throw new NotFoundException('Report share not found');
     if (share.doctorId !== doctorId) {
-      throw new InsufficientPermissionsException('You do not have access to this report');
+      throw new InsufficientPermissionsException(
+        'You do not have access to this report',
+      );
     }
 
     return this.prisma.reportShare.update({
@@ -565,7 +579,9 @@ export class ScreeningService {
     });
 
     const totalReports = shares.length;
-    const pendingReviews = shares.filter((s) => s.status === ReviewStatus.pending).length;
+    const pendingReviews = shares.filter(
+      (s) => s.status === ReviewStatus.pending,
+    ).length;
     const reviewedReports = totalReports - pendingReviews;
     const totalPatients = new Set(shares.map((s) => s.session.childId)).size;
 
@@ -574,10 +590,14 @@ export class ScreeningService {
       .filter((r): r is number => r !== null && r !== undefined);
     const averageRiskScore =
       riskScores.length > 0
-        ? Math.round((riskScores.reduce((a, b) => a + b, 0) / riskScores.length) * 100) / 100
+        ? Math.round(
+            (riskScores.reduce((a, b) => a + b, 0) / riskScores.length) * 100,
+          ) / 100
         : 0;
     const reviewRate =
-      totalReports > 0 ? Math.round((reviewedReports / totalReports) * 10000) / 100 : 0;
+      totalReports > 0
+        ? Math.round((reviewedReports / totalReports) * 10000) / 100
+        : 0;
 
     // Risk distribution on the 0–100 scale (matches RiskLevel bands).
     const riskDistribution = { low: 0, moderate: 0, high: 0 };
@@ -589,16 +609,29 @@ export class ScreeningService {
 
     // Last 6 months of activity, oldest → newest.
     const MONTHS = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     const now = new Date();
-    const monthlyTrend: { month: string; count: number; avgRisk: number }[] = [];
+    const monthlyTrend: { month: string; count: number; avgRisk: number }[] =
+      [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const inMonth = shares.filter((s) => {
         const c = new Date(s.createdAt);
-        return c.getFullYear() === d.getFullYear() && c.getMonth() === d.getMonth();
+        return (
+          c.getFullYear() === d.getFullYear() && c.getMonth() === d.getMonth()
+        );
       });
       const monthRisks = inMonth
         .map((s) => s.session.results?.riskScore)
@@ -608,7 +641,9 @@ export class ScreeningService {
         count: inMonth.length,
         avgRisk:
           monthRisks.length > 0
-            ? Math.round(monthRisks.reduce((a, b) => a + b, 0) / monthRisks.length)
+            ? Math.round(
+                monthRisks.reduce((a, b) => a + b, 0) / monthRisks.length,
+              )
             : 0,
       });
     }

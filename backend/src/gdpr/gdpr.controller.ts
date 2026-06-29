@@ -33,8 +33,14 @@ export class GdprController {
   }
 
   @Get('export/:requestId')
-  async getExportStatus(@Request() req: any, @Param('requestId') requestId: string) {
-    const status = await this.exportService.getExportStatus(requestId, req.user.sub);
+  async getExportStatus(
+    @Request() req: any,
+    @Param('requestId') requestId: string,
+  ) {
+    const status = await this.exportService.getExportStatus(
+      requestId,
+      req.user.sub,
+    );
     if (!status) {
       return { error: 'Export request not found' };
     }

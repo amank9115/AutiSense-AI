@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TreatmentPlan, Intervention, ClinicalNote } from '@prisma/client';
 
@@ -42,7 +47,10 @@ export class TreatmentPlanningService {
 
   // === Treatment Plans ===
 
-  async createPlan(doctorId: string, dto: CreateTreatmentPlanDto): Promise<TreatmentPlan> {
+  async createPlan(
+    doctorId: string,
+    dto: CreateTreatmentPlanDto,
+  ): Promise<TreatmentPlan> {
     const plan = await this.prisma.treatmentPlan.create({
       data: {
         childId: dto.childId,
@@ -63,7 +71,9 @@ export class TreatmentPlanningService {
       },
     });
 
-    this.logger.log(`Treatment plan ${plan.id} created for child ${dto.childId}`);
+    this.logger.log(
+      `Treatment plan ${plan.id} created for child ${dto.childId}`,
+    );
     return plan;
   }
 
@@ -156,7 +166,11 @@ export class TreatmentPlanningService {
 
   async updateIntervention(
     interventionId: string,
-    updates: Partial<AddInterventionDto> & { status?: string; effectiveness?: number; notes?: string },
+    updates: Partial<AddInterventionDto> & {
+      status?: string;
+      effectiveness?: number;
+      notes?: string;
+    },
   ): Promise<Intervention> {
     return this.prisma.intervention.update({
       where: { id: interventionId },
@@ -187,11 +201,16 @@ export class TreatmentPlanningService {
       },
     });
 
-    this.logger.log(`Clinical note ${note.id} created for child ${dto.childId}`);
+    this.logger.log(
+      `Clinical note ${note.id} created for child ${dto.childId}`,
+    );
     return note;
   }
 
-  async getSessionNotes(sessionId: string, userId: string): Promise<ClinicalNote[]> {
+  async getSessionNotes(
+    sessionId: string,
+    userId: string,
+  ): Promise<ClinicalNote[]> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -210,7 +229,10 @@ export class TreatmentPlanningService {
     });
   }
 
-  async getChildNotes(childId: string, userId: string): Promise<ClinicalNote[]> {
+  async getChildNotes(
+    childId: string,
+    userId: string,
+  ): Promise<ClinicalNote[]> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -235,7 +257,12 @@ export class TreatmentPlanningService {
   async updateNote(
     noteId: string,
     doctorId: string,
-    updates: { content?: string; title?: string; category?: string; isPrivate?: boolean },
+    updates: {
+      content?: string;
+      title?: string;
+      category?: string;
+      isPrivate?: boolean;
+    },
   ): Promise<ClinicalNote> {
     const note = await this.prisma.clinicalNote.findUnique({
       where: { id: noteId },

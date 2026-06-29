@@ -6,10 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { TenantService } from './tenant.service';
-import {
-  ForbiddenException,
-  ValidationException,
-} from '../common/exceptions';
+import { ForbiddenException, ValidationException } from '../common/exceptions';
 
 /**
  * Marks a route as requiring the `owner` role within the organization
@@ -30,12 +27,10 @@ export class OrgMembershipGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<{
-        user?: { sub?: string };
-        params?: Record<string, string>;
-      }>();
+    const request = context.switchToHttp().getRequest<{
+      user?: { sub?: string };
+      params?: Record<string, string>;
+    }>();
 
     const userId = request.user?.sub;
     const orgId = request.params?.orgId;

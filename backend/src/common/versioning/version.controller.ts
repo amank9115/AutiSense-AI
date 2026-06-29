@@ -9,7 +9,8 @@ export class VersionController {
       supported_versions: ['1'],
       deprecated_versions: [],
       documentation: '/api/docs',
-      changelog: 'https://github.com/amank9115/AutiSense-AI/blob/main/docs/API_CHANGELOG.md',
+      changelog:
+        'https://github.com/amank9115/AutiSense-AI/blob/main/docs/API_CHANGELOG.md',
     };
   }
 }

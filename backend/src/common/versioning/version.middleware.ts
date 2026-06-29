@@ -10,22 +10,28 @@ export const LATEST_VERSION = '1';
 export class VersionMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const path = req.path;
-    
+
     // Extract version from path (/api/v1/... -> v1)
     const versionMatch = path.match(/^\/api\/(v\d+)\//);
-    const pathVersion = versionMatch ? versionMatch[1].replace('v', '') : LATEST_VERSION;
-    
+    const pathVersion = versionMatch
+      ? versionMatch[1].replace('v', '')
+      : LATEST_VERSION;
+
     // Check Accept header for version negotiation
     const acceptHeader = req.get('Accept') || '';
-    const headerVersionMatch = acceptHeader.match(/application\/vnd\.autisense\.v(\d+)\+json/);
-    const requestedVersion = headerVersionMatch ? headerVersionMatch[1] : pathVersion;
-    
+    const headerVersionMatch = acceptHeader.match(
+      /application\/vnd\.autisense\.v(\d+)\+json/,
+    );
+    const requestedVersion = headerVersionMatch
+      ? headerVersionMatch[1]
+      : pathVersion;
+
     // Set version info on request for downstream use
     (req as any).apiVersion = requestedVersion;
-    
+
     // Add version header to response
     res.setHeader(API_VERSION_HEADER, requestedVersion);
-    
+
     next();
   }
 }

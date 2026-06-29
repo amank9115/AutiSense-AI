@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { SharedDocument } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -33,7 +38,8 @@ interface ShareDocumentDto {
 export class DocumentSharingService {
   private readonly logger = new Logger(DocumentSharingService.name);
   private readonly uploadDir = process.env.DOCUMENT_UPLOAD_DIR || './uploads';
-  private readonly encryptionKey = process.env.DOCUMENT_ENCRYPTION_KEY || 'default-encryption-key-32ch';
+  private readonly encryptionKey =
+    process.env.DOCUMENT_ENCRYPTION_KEY || 'default-encryption-key-32ch';
 
   constructor(private readonly prisma: PrismaService) {
     this.ensureUploadDir();
@@ -42,7 +48,9 @@ export class DocumentSharingService {
   private async ensureUploadDir() {
     try {
       await fs.mkdir(this.uploadDir, { recursive: true });
-      await fs.mkdir(path.join(this.uploadDir, 'encrypted'), { recursive: true });
+      await fs.mkdir(path.join(this.uploadDir, 'encrypted'), {
+        recursive: true,
+      });
     } catch (error) {
       this.logger.error(`Failed to create upload directory: ${error}`);
     }
@@ -56,7 +64,11 @@ export class DocumentSharingService {
     // Generate unique filename
     const fileId = crypto.randomUUID();
     const encryptedFilename = `${fileId}.enc`;
-    const encryptedPath = path.join(this.uploadDir, 'encrypted', encryptedFilename);
+    const encryptedPath = path.join(
+      this.uploadDir,
+      'encrypted',
+      encryptedFilename,
+    );
 
     // Encrypt file content
     const encrypted = this.encrypt(file.buffer);
@@ -203,7 +215,10 @@ export class DocumentSharingService {
     });
   }
 
-  async getChildDocuments(childId: string, userId: string): Promise<SharedDocument[]> {
+  async getChildDocuments(
+    childId: string,
+    userId: string,
+  ): Promise<SharedDocument[]> {
     return this.prisma.sharedDocument.findMany({
       where: {
         childId,
@@ -254,7 +269,11 @@ export class DocumentSharingService {
     const key = crypto.scryptSync(this.encryptionKey, 'salt', 32);
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
 
-    const encrypted = Buffer.concat([iv, cipher.update(buffer), cipher.final()]);
+    const encrypted = Buffer.concat([
+      iv,
+      cipher.update(buffer),
+      cipher.final(),
+    ]);
     return encrypted;
   }
 

@@ -3,7 +3,7 @@ import { createHmac, randomBytes } from 'crypto';
 import { lookup } from 'dns/promises';
 import { isIP } from 'net';
 import { PrismaService } from '../prisma/prisma.service';
-import { WebhookEndpoint, WebhookDelivery } from '@prisma/client';
+import { WebhookEndpoint } from '@prisma/client';
 import { ValidationException } from '../common/exceptions';
 
 export type WebhookEvent =
@@ -84,7 +84,10 @@ export class WebhooksService {
     } catch {
       throw new ValidationException('Webhook host could not be resolved');
     }
-    if (addresses.length === 0 || addresses.some((a) => this.isBlockedIp(a.address))) {
+    if (
+      addresses.length === 0 ||
+      addresses.some((a) => this.isBlockedIp(a.address))
+    ) {
       throw new ValidationException(
         'Webhook URL resolves to a private, loopback, or link-local address',
       );
@@ -118,19 +121,30 @@ export class WebhooksService {
     });
   }
 
-  async test(id: string, organizationId: string): Promise<{ success: boolean; statusCode?: number; error?: string }> {
+  async test(
+    id: string,
+    organizationId: string,
+  ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
     const endpoint = await this.prisma.webhookEndpoint.findFirst({
       where: { id, organizationId },
     });
     if (!endpoint) return { success: false, error: 'Endpoint not found' };
 
-    const payload = { event: 'test', data: { message: 'Test webhook' }, timestamp: new Date().toISOString() };
+    const payload = {
+      event: 'test',
+      data: { message: 'Test webhook' },
+      timestamp: new Date().toISOString(),
+    };
     const body = JSON.stringify(payload);
-    const result = await this.deliverWithRetry(endpoint as WebhookEndpoint, body, 0);
+    const result = await this.deliverWithRetry(endpoint, body, 0);
     return result;
   }
 
-  async getDeliveries(endpointId: string, organizationId: string, limit: number = 50) {
+  async getDeliveries(
+    endpointId: string,
+    organizationId: string,
+    limit: number = 50,
+  ) {
     const endpoint = await this.prisma.webhookEndpoint.findFirst({
       where: { id: endpointId, organizationId },
     });
@@ -201,11 +215,17 @@ export class WebhooksService {
       // Schedule retry (in production, use BullMQ or similar)
       setTimeout(() => {
         this.deliverWithRetry(endpoint, body, attempt + 1).catch((err) => {
-          this.logger.error(`Retry ${attempt + 1} failed for ${endpoint.url}`, err);
+          this.logger.error(
+            `Retry ${attempt + 1} failed for ${endpoint.url}`,
+            err,
+          );
         });
       }, RETRY_DELAYS[attempt]);
 
-      return { success: false, error: `Retry scheduled (attempt ${attempt + 2}/${MAX_RETRIES})` };
+      return {
+        success: false,
+        error: `Retry scheduled (attempt ${attempt + 2}/${MAX_RETRIES})`,
+      };
     }
 
     // Max retries reached
@@ -242,12 +262,18 @@ export class WebhooksService {
       });
 
       if (!response.ok) {
-        return { success: false, statusCode: response.status, error: `HTTP ${response.status}` };
+        return {
+          success: false,
+          statusCode: response.status,
+          error: `HTTP ${response.status}`,
+        };
       }
 
       return { success: true, statusCode: response.status };
     } catch (err) {
-      this.logger.warn(`Webhook delivery failed for ${url}: ${(err as Error).message}`);
+      this.logger.warn(
+        `Webhook delivery failed for ${url}: ${(err as Error).message}`,
+      );
       return { success: false, error: (err as Error).message };
     }
   }

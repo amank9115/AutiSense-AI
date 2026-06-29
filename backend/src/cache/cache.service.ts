@@ -35,7 +35,9 @@ export class CacheService implements OnModuleDestroy {
         : {}),
       retryStrategy: (times) => {
         if (times > 3) {
-          this.logger.error('Redis connection failed after 3 retries, running without cache');
+          this.logger.error(
+            'Redis connection failed after 3 retries, running without cache',
+          );
           return null; // Stop retrying
         }
         return Math.min(times * 200, 2000);

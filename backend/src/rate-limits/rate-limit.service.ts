@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { Plan } from '@prisma/client';
-import { RATE_LIMIT_TIERS, RateLimitTier, RATE_LIMIT_HEADERS } from './rate-limit.config';
+import { RATE_LIMIT_TIERS } from './rate-limit.config';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -40,7 +40,9 @@ export class RateLimitService {
     isMlEndpoint: boolean = false,
   ): Promise<RateLimitResult> {
     const tier = RATE_LIMIT_TIERS[plan];
-    const limit = isMlEndpoint ? tier.mlRequestsPerMinute : tier.requestsPerMinute;
+    const limit = isMlEndpoint
+      ? tier.mlRequestsPerMinute
+      : tier.requestsPerMinute;
     const key = this.buildKey(organizationId, isMlEndpoint);
     const windowStart = Math.floor(Date.now() / 60000) * 60000;
     const resetAt = windowStart + 60000;
@@ -55,7 +57,9 @@ export class RateLimitService {
         limit,
         remaining,
         resetAt,
-        retryAfter: allowed ? undefined : Math.ceil((resetAt - Date.now()) / 1000),
+        retryAfter: allowed
+          ? undefined
+          : Math.ceil((resetAt - Date.now()) / 1000),
       };
     } catch (error) {
       this.logger.error('Redis rate limit check failed', error);
@@ -64,13 +68,19 @@ export class RateLimitService {
     }
   }
 
-  async getBurstStatus(organizationId: string, plan: Plan): Promise<{ allowed: boolean; remaining: number }> {
+  async getBurstStatus(
+    organizationId: string,
+    plan: Plan,
+  ): Promise<{ allowed: boolean; remaining: number }> {
     const tier = RATE_LIMIT_TIERS[plan];
     const key = `burst:${organizationId}`;
-    
+
     try {
       const current = await this.increment(key, 10); // 10 second burst window
-      return { allowed: current <= tier.burstLimit, remaining: Math.max(0, tier.burstLimit - current) };
+      return {
+        allowed: current <= tier.burstLimit,
+        remaining: Math.max(0, tier.burstLimit - current),
+      };
     } catch {
       return { allowed: true, remaining: tier.burstLimit };
     }
@@ -79,11 +89,11 @@ export class RateLimitService {
   private async increment(key: string, ttlSeconds: number): Promise<number> {
     const multi = this.redis.multi();
     multi.incr(key);
-    if (await this.redis.ttl(key) === -1) {
+    if ((await this.redis.ttl(key)) === -1) {
       multi.expire(key, ttlSeconds);
     }
     const results = await multi.exec();
-    return results?.[0]?.[1] as number || 0;
+    return (results?.[0]?.[1] as number) || 0;
   }
 
   private buildKey(organizationId: string, isMl: boolean): string {

@@ -31,11 +31,15 @@ export class GamificationService {
 
   // === Points and Levels ===
 
-  async awardPoints(userId: string, action: keyof typeof POINT_VALUES, metadata?: any): Promise<UserGamification> {
+  async awardPoints(
+    userId: string,
+    action: keyof typeof POINT_VALUES,
+    metadata?: any,
+  ): Promise<UserGamification> {
     const points = POINT_VALUES[action] || 0;
-    
+
     const gamification = await this.getOrCreateUserGamification(userId);
-    
+
     const newTotal = gamification.totalPoints + points;
     const newLevel = this.calculateLevel(newTotal);
     const pointsToNext = this.pointsNeededForLevel(newLevel + 1) - newTotal;
@@ -50,7 +54,7 @@ export class GamificationService {
     });
 
     this.logger.log(`Awarded ${points} points to user ${userId} for ${action}`);
-    
+
     // Check for achievements
     await this.checkAchievements(userId, action, metadata);
 
@@ -69,7 +73,9 @@ export class GamificationService {
       const lastDate = new Date(gamification.lastActivityDate);
       lastDate.setHours(0, 0, 0, 0);
 
-      const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(
+        (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
 
       if (diffDays === 1) {
         newStreak = gamification.currentStreak + 1;
@@ -99,7 +105,11 @@ export class GamificationService {
 
   // === Achievements ===
 
-  async checkAchievements(userId: string, action: string, metadata?: any): Promise<UserAchievement[]> {
+  async checkAchievements(
+    userId: string,
+    action: string,
+    metadata?: any,
+  ): Promise<UserAchievement[]> {
     const earned: UserAchievement[] = [];
 
     // Get all active achievements
@@ -116,7 +126,12 @@ export class GamificationService {
 
       if (alreadyEarned) continue;
 
-      const shouldEarn = await this.checkAchievementCriteria(userId, achievement, action, metadata);
+      const shouldEarn = await this.checkAchievementCriteria(
+        userId,
+        achievement,
+        action,
+        metadata,
+      );
 
       if (shouldEarn) {
         const userAchievement = await this.prisma.userAchievement.create({
@@ -138,7 +153,9 @@ export class GamificationService {
         }
 
         earned.push(userAchievement);
-        this.logger.log(`User ${userId} earned achievement: ${achievement.name}`);
+        this.logger.log(
+          `User ${userId} earned achievement: ${achievement.name}`,
+        );
       }
     }
 
@@ -173,7 +190,9 @@ export class GamificationService {
     }
   }
 
-  async getUserAchievements(userId: string): Promise<(UserAchievement & { achievement: Achievement })[]> {
+  async getUserAchievements(
+    userId: string,
+  ): Promise<(UserAchievement & { achievement: Achievement })[]> {
     return this.prisma.userAchievement.findMany({
       where: { userId },
       include: { achievement: true },
@@ -251,10 +270,7 @@ export class GamificationService {
   async getLeaderboard(limit = 10): Promise<UserGamification[]> {
     return this.prisma.userGamification.findMany({
       take: limit,
-      orderBy: [
-        { currentLevel: 'desc' },
-        { totalPoints: 'desc' },
-      ],
+      orderBy: [{ currentLevel: 'desc' }, { totalPoints: 'desc' }],
       include: {
         user: {
           select: { id: true, name: true },
@@ -265,7 +281,9 @@ export class GamificationService {
 
   // === Helpers ===
 
-  private async getOrCreateUserGamification(userId: string): Promise<UserGamification> {
+  private async getOrCreateUserGamification(
+    userId: string,
+  ): Promise<UserGamification> {
     let gamification = await this.prisma.userGamification.findUnique({
       where: { userId },
     });

@@ -29,7 +29,7 @@ async function bootstrap() {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'", "'unsafe-inline'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "https:"],
+          imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
           objectSrc: ["'none'"],
@@ -172,7 +172,6 @@ bootstrap().catch((err) => {
   // At this point, logger may not be initialized, so we use console.error
   // but in a production-safe manner (only in development)
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
     console.error('❌ Failed to start application:', err);
   }
   process.exit(1);

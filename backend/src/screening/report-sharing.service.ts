@@ -1,6 +1,11 @@
-import { Injectable, ForbiddenException, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { ScreeningSession, ReportShare, User } from '@prisma/client';
+import { ReportShare } from '@prisma/client';
 import { NotificationService } from '../notifications/notification.service';
 
 interface ShareReportDto {
@@ -27,7 +32,10 @@ export class ReportSharingService {
   /**
    * Share a screening report with a doctor
    */
-  async shareReport(parentId: string, dto: ShareReportDto): Promise<ReportShare> {
+  async shareReport(
+    parentId: string,
+    dto: ShareReportDto,
+  ): Promise<ReportShare> {
     // Verify session belongs to parent's child
     const session = await this.prisma.screeningSession.findFirst({
       where: {
@@ -97,7 +105,9 @@ export class ReportSharingService {
       data: { shareId: share.id, sessionId: dto.sessionId },
     });
 
-    this.logger.log(`Report ${dto.sessionId} shared with doctor ${dto.doctorId}`);
+    this.logger.log(
+      `Report ${dto.sessionId} shared with doctor ${dto.doctorId}`,
+    );
     return share;
   }
 
@@ -106,7 +116,11 @@ export class ReportSharingService {
    */
   async getDoctorReports(
     doctorId: string,
-    options: { status?: 'pending' | 'reviewed'; page?: number; limit?: number } = {},
+    options: {
+      status?: 'pending' | 'reviewed';
+      page?: number;
+      limit?: number;
+    } = {},
   ): Promise<{ data: ReportShare[]; total: number }> {
     const { status, page = 1, limit = 10 } = options;
 
@@ -191,7 +205,9 @@ export class ReportSharingService {
     }
 
     if (share.doctorId !== doctorId) {
-      throw new ForbiddenException('Only the assigned doctor can update this report');
+      throw new ForbiddenException(
+        'Only the assigned doctor can update this report',
+      );
     }
 
     const updateData: any = {};
@@ -261,10 +277,14 @@ export class ReportSharingService {
 
     const totalReports = shares.length;
     const pendingReviews = shares.filter((s) => s.status === 'pending').length;
-    const reviewedReports = shares.filter((s) => s.status === 'reviewed').length;
+    const reviewedReports = shares.filter(
+      (s) => s.status === 'reviewed',
+    ).length;
 
     // Unique patients
-    const patientIds = new Set(shares.map((s) => s.session?.childId).filter(Boolean));
+    const patientIds = new Set(
+      shares.map((s) => s.session?.childId).filter(Boolean),
+    );
     const totalPatients = patientIds.size;
 
     // Average risk score
@@ -287,7 +307,8 @@ export class ReportSharingService {
           s.session?.results?.riskLevel === 'medium' ||
           s.session?.results?.riskLevel === 'high',
       ).length,
-      high: shares.filter((s) => s.session?.results?.riskLevel === 'very_high').length,
+      high: shares.filter((s) => s.session?.results?.riskLevel === 'very_high')
+        .length,
     };
 
     // Monthly trend (last 6 months)
@@ -316,7 +337,10 @@ export class ReportSharingService {
 
       const current = months.get(key) || { count: 0, totalRisk: 0 };
       current.count += 1;
-      if (share.session?.results?.riskScore !== null && share.session?.results?.riskScore !== undefined) {
+      if (
+        share.session?.results?.riskScore !== null &&
+        share.session?.results?.riskScore !== undefined
+      ) {
         current.totalRisk += share.session.results.riskScore;
       }
       months.set(key, current);

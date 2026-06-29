@@ -79,7 +79,9 @@ export class AppointmentsService {
       where: { id },
       data: {
         ...(dto.scheduledAt && { scheduledAt: new Date(dto.scheduledAt) }),
-        ...(dto.durationMins !== undefined && { durationMins: dto.durationMins }),
+        ...(dto.durationMins !== undefined && {
+          durationMins: dto.durationMins,
+        }),
         ...(dto.reason !== undefined && { reason: dto.reason }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
         ...(dto.status && { status: dto.status }),

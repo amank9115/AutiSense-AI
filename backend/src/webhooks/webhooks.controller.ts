@@ -56,6 +56,10 @@ export class WebhooksController {
     @Param('webhookId') webhookId: string,
     @Query('limit') limit?: string,
   ) {
-    return this.webhooks.getDeliveries(webhookId, orgId, limit ? parseInt(limit, 10) : 50);
+    return this.webhooks.getDeliveries(
+      webhookId,
+      orgId,
+      limit ? parseInt(limit, 10) : 50,
+    );
   }
 }

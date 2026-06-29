@@ -31,26 +31,34 @@ export class RateLimitGuard implements CanActivate {
     if (!organizationId) return true; // Skip if not org-scoped
 
     // Check if this is an ML endpoint
-    const isMlEndpoint = this.reflector.getAllAndOverride<boolean>(IS_ML_ENDPOINT, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isMlEndpoint = this.reflector.getAllAndOverride<boolean>(
+      IS_ML_ENDPOINT,
+      [context.getHandler(), context.getClass()],
+    );
 
     // Get plan from subscription
     let plan: Plan = 'free';
     try {
-      const subscription = await this.billingService.getSubscription(organizationId);
+      const subscription =
+        await this.billingService.getSubscription(organizationId);
       plan = subscription?.plan || 'free';
     } catch {
       // Default to free tier on error
     }
 
-    const result = await this.rateLimitService.checkLimit(organizationId, plan, isMlEndpoint);
+    const result = await this.rateLimitService.checkLimit(
+      organizationId,
+      plan,
+      isMlEndpoint,
+    );
 
     // Set rate limit headers
     response.setHeader(RATE_LIMIT_HEADERS.LIMIT, result.limit);
     response.setHeader(RATE_LIMIT_HEADERS.REMAINING, result.remaining);
-    response.setHeader(RATE_LIMIT_HEADERS.RESET, Math.floor(result.resetAt / 1000));
+    response.setHeader(
+      RATE_LIMIT_HEADERS.RESET,
+      Math.floor(result.resetAt / 1000),
+    );
 
     if (!result.allowed) {
       if (result.retryAfter) {

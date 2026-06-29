@@ -8,7 +8,10 @@ export class FhirMapperService {
    */
   toPatient(child: Child & { parent?: User }): any {
     const age = child.dateOfBirth
-      ? Math.floor((Date.now() - new Date(child.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      ? Math.floor(
+          (Date.now() - new Date(child.dateOfBirth).getTime()) /
+            (365.25 * 24 * 60 * 60 * 1000),
+        )
       : 0;
 
     return {
@@ -26,7 +29,9 @@ export class FhirMapperService {
           text: child.name,
         },
       ],
-      birthDate: child.dateOfBirth ? new Date(child.dateOfBirth).toISOString().split('T')[0] : undefined,
+      birthDate: child.dateOfBirth
+        ? new Date(child.dateOfBirth).toISOString().split('T')[0]
+        : undefined,
       gender: child.gender?.toLowerCase() || 'unknown',
       meta: {
         lastUpdated: child.updatedAt.toISOString(),
@@ -44,9 +49,15 @@ export class FhirMapperService {
   /**
    * Map ScreeningResult to FHIR Observation resource
    */
-  toObservation(session: ScreeningSession & { results?: ScreeningResult | null; child?: Child }): any {
-    const riskLevelCode = session.results?.riskLevel?.replace('_', '-') || 'unknown';
-    
+  toObservation(
+    session: ScreeningSession & {
+      results?: ScreeningResult | null;
+      child?: Child;
+    },
+  ): any {
+    const riskLevelCode =
+      session.results?.riskLevel?.replace('_', '-') || 'unknown';
+
     return {
       resourceType: 'Observation',
       id: `observation-${session.id}`,
@@ -55,12 +66,14 @@ export class FhirMapperService {
         {
           coding: [
             {
-              system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+              system:
+                'http://terminology.hl7.org/CodeSystem/observation-category',
               code: 'survey',
               display: 'Survey',
             },
             {
-              system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+              system:
+                'http://terminology.hl7.org/CodeSystem/observation-category',
               code: 'behavior',
               display: 'Behavior',
             },
@@ -81,7 +94,8 @@ export class FhirMapperService {
         reference: `Patient/${session.childId}`,
         display: session.child?.name,
       },
-      effectiveDateTime: session.completedAt?.toISOString() || session.createdAt.toISOString(),
+      effectiveDateTime:
+        session.completedAt?.toISOString() || session.createdAt.toISOString(),
       issued: session.createdAt.toISOString(),
       valueQuantity: {
         value: session.results?.riskScore || session.riskScore || 0,
@@ -95,7 +109,9 @@ export class FhirMapperService {
             {
               system: 'https://autisense.ai/fhir/risk-level',
               code: riskLevelCode,
-              display: this.getRiskLevelDisplay(session.results?.riskLevel || 'low'),
+              display: this.getRiskLevelDisplay(
+                session.results?.riskLevel || 'low',
+              ),
             },
           ],
         },
@@ -110,7 +126,12 @@ export class FhirMapperService {
   /**
    * Map ScreeningSession to FHIR DiagnosticReport resource
    */
-  toDiagnosticReport(session: ScreeningSession & { results?: ScreeningResult | null; child?: Child }): any {
+  toDiagnosticReport(
+    session: ScreeningSession & {
+      results?: ScreeningResult | null;
+      child?: Child;
+    },
+  ): any {
     return {
       resourceType: 'DiagnosticReport',
       id: `report-${session.id}`,
@@ -140,16 +161,20 @@ export class FhirMapperService {
         reference: `Patient/${session.childId}`,
         display: session.child?.name,
       },
-      effectiveDateTime: session.completedAt?.toISOString() || session.createdAt.toISOString(),
+      effectiveDateTime:
+        session.completedAt?.toISOString() || session.createdAt.toISOString(),
       issued: session.createdAt.toISOString(),
-      conclusion: session.results?.summary || session.summary || 'Screening completed',
+      conclusion:
+        session.results?.summary || session.summary || 'Screening completed',
       conclusionCode: [
         {
           coding: [
             {
               system: 'https://autisense.ai/fhir/risk-level',
               code: session.results?.riskLevel?.replace('_', '-') || 'low',
-              display: this.getRiskLevelDisplay(session.results?.riskLevel || 'low'),
+              display: this.getRiskLevelDisplay(
+                session.results?.riskLevel || 'low',
+              ),
             },
           ],
         },

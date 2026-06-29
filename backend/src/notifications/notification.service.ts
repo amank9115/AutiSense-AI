@@ -15,6 +15,7 @@ export class NotificationService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- async placeholder; will await persistence/transport
   async createNotification(dto: CreateNotificationDto): Promise<void> {
     try {
       // For now, we'll just log notifications
@@ -30,15 +31,16 @@ export class NotificationService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await -- async placeholder; will query the Notification model
   async getUserNotifications(
     userId: string,
-    options: { unreadOnly?: boolean; limit?: number } = {},
+    _options: { unreadOnly?: boolean; limit?: number } = {},
   ): Promise<any[]> {
     // Placeholder - would fetch from Notification model
     return [];
   }
 
-  async markAsRead(notificationId: string): Promise<void> {
+  async markAsRead(_notificationId: string): Promise<void> {
     // Placeholder - would update Notification model
   }
 }

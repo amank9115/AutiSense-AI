@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Appointment, AppointmentStatus } from '@prisma/client';
 
@@ -30,7 +36,10 @@ export class AppointmentService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async createAppointment(parentId: string, dto: CreateAppointmentDto): Promise<Appointment> {
+  async createAppointment(
+    parentId: string,
+    dto: CreateAppointmentDto,
+  ): Promise<Appointment> {
     // Verify doctor exists
     const doctor = await this.prisma.user.findUnique({
       where: { id: dto.doctorId, role: 'doctor' },
@@ -62,7 +71,9 @@ export class AppointmentService {
     });
 
     if (conflict) {
-      throw new ConflictException('Doctor already has an appointment at this time');
+      throw new ConflictException(
+        'Doctor already has an appointment at this time',
+      );
     }
 
     const appointment = await this.prisma.appointment.create({
@@ -88,7 +99,9 @@ export class AppointmentService {
       },
     });
 
-    this.logger.log(`Appointment ${appointment.id} created for ${scheduledTime}`);
+    this.logger.log(
+      `Appointment ${appointment.id} created for ${scheduledTime.toISOString()}`,
+    );
     return appointment;
   }
 
@@ -150,7 +163,10 @@ export class AppointmentService {
     });
   }
 
-  async getAppointment(appointmentId: string, userId: string): Promise<Appointment> {
+  async getAppointment(
+    appointmentId: string,
+    userId: string,
+  ): Promise<Appointment> {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id: appointmentId },
       include: {
@@ -161,7 +177,12 @@ export class AppointmentService {
           select: { id: true, name: true, email: true, phone: true },
         },
         child: {
-          select: { id: true, name: true, dateOfBirth: true, medicalNotes: true },
+          select: {
+            id: true,
+            name: true,
+            dateOfBirth: true,
+            medicalNotes: true,
+          },
         },
       },
     });
@@ -198,7 +219,9 @@ export class AppointmentService {
 
     // Only doctor can mark as completed
     if (dto.status === 'completed' && appointment.doctorId !== userId) {
-      throw new ForbiddenException('Only the doctor can mark appointments as completed');
+      throw new ForbiddenException(
+        'Only the doctor can mark appointments as completed',
+      );
     }
 
     const updateData: any = {};
@@ -218,12 +241,19 @@ export class AppointmentService {
       },
     });
 
-    this.logger.log(`Appointment ${appointmentId} updated: ${JSON.stringify(dto)}`);
+    this.logger.log(
+      `Appointment ${appointmentId} updated: ${JSON.stringify(dto)}`,
+    );
     return updated;
   }
 
-  async cancelAppointment(appointmentId: string, userId: string): Promise<Appointment> {
-    return this.updateAppointment(appointmentId, userId, { status: 'cancelled' });
+  async cancelAppointment(
+    appointmentId: string,
+    userId: string,
+  ): Promise<Appointment> {
+    return this.updateAppointment(appointmentId, userId, {
+      status: 'cancelled',
+    });
   }
 
   async getDoctorAvailability(
@@ -259,7 +289,9 @@ export class AppointmentService {
 
       const isBooked = appointments.some((apt) => {
         const aptStart = new Date(apt.scheduledAt);
-        const aptEnd = new Date(aptStart.getTime() + apt.durationMins * 60 * 1000);
+        const aptEnd = new Date(
+          aptStart.getTime() + apt.durationMins * 60 * 1000,
+        );
         return slotStart < aptEnd && slotEnd > aptStart;
       });
 
