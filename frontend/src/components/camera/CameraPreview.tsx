@@ -69,6 +69,7 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
   const previousSampleRef = useRef<number[] | null>(null)
   const detectorRef = useRef<FaceDetectorLike | null>(null)
   const isAnalyzingRef = useRef(false)
+  const isMountedRef = useRef(true)
   const smoothedRef = useRef<CameraLiveMetrics>({
     eyeContact: 72,
     attention: 74,
@@ -84,7 +85,7 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
   const [recordingDuration, setRecordingDuration] = useState(0)
 
-  const resolvedMetrics = useMemo(
+  const _resolvedMetrics = useMemo(
     () => ({
       eyeContact: metrics?.eyeContact ?? 73,
       attention: metrics?.attention ?? 79,
@@ -219,7 +220,10 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
       }
 
       smoothedRef.current = next
-      onLiveMetrics?.(next)
+      // Only call callback if component is still mounted
+      if (isMountedRef.current) {
+        onLiveMetrics?.(next)
+      }
     } finally {
       isAnalyzingRef.current = false
     }
@@ -290,6 +294,9 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
     const currentRecordingUrl = recordingUrl
     
     return () => {
+      // Mark component as unmounted to prevent async state updates
+      isMountedRef.current = false
+      
       // Clean up media stream
       const stream = video?.srcObject as MediaStream | null
       stream?.getTracks().forEach((track) => track.stop())
@@ -303,6 +310,13 @@ const CameraPreview = ({ onReady, onLiveMetrics, metrics, onRecordingComplete }:
       if (mediaRecorderRef.current?.state === 'recording') {
         mediaRecorderRef.current.stop()
       }
+      
+      // Clear detector reference
+      detectorRef.current = null
+      
+      // Clear sample data to free memory
+      previousSampleRef.current = null
+      chunksRef.current = []
     }
   }, [recordingUrl])
 

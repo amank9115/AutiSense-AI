@@ -186,14 +186,14 @@ describe('RefreshTokenService', () => {
 
   describe('revokeToken', () => {
     it('should update token with revokedAt timestamp', async () => {
-      (prismaService.refreshToken.update as jest.Mock).mockResolvedValue(
+      (prismaService.refreshToken.updateMany as jest.Mock).mockResolvedValue(
         undefined,
       );
 
       await service.revokeToken('token-to-revoke');
 
-      expect(prismaService.refreshToken.update).toHaveBeenCalledWith({
-        where: { tokenHash: expect.any(String) },
+      expect(prismaService.refreshToken.updateMany).toHaveBeenCalledWith({
+        where: { tokenHash: expect.any(String), revokedAt: null },
         data: { revokedAt: expect.any(Date) },
       });
     });
@@ -262,8 +262,8 @@ describe('RefreshTokenService', () => {
 
       expect(result.token).toBeDefined();
       expect(result.userId).toBe('user-123');
-      expect(prismaService.refreshToken.update).toHaveBeenCalledWith({
-        where: { tokenHash: expect.any(String) },
+      expect(prismaService.refreshToken.updateMany).toHaveBeenCalledWith({
+        where: { tokenHash: expect.any(String), revokedAt: null },
         data: { revokedAt: expect.any(Date) },
       });
     });

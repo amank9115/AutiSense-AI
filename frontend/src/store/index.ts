@@ -8,6 +8,12 @@ export type User = {
   name: string;
   email: string;
   role: UserRole;
+  // Doctor-specific profile fields — optional; populated only for doctor accounts.
+  phone?: string;
+  specialization?: string;
+  licenseNumber?: string;
+  hospital?: string;
+  yearsExperience?: number;
 };
 
 export type MlResults = {
@@ -16,6 +22,12 @@ export type MlResults = {
   modelVersion: string;
   summary: Record<string, number>;
   recommendations: string[];
+};
+
+export type AccessibilitySettings = {
+  highContrast: boolean;
+  reducedMotion: boolean;
+  fontSize: 'normal' | 'large' | 'xlarge';
 };
 
 interface AppState {
@@ -34,6 +46,11 @@ interface AppState {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
+
+  // Accessibility state
+  accessibility: AccessibilitySettings;
+  setAccessibility: (settings: Partial<AccessibilitySettings>) => void;
+  toggleHighContrast: () => void;
 
   // Sidebar state
   sidebarCollapsed: boolean;
@@ -56,6 +73,11 @@ export const useAppStore = create<AppState>()(
       theme: 'light',
       mlResults: null,
       sidebarCollapsed: false,
+      accessibility: {
+        highContrast: false,
+        reducedMotion: false,
+        fontSize: 'normal',
+      },
 
       // Auth actions
       setAuth: (user, token) => set({ user, token, isGuest: false }),
@@ -72,6 +94,16 @@ export const useAppStore = create<AppState>()(
         set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
       setTheme: (theme) => set({ theme }),
 
+      // Accessibility actions
+      setAccessibility: (settings) =>
+        set((state) => ({
+          accessibility: { ...state.accessibility, ...settings },
+        })),
+      toggleHighContrast: () =>
+        set((state) => ({
+          accessibility: { ...state.accessibility, highContrast: !state.accessibility.highContrast },
+        })),
+
       // Sidebar actions
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
@@ -84,11 +116,9 @@ export const useAppStore = create<AppState>()(
       name: 'autisense-storage',
       partialize: (state) => ({
         user: state.user,
-        // token is intentionally excluded: access tokens must not be stored in
-        // localStorage (XSS risk). The HttpOnly refresh-token cookie is used to
-        // obtain a fresh access token on page load via /api/v1/auth/refresh.
         isGuest: state.isGuest,
         theme: state.theme,
+        accessibility: state.accessibility,
       }),
     }
   )

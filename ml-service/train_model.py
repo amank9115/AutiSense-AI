@@ -19,6 +19,8 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from datetime import datetime
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
@@ -37,15 +39,48 @@ try:
     from sklearn.pipeline import Pipeline
     from sklearn.impute import SimpleImputer
     from ucimlrepo import fetch_ucirepo
+    import mlflow
+    import mlflow.sklearn
 except ImportError as e:
     print(f"[ERROR] Missing dependency: {e}")
     print("Run: pip install -r requirements.txt")
     sys.exit(1)
 
+# ── Git hash for versioning ────────────────────────────────────────────────────
+def get_git_sha() -> str:
+    """Get current git commit short hash for model versioning."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(__file__)
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return "nogit"
+
 # ── Output path ───────────────────────────────────────────────────────────────
-MODEL_OUTPUT = os.path.join(os.path.dirname(__file__), "app", "asd_model.pkl")
-SCALER_OUTPUT = os.path.join(os.path.dirname(__file__), "app", "asd_scaler.pkl")
-METADATA_OUTPUT = os.path.join(os.path.dirname(__file__), "app", "asd_metadata.pkl")
+# Versioned model directory
+MODEL_DIR = Path(os.path.dirname(__file__)) / "app" / "models"
+MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+# Generate versioned filenames
+_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+_git_sha = get_git_sha()
+MODEL_VERSION = f"v{_timestamp}_{_git_sha}"
+
+MODEL_OUTPUT = MODEL_DIR / f"asd_model_{MODEL_VERSION}.pkl"
+LATEST_MODEL_LINK = Path(os.path.dirname(__file__)) / "app" / "asd_model.pkl"
+METADATA_OUTPUT = MODEL_DIR / f"asd_metadata_{MODEL_VERSION}.pkl"
+LATEST_METADATA_LINK = Path(os.path.dirname(__file__)) / "app" / "asd_metadata.pkl"
+
+# MLflow tracking
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", f"file://{Path(os.path.dirname(__file__)) / 'mlruns'}")
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 
 def download_dataset() -> tuple[pd.DataFrame, pd.Series]:
@@ -204,31 +239,74 @@ def train_and_evaluate(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
+    # Model hyperparameters
+    hyperparams = {
+        "n_estimators": 200,
+        "max_depth": 8,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "class_weight": "balanced",
+        "random_state": 42,
+        "n_jobs": -1,
+    }
+
     pipeline = Pipeline([
         ("imputer", SimpleImputer(strategy="mean")),
         ("scaler", StandardScaler()),
-        ("model", RandomForestClassifier(
-            n_estimators=200,
-            max_depth=8,
-            min_samples_split=4,
-            min_samples_leaf=2,
-            class_weight="balanced",  # Handles ASD/non-ASD imbalance
-            random_state=42,
-            n_jobs=-1,
-        )),
+        ("model", RandomForestClassifier(**hyperparams)),
     ])
 
     # Cross-validation (5-fold stratified)
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     cv_scores = cross_val_score(pipeline, X, y, cv=cv, scoring="roc_auc")
 
-    pipeline.fit(X_train, y_train)
+    # ── MLflow Experiment Tracking ─────────────────────────────────────────────
+    mlflow.set_experiment("asd_screening_model")
 
-    y_pred = pipeline.predict(X_test)
-    y_proba = pipeline.predict_proba(X_test)[:, 1]
+    with mlflow.start_run(run_name=f"train_{MODEL_VERSION}"):
+        # Log hyperparameters
+        mlflow.log_params(hyperparams)
+        mlflow.log_param("model_type", "RandomForestClassifier")
+        mlflow.log_param("feature_count", len(feature_names))
+        mlflow.log_param("train_samples", len(X_train))
+        mlflow.log_param("test_samples", len(X_test))
 
-    accuracy = accuracy_score(y_test, y_pred)
-    roc_auc = roc_auc_score(y_test, y_proba)
+        # Train model
+        pipeline.fit(X_train, y_train)
+
+        y_pred = pipeline.predict(X_test)
+        y_proba = pipeline.predict_proba(X_test)[:, 1]
+
+        accuracy = accuracy_score(y_test, y_pred)
+        roc_auc = roc_auc_score(y_test, y_proba)
+
+        # Log metrics
+        mlflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("roc_auc", roc_auc)
+        mlflow.log_metric("cv_auc_mean", cv_scores.mean())
+        mlflow.log_metric("cv_auc_std", cv_scores.std())
+
+        # Log model
+        mlflow.sklearn.log_model(pipeline, "model")
+
+        # Log feature importances as artifact
+        rf_model = pipeline.named_steps["model"]
+        importances = rf_model.feature_importances_
+        feature_importance_df = pd.DataFrame({
+            "feature": feature_names,
+            "importance": importances
+        }).sort_values("importance", ascending=False)
+
+        feat_path = MODEL_DIR / f"feature_importance_{MODEL_VERSION}.csv"
+        feature_importance_df.to_csv(feat_path, index=False)
+        mlflow.log_artifact(str(feat_path))
+
+        # Log training data stats
+        mlflow.log_metric("asd_positive_train", int(y_train.sum()))
+        mlflow.log_metric("asd_negative_train", int(len(y_train) - y_train.sum()))
+
+        run_id = mlflow.active_run().info.run_id
+        print(f"      [MLflow] Run ID: {run_id}")
 
     print(f"\n{'='*55}")
     print(f"  Model Performance (show this to judges!)")
@@ -241,28 +319,73 @@ def train_and_evaluate(
     print(f"{'='*55}\n")
 
     # Feature importance (top 10)
-    rf_model = pipeline.named_steps["model"]
-    importances = rf_model.feature_importances_
     top_features = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)[:10]
     print("  Top Predictive Features:")
     for fname, importance in top_features:
         bar = "=" * int(importance * 50)
         print(f"    {fname:<18} {bar} {importance:.3f}")
 
-    return pipeline, {"accuracy": accuracy, "roc_auc": roc_auc, "cv_auc_mean": float(cv_scores.mean())}
+    return pipeline, {
+        "accuracy": accuracy,
+        "roc_auc": roc_auc,
+        "cv_auc_mean": float(cv_scores.mean()),
+        "cv_auc_std": float(cv_scores.std()),
+        "model_version": MODEL_VERSION,
+        "git_sha": _git_sha,
+        "trained_at": datetime.now().isoformat(),
+        "run_id": run_id,
+    }
 
 
 def save_model(pipeline: object, metadata: dict, feature_names: list[str]) -> None:
-    """Saves the trained pipeline and metadata to disk."""
+    """Saves the trained pipeline and metadata to disk with versioning."""
     print(f"\n[4/5] Saving model artifacts...")
 
-    os.makedirs(os.path.dirname(MODEL_OUTPUT), exist_ok=True)
-
+    # Save versioned model
     joblib.dump(pipeline, MODEL_OUTPUT)
-    joblib.dump({"model_version": "manassaathi-rf-uci-asd-v1", "feature_names": feature_names, **metadata}, METADATA_OUTPUT)
+    joblib.dump({
+        "model_version": f"manassaathi-rf-uci-asd-{MODEL_VERSION}",
+        "feature_names": feature_names,
+        **metadata
+    }, METADATA_OUTPUT)
 
     print(f"      [OK] Model saved    -> {MODEL_OUTPUT}")
     print(f"      [OK] Metadata saved -> {METADATA_OUTPUT}")
+
+    # Create/update symlink to latest model (for backward compatibility)
+    # On Windows, we copy instead of symlink for reliability
+    import shutil
+    shutil.copy2(MODEL_OUTPUT, LATEST_MODEL_LINK)
+    shutil.copy2(METADATA_OUTPUT, LATEST_METADATA_LINK)
+
+    print(f"      [OK] Latest model   -> {LATEST_MODEL_LINK}")
+    print(f"      [OK] Latest metadata -> {LATEST_METADATA_LINK}")
+
+    # Save model registry entry
+    registry_path = MODEL_DIR / "registry.json"
+    registry = []
+    if registry_path.exists():
+        import json
+        with open(registry_path, "r") as f:
+            registry = json.load(f)
+
+    registry.append({
+        "version": MODEL_VERSION,
+        "path": str(MODEL_OUTPUT),
+        "metadata_path": str(METADATA_OUTPUT),
+        "created_at": metadata.get("trained_at"),
+        "accuracy": metadata.get("accuracy"),
+        "roc_auc": metadata.get("roc_auc"),
+        "run_id": metadata.get("run_id"),
+        "git_sha": _git_sha,
+        "stage": "staging"
+    })
+
+    import json
+    with open(registry_path, "w") as f:
+        json.dump(registry, f, indent=2)
+
+    print(f"      [OK] Registry updated -> {registry_path}")
 
 
 def main() -> None:
@@ -277,8 +400,13 @@ def main() -> None:
     save_model(pipeline, metadata, feature_names)
 
     print("\n[5/5] DONE! [OK]")
-    print("      Model is ready. Now start the ML service:")
+    print(f"      Model version: {MODEL_VERSION}")
+    print(f"      MLflow run ID: {metadata.get('run_id', 'N/A')}")
+    print(f"      MLflow tracking: {MLFLOW_TRACKING_URI}")
+    print("\n      Model is ready. Now start the ML service:")
     print("      uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload")
+    print("\n      View experiments:")
+    print("      mlflow ui --backend-store-uri file://./mlruns")
     print("=" * 60)
 
 

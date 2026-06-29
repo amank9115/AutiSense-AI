@@ -4,11 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
+import Image from "next/image";
 import {
   useFadeInOnScroll,
   useStaggerChildren,
   useSpotlight,
-  useCountUp,
 } from "@/hooks/useGsap";
 
 const ServicesPage = () => {
@@ -82,10 +82,13 @@ const ServicesPage = () => {
                 </Link>
               </div>
               <div className="w-full md:w-1/2 aspect-square rounded-lg overflow-hidden">
-                <img
+                <Image
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuArelEYUXUTAmi9C60GxgPh2jEgLRHK1JamPEJ8H1quceOopigHw5lqZUgoq4ZOO40oltuP2VOhn-BxKXIjREd8P1N6pQdc4qcqzRVrP8l6e9fJeUwKlUt8TdJekGJ7WuvU7upheH98pTFqMlkIUoPLo7VbwFlqIJxcCdGiu3uJaiKgbwNTR-w5P4Ln3ULioq07bro_P3ogjWwwsSRNrGxut7A6p2ldWTDAqH23l5P1zvzlCRrQN-Yo3dy-RDcGPvF7E2RgoMYwAwU"
                   alt="Clinical Assessments"
+                  width={600}
+                  height={600}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
             </div>
@@ -119,10 +122,13 @@ const ServicesPage = () => {
               className="spotlight-card md:col-span-5 bg-surface-container-high rounded-xl p-8 md:p-10 hover:shadow-xl transition-shadow duration-500"
             >
               <div className="aspect-video w-full rounded-lg overflow-hidden mb-6 relative z-10">
-                <img
+                <Image
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0UPgMr4Ur-sHJfMybhQEYjmur58-Wi4ixXqFcGr96w6YkyHc4RxFct2O3Rc-TFbAXYYOi813zwG7eX5F-cmngtjWSKAFMoxxOnuOCWnffEiqmvb-BrUfyr0uPndlTvJu6OrXh95jjspLR69eyXQbX6MMgkemMI2bRjlIptaKq9fPqSuHc0ILABQR23-_lrs8jXVnrGfolPtBIVRbFVGDhMed-EsdWKo-pNh7uCMCEOe39qcr2t1t3bo5AHf4h1NVnVwT7g1GXVwk"
                   alt="Art Therapy Workshops"
+                  width={800}
+                  height={450}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
               <h2 className="font-headline text-2xl font-bold text-tertiary mb-3 relative z-10">Art Therapy Workshops</h2>

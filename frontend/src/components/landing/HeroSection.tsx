@@ -2,11 +2,10 @@
 
 import React, { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, PlayCircle, Sparkles } from "lucide-react";
+import { ArrowRight, PlayCircle } from "lucide-react";
 import { gsap, EASE, DURATION } from "@/lib/gsap";
 import MeshGradientBg from "./MeshGradientBg";
 import DashboardMockup from "./DashboardMockup";
-import FloatingCards from "./FloatingCards";
 
 /**
  * Hero section — dark, mesh-backed, with the dashboard mockup centered.
@@ -45,13 +44,11 @@ export default function HeroSection() {
         defaults: { ease: EASE.reveal, duration: DURATION.reveal },
       });
       tl.from("[data-hero='mesh']", { opacity: 0, scale: 1.08, duration: 1.6 })
-        .from("[data-hero='label']", { y: 16, opacity: 0, duration: 0.7 }, "-=1.0")
-        .from("[data-hero='heading']", { y: 32, opacity: 0, duration: 1.0 }, "-=0.6")
+        .from("[data-hero='heading']", { y: 32, opacity: 0, duration: 1.0 }, "-=0.9")
         .from("[data-hero='sub']", { y: 24, opacity: 0, duration: 0.8 }, "-=0.6")
         .from("[data-hero='cta'] > *", { y: 18, opacity: 0, stagger: 0.08, duration: 0.7 }, "-=0.5")
         .from("[data-hero='proof'] > *", { y: 14, opacity: 0, stagger: 0.06, duration: 0.6 }, "-=0.4")
-        .from("[data-hero='mock']", { y: 60, opacity: 0, scale: 0.96, rotateX: 6, transformOrigin: "center bottom", duration: 1.1 }, "-=0.5")
-        .from("[data-hero^='float-']", { y: 30, opacity: 0, stagger: 0.1, duration: 0.7 }, "-=0.3");
+        .from("[data-hero='mock']", { y: 60, opacity: 0, scale: 0.96, rotateX: 6, transformOrigin: "center bottom", duration: 1.1 }, "-=0.5");
     }, rootRef);
 
     return () => ctx.revert();
@@ -61,7 +58,6 @@ export default function HeroSection() {
   React.useEffect(() => {
     const cleanup = runTimeline();
     return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -76,30 +72,12 @@ export default function HeroSection() {
         <MeshGradientBg intensity={1} />
         {/* Mouse-tracking glow overlay */}
         <div className="absolute inset-0 mouse-glow-dark" />
-        {/* scan-grid */}
-        <div className="absolute inset-0 scan-grid scan-grid-mask opacity-30" />
      </div>
 
       {/* Top vignette to lift text contrast */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/40 to-transparent" />
 
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        {/* Eyebrow */}
-        <div
-          data-hero="label"
-          className="mx-auto flex w-fit items-center gap-2 rounded-full glass-dark px-3 py-1.5 text-xs font-semibold text-ink-200 shadow-dark-card"
-        >
-          <span className="grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-400">
-            <Sparkles className="h-3 w-3 text-white" />
-        </span>
-          <span>
-            Introducing <span className="font-bold text-white">AutiSense&nbsp;AI</span> v2
-        </span>
-          <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-violet-500/20 px-2 py-0.5 text-[10px] font-bold text-violet-200">
-            New
-        </span>
-      </div>
-
         {/* Headline */}
         <h1
           data-hero="heading"
@@ -125,18 +103,18 @@ export default function HeroSection() {
           data-hero="cta"
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
         >
-          <Link href="/begin-the-journey" className="group">
-            <button className="btn-glow inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-headline font-bold text-[15px] focus-aurora">
+          <div className="flex">
+            <Link href="/begin-the-journey" className="btn-glow inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-headline font-bold text-[15px] focus-aurora group">
               Start free screening
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
-        </Link>
-          <Link href="/assessment">
-            <button className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-md px-6 py-3.5 font-headline font-semibold text-[14.5px] text-ink-100 hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300">
+            </Link>
+          </div>
+          <div className="flex">
+            <Link href="/screening" className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-md px-6 py-3.5 font-headline font-semibold text-[14.5px] text-ink-100 hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300">
               <PlayCircle className="h-4 w-4 text-violet-300" />
               Watch 90-sec demo
-          </button>
-        </Link>
+            </Link>
+          </div>
       </div>
 
         {/* Trust row */}
@@ -166,6 +144,35 @@ export default function HeroSection() {
         </div>
       </div>
 
+        {/* Partner strip — merged from TrustedByStrip */}
+        <div
+          data-hero="proof"
+          className="mt-6 flex flex-col items-center gap-3"
+        >
+          <p className="text-[10px] uppercase tracking-[0.22em] text-ink-400 font-semibold">
+            Backed by leading clinical institutions
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-2">
+            {[
+              { name: "Mayo Clinic", accent: "from-violet-500 to-fuchsia-500", glyph: "MC" },
+              { name: "Stanford Pediatrics", accent: "from-sky-500 to-cyan-500", glyph: "SP" },
+              { name: "AIIMS Delhi", accent: "from-emerald-500 to-teal-500", glyph: "AI" },
+              { name: "Boston Children's", accent: "from-amber-500 to-orange-500", glyph: "BC" },
+              { name: "King's College", accent: "from-pink-500 to-rose-500", glyph: "KC" },
+            ].map((p) => (
+              <div
+                key={p.name}
+                className="flex items-center gap-2 rounded-full glass-dark px-3 py-1.5 text-[11px] font-semibold text-ink-200"
+              >
+                <span className={`grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br ${p.accent} text-white text-[9px] font-bold`}>
+                  {p.glyph}
+                </span>
+                {p.name}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Dashboard mockup + floating cards */}
         <div
           data-hero="mock"
@@ -188,8 +195,7 @@ export default function HeroSection() {
             <DashboardMockup />
         </div>
 
-          {/* Floating cards orbiting mockup */}
-          <FloatingCards triggerRef={rootRef} />
+
 
           {/* Soft floor shadow */}
           <div

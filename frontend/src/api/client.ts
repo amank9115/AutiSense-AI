@@ -54,7 +54,7 @@ export const fetchJson = async <T>(path: string, init?: RequestInit, isRetry = f
             }
           }
         }
-      } catch (err) {
+      } catch (_err) {
         // Refresh failed, fall through to logout
       }
 
@@ -82,7 +82,7 @@ export const fetchJson = async <T>(path: string, init?: RequestInit, isRetry = f
       try {
         const text = await response.text();
         if (text) message = `Error ${response.status}: ${text.slice(0, 100)}`;
-      } catch (e) {
+      } catch (_e) {
         // give up
       }
     }

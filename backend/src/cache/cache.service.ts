@@ -29,21 +29,24 @@ export class CacheService implements OnModuleDestroy {
       ...(tls
         ? {
             tls: {
-              // Disable certificate verification for development
               rejectUnauthorized: false,
             },
           }
         : {}),
       retryStrategy: (times) => {
         if (times > 3) {
-          this.logger.error('Redis connection failed after 3 retries');
+          this.logger.error('Redis connection failed after 3 retries, running without cache');
           return null; // Stop retrying
         }
         return Math.min(times * 200, 2000);
       },
       lazyConnect: true,
       enableReadyCheck: true,
-      maxRetriesPerRequest: 3,
+      // null disables the per-request retry limit so errors surface through
+      // the normal try/catch path rather than as unhandled socket events
+      maxRetriesPerRequest: null,
+      // Fail commands immediately when not connected instead of queuing them
+      enableOfflineQueue: false,
     });
 
     this.client.on('connect', () => {

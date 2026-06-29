@@ -11,10 +11,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { AuditService } from '../audit/audit.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/roles.guard';
 import { Role } from '@prisma/client';
-import { NotFoundException, ValidationException } from '../common/exceptions';
+import {
+  NotFoundException,
+  ValidationException,
+  ForbiddenException,
+} from '../common/exceptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -26,7 +31,10 @@ interface RequestWithUser extends Request {
 
 @Controller('api/v1/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
+  ) {}
 
   /**
    * Get current user's profile
@@ -98,10 +106,10 @@ export class UsersController {
   }
 
   /**
-   * Get user by ID (admin only)
+   * Get user by ID (super admin only)
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.doctor)
+  @Roles(Role.super_admin)
   @Get(':userId')
   async getUserById(@Param('userId') userId: string) {
     const user = await this.usersService.findById(userId);
@@ -114,10 +122,10 @@ export class UsersController {
   }
 
   /**
-   * List all users with pagination (admin only)
+   * List all users with pagination (super admin only)
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.doctor)
+  @Roles(Role.super_admin)
   @Get()
   async listUsers(
     @Query('page') page?: string,
@@ -139,17 +147,46 @@ export class UsersController {
   }
 
   /**
-   * Update user role (admin only)
+   * Update user role (super admin only)
+   *
+   * Hardened after security audit (finding C1): the previous `@Roles(Role.doctor)`
+   * gate let any doctor promote any account — including their own — to
+   * super_admin. Now restricted to super_admin, self-changes are blocked, and
+   * every role change is written to the audit log.
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.doctor)
+  @Roles(Role.super_admin)
   @Put(':userId/role')
   async updateUserRole(
+    @Request() req: RequestWithUser,
     @Param('userId') userId: string,
     @Body() body: UpdateRoleDto,
   ) {
+    const actorId = req.user.sub;
+
+    // Prevent a super admin from changing their own role (e.g. self-demotion
+    // that could orphan the last admin, or accidental privilege loss).
+    if (userId === actorId) {
+      throw new ForbiddenException('You cannot change your own role');
+    }
+
+    const target = await this.usersService.findById(userId);
+    if (!target) {
+      throw new NotFoundException('User not found');
+    }
+
+    const previousRole = target.role;
     const updatedUser = await this.usersService.update(userId, {
       role: body.role,
+    });
+
+    await this.auditService.log({
+      actorId,
+      actorType: 'user',
+      action: 'user.role.updated',
+      resourceType: 'user',
+      resourceId: userId,
+      changes: { from: previousRole, to: body.role },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

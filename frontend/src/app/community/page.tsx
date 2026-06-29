@@ -1,14 +1,8 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
-import {
-  useFadeInOnScroll,
-  useStaggerChildren,
-  useSpotlight,
-} from "@/hooks/useGsap";
 
 const CommunityPage = () => {
   const router = useRouter();
@@ -134,10 +128,13 @@ const CommunityPage = () => {
                 className="bg-surface-container-lowest rounded-lg overflow-hidden group"
               >
                 <div className="h-48 overflow-hidden">
-                  <img
+                  <Image
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpceMteWGv9hwmoheAbY2m3k4nVR5QPc5t83HCZ1-pAUu0cJZ-wQfNv1IATNjhnBBuDXmAuNKCO6ibMk9zQ9nxxqy5xnLuKHtfdN-YBsmz3uOyAxHDamglEKURtxtAaLQBLVDJEhgAHdGZmjnUgDFwEDXSTgIIOeYtM-y8p-dv0TagL4OHM522RqJF46rywg38TQliIODKR3vQgi9Ci_uC1AlkNsKa0H0bGtPvdQvlmCuZ9GG-IZB4uriYO4qAAkJkHtsJynAtXII"
                     alt="Dr. Elena Brooks"
+                    width={400}
+                    height={192}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
                 <div className="p-6">
@@ -156,10 +153,13 @@ const CommunityPage = () => {
                 className="bg-surface-container-lowest rounded-lg overflow-hidden group"
               >
                 <div className="h-48 overflow-hidden">
-                  <img
+                  <Image
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfHU6SyHDy2etNeZEzPUzn9m00jkevvj9azsMBfXin3BCdIbsYa8Y7ZpAaXXRiociGMTBl_35a8d0OrwAzoEqFgAsdSCCluIWb25VyfOfnpQ-JcwInmvTJYV8Y1QomlPvolOQ3vEyq-zD0rGbMcBW_z6e6AL_S3KddVzgbLzmBm-47-Z_fBQxvCI4Nrf2CVFwi1rfQAbRylQ78zAVawGlo9-QqA81IWH_Q7jopj4LuoRoh5yHOwPCR3KVgQ4jUTsfBfho6ghFnVrA"
                     alt="Marcus Sterling"
+                    width={400}
+                    height={192}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
                 <div className="p-6">
@@ -178,10 +178,13 @@ const CommunityPage = () => {
                 className="bg-surface-container-lowest rounded-lg overflow-hidden group"
               >
                 <div className="h-48 overflow-hidden">
-                  <img
+                  <Image
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrMj-XhaCODpPzaGRHpyoy2FmHl4S9rDpsdZMg3paCND4dr3RCLEo4ds1Z1M_l5-1mrnOtW704_BP8ddXAOVDWcmkPM_KLL5zdPp11_ACCMJb9-l1eHJWJ-nGhQS_-jO1hZaC7tcseQHTsYot9WhB4kzJtDeJZaXqiFXVhaVCzUOMJY1Q2NEPbS96IsYzArslgA7PO-8TXFfm2Q-HDHsM9nNlKR5nuT6NApO-8Cx8f18sk92TBYF1GXJhKZgII6S5yyQMEJF5MwDQ"
                     alt="Amina Lowery"
+                    width={400}
+                    height={192}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
                 <div className="p-6">

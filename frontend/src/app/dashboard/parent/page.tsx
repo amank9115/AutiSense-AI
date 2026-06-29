@@ -7,42 +7,27 @@ import { Button } from "@/components/ui/StitchUI";
 import { DashboardStatsSkeleton, ParentDashboardSkeleton } from "@/components/ui/SkeletonLoader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { fetchJson } from "@/api/client";
-import { useProtectedData } from "@/hooks/useProtectedData";
+import { useProtectedQuery } from "@/hooks/useProtectedQuery";
 import type { DashboardStats } from "@/lib/analytics";
 
 const MilestoneCard = ({
-  title, progress, color, icon,
+  title, color, icon, hasData,
 }: {
-  title: string; progress: string; color: string; icon: string;
+  title: string; color: string; icon: string; hasData: boolean;
 }) => (
-  <div
-    className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/10 hover:shadow-md transition-all duration-300"
-    style={{ boxShadow: "var(--shadow-card)" }}
-  >
+  <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/10 hover:shadow-md transition-all duration-300 shadow-card">
     <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mb-4`}>
       <span className="material-symbols-outlined text-2xl">{icon}</span>
     </div>
     <h4 className="font-headline font-bold text-base text-on-surface mb-3">{title}</h4>
-    <div className="space-y-2">
-      <div className="flex justify-between text-xs font-medium text-on-surface-muted">
-        <span>Progress</span>
-        <span className="font-bold text-on-surface">{progress}</span>
-      </div>
-      <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${
-            color.includes("primary")
-              ? "bg-primary"
-              : color.includes("secondary")
-              ? "bg-secondary"
-              : color.includes("tertiary")
-              ? "bg-tertiary"
-              : "bg-on-surface-muted"
-          }`}
-          style={{ width: progress }}
-        />
-      </div>
-    </div>
+    {hasData ? (
+      <p className="text-xs text-on-surface-muted italic">
+        Detailed scores available in{" "}
+        <span className="text-primary font-semibold">History</span>.
+      </p>
+    ) : (
+      <p className="text-xs text-on-surface-muted italic">Complete a screening to track progress.</p>
+    )}
   </div>
 );
 
@@ -88,8 +73,9 @@ const ResourceCard = ({ title, category, icon }: { title: string; category: stri
 export default function ParentDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const { data: stats, loading } = useProtectedData<DashboardStats>(() =>
-    fetchJson<DashboardStats>("/api/v1/screening/statistics"),
+  const { data: stats, loading } = useProtectedQuery<DashboardStats>(
+    ["screening", "statistics"],
+    () => fetchJson<DashboardStats>("/api/v1/screening/statistics"),
   );
 
   const getGreeting = () => {
@@ -110,8 +96,7 @@ export default function ParentDashboard() {
         <ParentDashboardSkeleton />
       ) : (
         <section
-          className="bg-surface-container-low rounded-3xl p-8 lg:p-12 relative overflow-hidden border border-outline-variant/10"
-          style={{ boxShadow: "var(--shadow-card)" }}
+          className="bg-surface-container-low rounded-3xl p-8 lg:p-12 relative overflow-hidden border border-outline-variant/10 shadow-card"
         >
           <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div className="space-y-4 max-w-xl">
@@ -204,25 +189,24 @@ export default function ParentDashboard() {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MilestoneCard title="Communication" progress="68%" color="bg-primary-container text-on-primary-container"    icon="record_voice_over" />
-          <MilestoneCard title="Sensory Focus" progress="84%" color="bg-secondary-container text-on-secondary-container" icon="visibility" />
-          <MilestoneCard title="Social Play"   progress="42%" color="bg-tertiary-container text-on-tertiary-container"   icon="diversity_2" />
-          <MilestoneCard title="Motor Skills"  progress="91%" color="bg-surface-container-highest text-on-surface"       icon="directions_run" />
+          <MilestoneCard title="Communication" color="bg-primary-container text-on-primary-container"    icon="record_voice_over" hasData={!!stats && (stats.completedSessions ?? 0) > 0} />
+          <MilestoneCard title="Sensory Focus" color="bg-secondary-container text-on-secondary-container" icon="visibility"       hasData={!!stats && (stats.completedSessions ?? 0) > 0} />
+          <MilestoneCard title="Social Play"   color="bg-tertiary-container text-on-tertiary-container"   icon="diversity_2"      hasData={!!stats && (stats.completedSessions ?? 0) > 0} />
+          <MilestoneCard title="Motor Skills"  color="bg-surface-container-highest text-on-surface"       icon="directions_run"   hasData={!!stats && (stats.completedSessions ?? 0) > 0} />
         </div>
       </section>
 
       {/* Appointment CTA — conditional */}
       {stats && stats.completedSessions > 0 && (
         <section
-          className="bg-secondary text-on-secondary rounded-3xl p-8 lg:p-12 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden"
-          style={{ boxShadow: "var(--shadow-card-raised)" }}
+          className="bg-secondary text-on-secondary rounded-3xl p-8 lg:p-12 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-card-raised"
         >
           <div className="relative z-10 space-y-3 max-w-md">
             <h3 className="font-headline font-bold text-2xl lg:text-3xl tracking-tight">
-              Your next visit is scheduled.
+              Ready for your next consultation?
             </h3>
             <p className="text-on-secondary/80 text-sm">
-              Thursday at 10:30 AM with Dr. Julianne Smith. Would you like to pre-fill the intake form?
+              You have completed screening sessions. Book a follow-up with a specialist to discuss the results.
             </p>
           </div>
           <div className="relative z-10 flex gap-3">
@@ -231,13 +215,13 @@ export default function ParentDashboard() {
               onClick={() => router.push("/dashboard/parent/appointments")}
               className="bg-white text-secondary hover:bg-surface-bright px-8 py-3 rounded-2xl font-bold uppercase tracking-widest shadow-md transition-all text-sm"
             >
-              Start Form
+              View Appointments
             </Button>
             <button
-              onClick={() => router.push("/dashboard/parent/appointments")}
+              onClick={() => router.push("/professionals")}
               className="bg-secondary-dim text-white border border-white/20 px-6 py-3 rounded-2xl font-bold uppercase tracking-widest hover:bg-black/10 transition-all text-sm cursor-pointer"
             >
-              Reschedule
+              Find Specialist
             </button>
           </div>
           <div className="absolute -top-8 -left-8 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AiService } from './ai.service';
+import { AiService, CHAT_MODEL } from './ai.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { DocumentProcessor } from './document.processor';
 
@@ -21,6 +21,10 @@ describe('AiService', () => {
         {
           provide: DocumentProcessor,
           useValue: { processDocument: jest.fn() },
+        },
+        {
+          provide: CHAT_MODEL,
+          useValue: {}, // Mock chat model
         },
       ],
     }).compile();

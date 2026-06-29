@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import { Button, Card, Input } from "@/components/ui/StitchUI";
 import { authApi } from "@/services/authApi";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function ResetPasswordPage() {
@@ -17,7 +17,6 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
     const queryToken = searchParams?.get("token");

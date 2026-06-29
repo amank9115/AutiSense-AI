@@ -37,8 +37,8 @@ export function filterPatients(
 
   return patients.filter((patient) => {
     const latestSession = patient.screeningSessions?.[0];
-    const riskLevel = latestSession?.results?.riskLevel || "Low";
-    const status = latestSession?.status || "Reviewed";
+    const riskLevel = latestSession?.results?.riskLevel || "none";
+    const status = latestSession?.status || "none";
 
     const matchesSearch =
       patient.name.toLowerCase().includes(term) ||

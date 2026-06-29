@@ -23,10 +23,7 @@ export function StatCard({
 }: StatCardProps) {
   if (variant === "compact") {
     return (
-      <div
-        className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4"
-        style={{ boxShadow: "var(--shadow-card)" }}
-      >
+      <div className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-card">
         <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${iconColor} flex items-center justify-center shrink-0`}>
           <span className="material-symbols-outlined text-lg sm:text-xl">{icon}</span>
         </div>
@@ -44,10 +41,7 @@ export function StatCard({
   }
 
   return (
-    <div
-      className="bg-surface-container-lowest rounded-2xl p-6 relative overflow-hidden group hover:bg-surface-container-low transition-colors duration-300"
-      style={{ boxShadow: "var(--shadow-card)" }}
-    >
+    <div className="bg-surface-container-lowest rounded-2xl p-6 relative overflow-hidden group hover:bg-surface-container-low transition-colors duration-300 shadow-card">
       <div className={`w-12 h-12 rounded-2xl ${iconColor} flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
         <span className="material-symbols-outlined text-2xl">{icon}</span>
       </div>

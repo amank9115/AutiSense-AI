@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Webcam from "react-webcam";
 import { fetchJson } from "@/api/client";
 import { screeningApi } from "@/services/api/screeningApi";
+import { logger } from "@/lib/logger";
 
 const MODULES = [
   { id: "calibration", title: "Calibration", duration: 5, icon: "center_focus_strong", parentHint: "Ensure your child is facing the camera clearly.", childPrompt: "Look at the camera!" },
@@ -27,42 +28,75 @@ export default function ScreeningPage() {
       router.push("/dashboard/parent/children");
     }
   }, [childId, router]);
-  const token = useAppStore((state) => state.token);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(-1); // -1 = setup
   const [timeLeft, setTimeLeft] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<string | null>(null);
+  // null = no failure; "insufficient" = too few frames captured (must redo capture);
+  // "analysis" = capture succeeded but the ML/network call failed (can retry analysis).
+  const [failure, setFailure] = useState<null | "insufficient" | "analysis">(null);
   const webcamRef = useRef<Webcam>(null);
   const capturedFramesRef = useRef<Array<{ eyeContact: number; attentionSpan: number; emotionSignals: number; gestureAnalysis: number; confidence: number; imageBase64?: string }>>([]);
   const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const previousFrameSampleRef = useRef<number[] | null>(null);
   const [frameCount, setFrameCount] = useState(0);
 
-  // Capture real video frames as base64 JPEGs for server-side MediaPipe analysis
+  // Capture real video frames as base64 JPEGs and compute client-side behavioral metrics.
+  // Metrics are in 0–1 scale to match FrameDto validation; the backend scales to 0–100
+  // before forwarding to the Python ML service.
   const captureFrame = useCallback(() => {
     const video = webcamRef.current?.video;
     if (!video || !(video instanceof HTMLVideoElement) || !video.videoWidth) return;
 
     const canvas = document.createElement("canvas");
-    // Resize to 320×240 to keep base64 payload manageable (~30-50KB per frame)
     canvas.width = 320;
     canvas.height = 240;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, 320, 240);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+    const imageBase64 = canvas.toDataURL("image/jpeg", 0.7);
 
-    // Strip the "data:image/jpeg;base64," prefix — the ML service expects raw base64 or handles both
-    const imageBase64 = dataUrl;
+    // Pixel-level analysis: brightness + inter-frame motion (mirrors CameraPreview logic)
+    const frameData = ctx.getImageData(0, 0, 320, 240);
+    const pixels = frameData.data;
+    const sampleStep = 32;
+    const sample: number[] = [];
+    let lumTotal = 0;
+    for (let i = 0; i < pixels.length; i += sampleStep) {
+      const lum = pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114;
+      lumTotal += lum;
+      sample.push(lum);
+    }
+    const brightness = sample.length > 0 ? lumTotal / sample.length : 0;
+
+    let motion = 0;
+    const prev = previousFrameSampleRef.current;
+    if (prev && prev.length === sample.length) {
+      let diff = 0;
+      for (let i = 0; i < sample.length; i++) diff += Math.abs(sample[i] - prev[i]);
+      motion = (diff / sample.length / 255) * 100;
+    }
+    previousFrameSampleRef.current = sample;
+
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+    const stability = clamp01((100 - motion * 2) / 100);
+    const focus     = clamp01((80 - Math.abs(brightness - 60) * 0.5) / 100);
+
+    const eyeContact      = clamp01(stability * 0.7 + focus * 0.3);
+    const attentionSpan   = clamp01(eyeContact * 0.7 + (1 - motion / 100) * 0.3);
+    const emotionSignals  = clamp01(0.5 + stability * 0.4 - Math.abs(motion - 15) * 0.008);
+    const gestureAnalysis = clamp01(0.3 + motion * 0.012);
+    const confidence      = clamp01(0.4 + stability * 0.3);
 
     capturedFramesRef.current.push({
-      eyeContact: 0,
-      attentionSpan: 0,
-      emotionSignals: 0,
-      gestureAnalysis: 0,
-      confidence: 0,
+      eyeContact,
+      attentionSpan,
+      emotionSignals,
+      gestureAnalysis,
+      confidence,
       imageBase64,
     });
     setFrameCount((c) => c + 1);
@@ -84,6 +118,100 @@ export default function ScreeningPage() {
       .catch(() => setHasPermission(false));
   }, []);
 
+  const startScreening = () => {
+    setCurrentModuleIndex(0);
+    setTimeLeft(MODULES[0].duration);
+  };
+
+  // Submit captured frames to the backend ML pipeline. On failure we surface an
+  // honest error + retry — we never fabricate or persist a synthetic risk score.
+  const runAnalysis = useCallback(async () => {
+    setIsProcessing(true);
+    setProcessingError(null);
+    setFailure(null);
+
+    const frames = capturedFramesRef.current;
+
+    if (!(frames.length >= 3 && childId)) {
+      // Too little usable data was captured — the screening must be redone.
+      setFailure("insufficient");
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      // 1. Create session in backend
+      const session = await screeningApi.createSession(childId, {
+        moduleCount: MODULES.length,
+        frameCount: frames.length,
+        source: "web-camera",
+      });
+
+      // 2. Call ML service for analysis
+      const mlResult = await fetchJson<{ riskScore?: number; riskLabel?: string; modelVersion?: string; featureAverages?: { eye_contact?: number; attention_span?: number; emotion_signals?: number }; recommendations?: string[] }>("/ml/camera-screening", {
+        method: "POST",
+        body: JSON.stringify({ frames }),
+      });
+
+      // Map snake_case feature_averages → CamelCase summary for results page
+      const fa = mlResult.featureAverages || {};
+      const results: MlResults = {
+        riskScore: mlResult.riskScore ?? 0,
+        riskLabel: mlResult.riskLabel ?? "low",
+        modelVersion: mlResult.modelVersion ?? "heuristic-v1",
+        summary: {
+          EyeContact: fa.eye_contact ?? 0,
+          JointAttention: fa.attention_span ?? 0,
+          FacialExpression: fa.emotion_signals ?? 0,
+        },
+        recommendations: mlResult.recommendations ?? [],
+      };
+
+      // 3. Persist results to backend session
+      try {
+        await screeningApi.saveResults(session.id, {
+          riskScore: results.riskScore,
+          riskLevel: results.riskLabel.toUpperCase(),
+          confidence: 0.9,
+          behaviors: results.summary as Record<string, unknown>,
+          recommendations: results.recommendations,
+        });
+      } catch (e) {
+        logger.error("ScreeningPage", "Failed to save screening results", e);
+      }
+
+      setMlResults(results);
+      setIsProcessing(false);
+      setTimeout(() => router.push(`/results?sessionId=${session.id}`), 1500);
+    } catch (err) {
+      // Network/ML failure: keep the captured frames so the parent can retry
+      // without redoing the whole screening. No fabricated results.
+      logger.error("ScreeningPage", "Camera screening analysis failed", err);
+      setProcessingError(err instanceof Error ? err.message : "We couldn't reach the analysis service.");
+      setFailure("analysis");
+      setIsProcessing(false);
+    }
+  }, [childId, setMlResults, router]);
+
+  const finishScreening = useCallback(() => {
+    setIsCompleted(true);
+    if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+    runAnalysis();
+  }, [runAnalysis]);
+
+  // Restart the whole screening from setup (used when too few frames were captured).
+  const restartScreening = useCallback(() => {
+    capturedFramesRef.current = [];
+    previousFrameSampleRef.current = null;
+    setFrameCount(0);
+    setProcessingError(null);
+    setFailure(null);
+    setIsCompleted(false);
+    setCurrentModuleIndex(-1);
+    setTimeLeft(0);
+  }, []);
+
+  // Timer useEffect - must be after finishScreening declaration
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (currentModuleIndex >= 0 && currentModuleIndex < MODULES.length && !isCompleted) {
@@ -99,93 +227,7 @@ export default function ScreeningPage() {
       }
     }
     return () => clearTimeout(timer);
-  }, [currentModuleIndex, timeLeft, isCompleted]);
-
-  const startScreening = () => {
-    setCurrentModuleIndex(0);
-    setTimeLeft(MODULES[0].duration);
-  };
-
-  const finishScreening = async () => {
-    setIsCompleted(true);
-    setIsProcessing(true);
-    setProcessingError(null);
-
-    const frames = capturedFramesRef.current;
-    if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
-
-    try {
-      if (frames.length >= 3 && childId) {
-        // 1. Create session in backend
-        const session = await screeningApi.createSession(childId, {
-          moduleCount: MODULES.length,
-          frameCount: frames.length,
-          source: "web-camera"
-        });
-
-        // 2. Call ML service for analysis
-        const mlResult = await fetchJson<{ riskScore?: number; riskLabel?: string; modelVersion?: string; featureAverages?: { eye_contact?: number; attention_span?: number; emotion_signals?: number }; recommendations?: string[] }>("/ml/camera-screening", {
-          method: "POST",
-          body: JSON.stringify({ frames }),
-        });
-
-        // Map snake_case feature_averages → CamelCase summary for results page
-        const fa = mlResult.featureAverages || {};
-        const results: MlResults = {
-          riskScore: mlResult.riskScore ?? 0,
-          riskLabel: mlResult.riskLabel ?? "low",
-          modelVersion: mlResult.modelVersion ?? "heuristic-v1",
-          summary: {
-            EyeContact: fa.eye_contact ?? 0,
-            JointAttention: fa.attention_span ?? 0,
-            FacialExpression: fa.emotion_signals ?? 0,
-          },
-          recommendations: mlResult.recommendations ?? [],
-        };
-
-        // 3. Persist results to backend session
-        try {
-          await screeningApi.saveResults(session.id, {
-            riskScore: results.riskScore,
-            riskLevel: results.riskLabel.toUpperCase(),
-            confidence: 0.9,
-            behaviors: results.summary as Record<string, unknown>,
-            recommendations: results.recommendations,
-          });
-        } catch (e) {
-          console.error("Failed to save screening results", e);
-        }
-
-        setMlResults(results);
-        setTimeout(() => router.push(`/results?sessionId=${session.id}`), 1500);
-      } else {
-        // Not enough frames, use fallback
-        const fallbackResults: MlResults = {
-          riskScore: 0,
-          riskLabel: "insufficient_data",
-          modelVersion: "fallback",
-          summary: {},
-          recommendations: ["Not enough data was captured. Please try again."],
-        };
-        setMlResults(fallbackResults);
-        setTimeout(() => router.push("/results"), 1500);
-      }
-    } catch (err) {
-      setProcessingError(err instanceof Error ? err.message : "Analysis failed.");
-      // Still navigate to results with mock data
-      const mockResults: MlResults = {
-        riskScore: 0.15,
-        riskLabel: "Low Probability",
-        modelVersion: "2.1.0",
-        summary: { EyeContact: 85, JointAttention: 78, FacialExpression: 92 },
-        recommendations: ["Continue typical development monitoring."],
-      };
-      setMlResults(mockResults);
-      setTimeout(() => router.push("/results"), 1500);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  }, [currentModuleIndex, timeLeft, isCompleted, finishScreening]);
 
   if (hasPermission === false) {
     return (
@@ -428,10 +470,16 @@ export default function ScreeningPage() {
                 ))}
               </div>
 
-              <div className="bg-white rounded-3xl p-10 text-center shadow-2xl max-w-md border border-outline-variant/20 relative animate-session-pop">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/30">
+              <div className="bg-white rounded-3xl p-10 text-center shadow-2xl max-w-md border border-outline-variant/20 relative animate-session-pop" role={failure ? "alert" : undefined}>
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg ${
+                  failure ? "bg-error/10 shadow-error/10" : "bg-gradient-to-br from-primary to-secondary shadow-primary/30"
+                }`}>
                    {isProcessing ? (
                      <span className="material-symbols-outlined text-4xl text-white animate-spin">autorenew</span>
+                   ) : failure ? (
+                     <span className="material-symbols-outlined text-5xl text-error" style={{ fontVariationSettings: "'FILL' 1" }}>
+                       {failure === "insufficient" ? "videocam_off" : "cloud_off"}
+                     </span>
                    ) : (
                      <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                        <path className="animate-check-draw" strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -439,19 +487,56 @@ export default function ScreeningPage() {
                    )}
                 </div>
                 <h2 className="text-3xl font-headline font-extrabold mb-3">
-                  {isProcessing ? "Analyzing..." : "Session Complete"}
+                  {isProcessing
+                    ? "Analyzing..."
+                    : failure === "insufficient"
+                    ? "We Need a Bit More"
+                    : failure === "analysis"
+                    ? "Analysis Couldn't Complete"
+                    : "Session Complete"}
                 </h2>
                 <p className="text-on-surface-variant mb-6">
                   {isProcessing
                     ? "Processing behavioral patterns..."
-                    : processingError
-                    ? "Analysis encountered an issue, but you can still view preliminary results."
+                    : failure === "insufficient"
+                    ? "We couldn't capture enough clear footage to analyze. Find a well-lit, quiet spot and run the short screening again."
+                    : failure === "analysis"
+                    ? "Your recording is safe — we just couldn't reach the analysis service. Please check your connection and try again."
                     : "Great job! Our AI has finished analyzing the behavioral patterns."}
                 </p>
-                {processingError && (
-                  <p className="text-error text-sm mb-4">{processingError}</p>
+                {failure === "analysis" && processingError && (
+                  <p className="text-error text-xs mb-6 font-mono break-words">{processingError}</p>
                 )}
-                {!isProcessing && (
+
+                {failure === "analysis" && (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={runAnalysis}
+                      className="bg-primary text-on-primary px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-primary-dim active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-lg">refresh</span>
+                      Retry Analysis
+                    </button>
+                    <button
+                      onClick={restartScreening}
+                      className="px-6 py-3 rounded-2xl font-bold text-primary border-2 border-primary/20 hover:bg-primary-container/40 active:scale-95 transition-all"
+                    >
+                      Start Over
+                    </button>
+                  </div>
+                )}
+
+                {failure === "insufficient" && (
+                  <button
+                    onClick={restartScreening}
+                    className="bg-primary text-on-primary px-8 py-3 rounded-2xl font-bold inline-flex items-center justify-center gap-2 hover:bg-primary-dim active:scale-95 transition-all mx-auto"
+                  >
+                    <span className="material-symbols-outlined text-lg">replay</span>
+                    Run Screening Again
+                  </button>
+                )}
+
+                {!isProcessing && !failure && (
                   <div className="flex items-center justify-center gap-2 text-sm text-primary font-medium animate-pulse">
                     <span className="material-symbols-outlined text-lg">auto_awesome</span>
                     Redirecting to results...

@@ -10,15 +10,10 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  Radar,
 } from "recharts";
 import { CheckCircle2, Circle, Loader2, Sparkles } from "lucide-react";
 import Section from "./Section";
 import MeshGradientBg from "./MeshGradientBg";
-import BrainWaveSVG from "./illustrations/BrainWaveSVG";
 
 type StepState = "idle" | "listening" | "analyzing" | "done";
 
@@ -38,41 +33,46 @@ const ENGAGEMENT = [
   { t: "02:00", gaze: 95, affect: 88, speech: 94 },
 ];
 
-const RADAR = [
-  { axis: "Eye contact", value: 86 },
-  { axis: "Recip. smile", value: 72 },
-  { axis: "Joint attn.", value: 64 },
-  { axis: "Speech flow", value: 91 },
-  { axis: "Sensory ts.", value: 58 },
-  { axis: "Imitation", value: 76 },
-];
-
 export default function AIDemoPreview() {
   const [step, setStep] = useState<StepState>("idle");
+  const [isVisible, setIsVisible] = useState<boolean>(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
 
-  // Auto-advance the demo after 1.2s of idle so users see motion immediately.
+  // IntersectionObserver — pause auto-advance when section leaves viewport
   useEffect(() => {
-    if (step === "idle") {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-advance the demo after 800ms of idle so users see motion immediately.
+  useEffect(() => {
+    if (step === "idle" && isVisible) {
       const id = window.setTimeout(() => setStep("listening"), 800);
       return () => window.clearTimeout(id);
     }
-  }, [step]);
+  }, [step, isVisible]);
 
   // Listen → Analyze → Done progression
   useEffect(() => {
-    if (step === "listening") {
+    if (step === "listening" && isVisible) {
       const id = window.setTimeout(() => setStep("analyzing"), 2400);
       return () => window.clearTimeout(id);
     }
-    if (step === "analyzing") {
+    if (step === "analyzing" && isVisible) {
       const id = window.setTimeout(() => setStep("done"), 2000);
       return () => window.clearTimeout(id);
     }
-    if (step === "done") {
+    if (step === "done" && isVisible) {
       const id = window.setTimeout(() => setStep("idle"), 6000);
       return () => window.clearTimeout(id);
     }
-  }, [step]);
+  }, [step, isVisible]);
 
   return (
     <Section
@@ -80,14 +80,13 @@ export default function AIDemoPreview() {
       id="ai-demo"
       className="relative isolate"
       bgClass="bg-ink-950"
+      ref={sectionRef}
     >
       {/* Soft mesh echo behind demo */}
       <div className="absolute inset-0 -z-10 opacity-70">
         <MeshGradientBg intensity={0.45} withOrbs={false} />
         <div className="absolute inset-0 mouse-glow-dark" />
-  </div>
-      {/* Scan grid mask */}
-      <div className="absolute inset-0 -z-10 scan-grid scan-grid-mask opacity-15" />
+      </div>
 
       <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
         {/* Left copy */}
@@ -100,15 +99,14 @@ export default function AIDemoPreview() {
         >
           <p className="mb-3 text-[11px] uppercase tracking-[0.22em] text-aurora-2 font-bold">
             See AutiSense AI live
-  </p>
+          </p>
           <h2 className="font-headline font-bold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tighter leading-[1.05]">
-            Watch a screening,
-            <br className="hidden sm:block" />{" "}
-            <span className="text-aurora italic font-display">in 2 minutes</span>
-  </h2>
+            See AutiSense AI <br />{" "}
+            <span className="text-aurora italic font-display">in action</span>
+          </h2>
           <p className="mt-5 text-base sm:text-lg text-ink-300 leading-relaxed max-w-md">
             AutiSense maps 28+ behavioral signals across a brief, sensory-calibrated video session — and turns them into a clear, shareable report.
-  </p>
+          </p>
 
           {/* State pills */}
           <div className="mt-8 flex flex-wrap items-center gap-2">
@@ -139,10 +137,10 @@ export default function AIDemoPreview() {
                     <Circle className="h-3.5 w-3.5" />
                   )}
                   {s.t}
-      </button>
+                </button>
               );
             })}
-      </div>
+          </div>
 
           {/* Status text */}
           <p className="mt-5 text-[13px] text-ink-400 max-w-md">
@@ -159,10 +157,10 @@ export default function AIDemoPreview() {
                 {step === "listening" && "Reading facial affect, gaze and vocal prosody in 12 ms slices."}
                 {step === "analyzing" && "Comparing against population baseline + family priors."}
                 {step === "done" && "Generated a personalized report — share securely or export PDF."}
-             </motion.span>
-           </AnimatePresence>
-         </p>
-       </motion.div>
+              </motion.span>
+            </AnimatePresence>
+          </p>
+        </motion.div>
 
         {/* Right demo card */}
         <motion.div
@@ -181,10 +179,10 @@ export default function AIDemoPreview() {
                 <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-             </div>
+              </div>
               <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400 font-semibold">AutiSense · live</p>
               <span className="text-[11px] text-aurora-3 font-semibold">● running</span>
-           </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-5">
               {/* Chart */}
@@ -192,7 +190,7 @@ export default function AIDemoPreview() {
                 <div className="flex items-baseline justify-between mb-2">
                   <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400 font-semibold">Engagement</p>
                   <p className="text-[11px] text-ink-400 font-semibold">last 2 min</p>
-               </div>
+                </div>
                 <div className="h-44">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={ENGAGEMENT} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -200,16 +198,16 @@ export default function AIDemoPreview() {
                         <linearGradient id="engage-a" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.6} />
                           <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
-                       </linearGradient>
+                        </linearGradient>
                         <linearGradient id="engage-b" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#D946EF" stopOpacity={0.55} />
                           <stop offset="100%" stopColor="#D946EF" stopOpacity={0} />
-                       </linearGradient>
+                        </linearGradient>
                         <linearGradient id="engage-c" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#06B6D4" stopOpacity={0.5} />
                           <stop offset="100%" stopColor="#06B6D4" stopOpacity={0} />
-                       </linearGradient>
-                     </defs>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid stroke="rgba(255,255,255,0.05)" strokeDasharray="3 5" />
                       <XAxis dataKey="t" hide />
                       <YAxis hide />
@@ -247,46 +245,47 @@ export default function AIDemoPreview() {
                         fill="url(#engage-c)"
                         isAnimationActive={step !== "idle"}
                       />
-                   </AreaChart>
-                 </ResponsiveContainer>
-               </div>
-                <div className="mt-3">
-                  <BrainWaveSVG className="w-full h-10" />
-               </div>
-             </div>
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
 
-              {/* Radar + match score */}
+              {/* Signal profile + match score */}
               <div className="md:col-span-2 p-5 flex flex-col gap-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400 font-semibold mb-2">Signal profile</p>
-                  <div className="h-44">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={RADAR} margin={{ top: 0, right: 6, left: 6, bottom: 0 }}>
-                        <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                        <PolarAngleAxis dataKey="axis" tick={{ fill: "#8A91A8", fontSize: 9, fontWeight: 600 }} />
-                        <Radar
-                          name="Profile"
-                          dataKey="value"
-                          stroke="#D946EF"
-                          fill="#8B5CF6"
-                          fillOpacity={0.35}
-                          isAnimationActive={step !== "idle"}
-                        />
-                     </RadarChart>
-                   </ResponsiveContainer>
-                 </div>
-               </div>
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-ink-400 font-semibold mb-3">Signal profile</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { label: "Eye contact", value: 86, color: "#8B5CF6" },
+                      { label: "Speech flow", value: 91, color: "#06B6D4" },
+                      { label: "Joint attention", value: 64, color: "#D946EF" },
+                    ].map((m) => (
+                      <div key={m.label}>
+                        <div className="flex justify-between text-[11px] mb-1">
+                          <span className="text-ink-300 font-medium">{m.label}</span>
+                          <span className="text-white font-bold">{m.value}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${m.value}%`, background: m.color }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-[11px] uppercase tracking-[0.18em] text-ink-400 font-semibold">Match</span>
-                    <span className="ml-auto font-display font-extrabold text-3xl text-white tracking-tight">94%</span>
-                 </div>
+                    <span className="ml-auto font-display font-extrabold text-3xl text-white tracking-tight">94.1%</span>
+                  </div>
                   <p className="text-[12px] text-ink-300 leading-relaxed">
                     {step === "done"
                       ? "Report ready. Pipeline finished with 0.18σ noise floor — clinical-grade quality."
                       : "Computing exact match — the model needs a few more frames to converge."}
-                 </p>
+                  </p>
                   <div className="mt-3 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
                     <motion.span
                       key={step}
@@ -295,23 +294,23 @@ export default function AIDemoPreview() {
                       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                       className="block h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400"
                     />
-                 </div>
-               </div>
-             </div>
-           </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="border-t border-white/5 p-4 flex items-center justify-between">
               <p className="text-[12px] text-ink-400 inline-flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-violet-300" />
                 Pipeline processed <span className="text-white font-semibold">{step === "done" ? "8,932" : step === "analyzing" ? "5,140" : "1,287"}</span> frames
-             </p>
+              </p>
               <span className="text-[11px] text-ink-400 font-semibold">
                 v2.0 · {step === "done" ? "ready" : "streaming"}
-             </span>
-           </div>
-         </div>
-       </motion.div>
-     </div>
-   </Section>
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </Section>
   );
 }

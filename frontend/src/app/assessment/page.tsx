@@ -4,6 +4,7 @@ import React from "react";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Alert } from "@/components/ui/Alert";
 
 const features = [
   { icon: "psychology", title: "AI-Powered Analysis", description: "Advanced ML models analyze facial expressions, eye contact, and behavioral patterns in real-time.", borderColor: "border-t-primary", iconColor: "text-primary", bg: "from-primary/8 to-transparent" },
@@ -25,6 +26,16 @@ export default function AssessmentIntroPage() {
 
       <main className="flex-grow pt-20 sm:pt-24 pb-20 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto">
+
+          {/* ── Clinical disclaimer (visible before starting) ── */}
+          <Alert
+            variant="warning"
+            title="A preliminary screening, not a diagnosis"
+            className="mb-10"
+          >
+            This tool highlights behavioral patterns to share with a professional — it cannot diagnose autism.
+            Always review the results with a qualified healthcare provider.
+          </Alert>
 
           {/* ── Hero ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20 pt-8">

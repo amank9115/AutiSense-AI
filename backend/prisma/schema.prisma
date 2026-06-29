@@ -106,6 +106,11 @@ model User {
   receivedReports        ReportShare[]         @relation("ReceivedReports")
   doctorAppointments     Appointment[]         @relation("DoctorAppointments")
   parentAppointments     Appointment[]         @relation("ParentAppointments")
+  treatmentPlans         TreatmentPlan[]       @relation("DoctorTreatmentPlans")
+  clinicalNotes          ClinicalNote[]        @relation("DoctorClinicalNotes")
+  uploadedDocuments      SharedDocument[]      @relation("UserUploadedDocuments")
+  achievements           UserAchievement[]     @relation("UserAchievements")
+  gamification          UserGamification?     @relation("UserGamification")
 
   @@index([email])
   @@index([role])
@@ -145,6 +150,11 @@ model Child {
   organization       Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   screeningSessions  ScreeningSession[]  @relation("ChildScreeningSessions")
   appointments       Appointment[]       @relation("ChildAppointments")
+  behavioralTrends   BehavioralTrend[]   @relation("ChildBehavioralTrends")
+  treatmentPlans     TreatmentPlan[]     @relation("ChildTreatmentPlans")
+  clinicalNotes      ClinicalNote[]      @relation("ChildClinicalNotes")
+  documents          SharedDocument[]    @relation("ChildDocuments")
+  gamification       ChildGamification?  @relation("ChildGamification")
 
   @@index([parentId])
   @@index([organizationId])
@@ -186,6 +196,8 @@ model ScreeningSession {
   results            ScreeningResult?    @relation("SessionResults")
   report             Report?             @relation("SessionReport")
   reportShares       ReportShare[]
+  gazeData           GazeSessionData?    @relation("SessionGazeData")
+  clinicalNotes      ClinicalNote[]      @relation("SessionClinicalNotes")
 
   @@index([userId])
   @@index([childId])
@@ -443,7 +455,8 @@ model WebhookEndpoint {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliveries     WebhookDelivery[]
 
   @@index([organizationId])
 }
@@ -519,3 +532,344 @@ model Message {
   // TODO: Deprecate - Use ChatMessage instead
 }
 
+
+// ------------------------------------------------------------------------------
+// Longitudinal Tracking Models (Phase 2)
+// ------------------------------------------------------------------------------
+
+model BehavioralTrend {
+  id                 String              @id @default(uuid())
+  childId            String
+  
+  // Time period
+  periodStart        DateTime
+  periodEnd          DateTime
+  periodType         String              // "week", "month", "quarter"
+  
+  // Aggregated metrics
+  avgEyeContact      Float               // 0-100
+  avgAttention       Float               // 0-100
+  avgEmotion         Float               // 0-100
+  avgGesture         Float               // 0-100
+  avgRiskScore       Float               // 0-100
+  
+  // Session count in period
+  sessionCount       Int
+  
+  // Trend indicators
+  eyeContactTrend    Float?              // Change from previous period
+  attentionTrend     Float?
+  emotionTrend       Float?
+  riskScoreTrend     Float?
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  child              Child               @relation("ChildBehavioralTrends", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, periodStart, periodType])
+  @@index([childId])
+  @@index([periodStart])
+}
+
+model GazeSessionData {
+  id                 String              @id @default(uuid())
+  sessionId          String              @unique
+  
+  // Gaze metrics aggregated from all frames
+  avgGazeScore       Float               // 0-100
+  avgGazeStability   Float               // 0-100
+  gazeDirections     Json                // Distribution: {center: 0.7, left: 0.15, right: 0.15}
+  
+  // Attention patterns
+  attentionPeaks     Json?               // Timestamps of high attention moments
+  attentionDrops     Json?               // Timestamps of attention drops
+  
+  // Frame-level data
+  frameData          Json?               // Array of per-frame gaze metrics
+  
+  createdAt          DateTime            @default(now())
+  
+  session            ScreeningSession    @relation("SessionGazeData", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Treatment Planning Models (Phase 3)
+// ──────────────────────────────────────────────────────────────────────────────
+
+model TreatmentPlan {
+  id                 String              @id @default(uuid())
+  childId            String
+  doctorId           String
+  sessionId          String?             // Optional: linked screening session
+  
+  // Plan details
+  title              String
+  description        String?
+  goals              Json                // Array of treatment goals
+  
+  // Timeline
+  startDate          DateTime
+  endDate            DateTime?
+  
+  // Status
+  status             String              @default("active") // active, completed, on_hold
+  
+  // Progress tracking
+  progressNotes      Json?               // Array of progress notes with timestamps
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  child              Child               @relation("ChildTreatmentPlans", fields: [childId], references: [id], onDelete: Cascade)
+  doctor             User                @relation("DoctorTreatmentPlans", fields: [doctorId], references: [id], onDelete: Cascade)
+  interventions      Intervention[]
+
+  @@index([childId])
+  @@index([doctorId])
+  @@index([status])
+}
+
+model Intervention {
+  id                 String              @id @default(uuid())
+  planId             String
+  
+  // Intervention details
+  type               String              // therapy, medication, behavioral, educational
+  name               String
+  description        String?
+  
+  // Scheduling
+  frequency          String?             // daily, weekly, etc.
+  duration_weeks     Int?
+  
+  // Progress
+  status             String              @default("planned") // planned, in_progress, completed
+  effectiveness      Int?                // 1-5 rating
+  
+  // Notes
+  notes              String?
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  plan               TreatmentPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([status])
+}
+
+model ClinicalNote {
+  id                 String              @id @default(uuid())
+  sessionId          String?
+  childId            String
+  doctorId           String
+  
+  // Note content
+  title              String?
+  content            String              @db.Text
+  
+  // Categories
+  category           String              @default("general") // general, observation, assessment, recommendation
+  
+  // Privacy
+  isPrivate          Boolean             @default(false)  // Only visible to doctor
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  session            ScreeningSession?   @relation("SessionClinicalNotes", fields: [sessionId], references: [id], onDelete: SetNull)
+  child              Child               @relation("ChildClinicalNotes", fields: [childId], references: [id], onDelete: Cascade)
+  doctor             User                @relation("DoctorClinicalNotes", fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([childId])
+  @@index([doctorId])
+  @@index([category])
+}
+
+model SharedDocument {
+  id                 String              @id @default(uuid())
+  name               String
+  type               String              // report, assessment, prescription, other
+  fileSize           Int
+  filePath           String              // Encrypted storage path
+  
+  // Ownership
+  uploadedById       String
+  childId            String?
+  
+  // Access control
+  accessLevel        String              @default("owner") // owner, doctor, parent
+  sharedWith         Json?               // Array of user IDs with access
+  
+  // Metadata
+  description        String?
+  tags               Json?
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  uploadedBy         User                @relation("UserUploadedDocuments", fields: [uploadedById], references: [id], onDelete: Cascade)
+  child              Child?              @relation("ChildDocuments", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([uploadedById])
+  @@index([childId])
+  @@index([type])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Gamification Models (Phase 4)
+// ──────────────────────────────────────────────────────────────────────────────
+
+model Achievement {
+  id                 String              @id @default(uuid())
+  code               String              @unique
+  name               String
+  description        String
+  icon               String
+  
+  // Achievement criteria
+  category           String              // screening, engagement, milestone
+  requirementType    String              // count, streak, score, time
+  requirementValue   Int
+  
+  // Rewards
+  points             Int                 @default(0)
+  badgeImage         String?
+  
+  // Rarity
+  rarity             String              @default("common") // common, rare, epic, legendary
+  
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+
+  userAchievements   UserAchievement[]
+
+  @@index([code])
+  @@index([category])
+}
+
+model UserAchievement {
+  id                 String              @id @default(uuid())
+  userId             String
+  achievementId      String
+  
+  earnedAt           DateTime            @default(now())
+  progress           Int                 @default(100)
+  
+  // Notification status
+  viewed             Boolean             @default(false)
+
+  user               User                @relation("UserAchievements", fields: [userId], references: [id], onDelete: Cascade)
+  achievement        Achievement         @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([earnedAt])
+}
+
+model UserGamification {
+  id                 String              @id @default(uuid())
+  userId             String              @unique
+  
+  // Points and level
+  totalPoints        Int                 @default(0)
+  currentLevel       Int                 @default(1)
+  pointsToNextLevel  Int                 @default(100)
+  
+  // Streaks
+  currentStreak      Int                 @default(0)
+  longestStreak      Int                 @default(0)
+  lastActivityDate   DateTime?
+  
+  // Stats
+  screeningsCompleted Int               @default(0)
+  badgesEarned       Int                 @default(0)
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  user               User                @relation("UserGamification", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([totalPoints])
+}
+
+model ChildGamification {
+  id                 String              @id @default(uuid())
+  childId            String              @unique
+  
+  // Child-specific rewards
+  stars              Int                 @default(0)
+  stickers           Json?               // Array of earned sticker IDs
+  unlockedThemes     Json?               // Array of unlocked theme names
+  
+  // Progress
+  screeningsCompleted Int               @default(0)
+  modulesCompleted   Int                 @default(0)
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  child              Child               @relation("ChildGamification", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// GDPR Data Export Models (Phase 5)
+// ──────────────────────────────────────────────────────────────────────────────
+
+enum ExportStatus {
+  pending
+  processing
+  completed
+  expired
+  failed
+}
+
+enum ExportFormat {
+  comprehensive    // Full ZIP archive
+  json_only        // JSON only (real-time API)
+}
+
+model DataExportRequest {
+  id            String        @id @default(uuid())
+  userId        String
+  status        ExportStatus  @default(pending)
+  format        ExportFormat  @default(comprehensive)
+  downloadUrl   String?
+  expiresAt     DateTime?
+  completedAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model WebhookDelivery {
+  id            String           @id @default(uuid())
+  endpointId    String
+  event         String
+  payload       Json
+  statusCode    Int?
+  deliveredAt   DateTime?
+  attempts      Int              @default(0)
+  lastError     String?
+  createdAt     DateTime         @default(now())
+
+  endpoint      WebhookEndpoint  @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+  @@index([createdAt])
+}

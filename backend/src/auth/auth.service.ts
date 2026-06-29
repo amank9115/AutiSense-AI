@@ -264,10 +264,15 @@ export class AuthService {
     return { message: genericMessage };
   }
 
-  // DEV ONLY: Direct email verification for development
+  // DEV ONLY: Direct email verification for development.
+  // Fail closed (security audit H4): only available when NODE_ENV is
+  // *explicitly* 'development' or 'test'. An unset/staging/production NODE_ENV
+  // disables this email-verification bypass.
   async devVerifyEmail(email: string) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new ValidationException('Not available in production');
+    const explicitDevOrTest =
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+    if (!explicitDevOrTest) {
+      throw new ValidationException('Not available in this environment');
     }
     const user = await this.usersService.findOne(email);
     if (!user) {

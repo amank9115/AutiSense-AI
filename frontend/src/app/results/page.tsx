@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import { screeningApi, ScreeningSession, DoctorProfile } from "@/services/api/screeningApi";
 import { useAppStore } from "@/store";
+import { logger } from "@/lib/logger";
+import { Alert } from "@/components/ui/Alert";
+import { EmptyState, Button } from "@/components/ui/StitchUI";
 
 type RiskLevel = "low" | "medium" | "high" | "very_high";
 
@@ -69,7 +72,7 @@ export default function ResultsPage() {
     if (sessionId) {
       screeningApi.getSessionDetails(sessionId)
         .then(setSession)
-        .catch((err) => console.error("Failed to fetch session", err))
+        .catch((err) => logger.error("ResultsPage", "Failed to fetch session", err))
         .finally(() => setLoading(false));
     }
     if (isAuthenticated) {
@@ -161,11 +164,52 @@ export default function ResultsPage() {
     );
   }
 
+  // No results to show — either the page was opened without a valid session, or the
+  // fetch failed and there's nothing in the store. Never fabricate placeholder data.
+  if (!displayResults) {
+    return (
+      <div className="bg-surface min-h-screen text-on-surface font-body antialiased flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center max-w-3xl mx-auto px-6 py-32 w-full">
+          <EmptyState
+            icon="science"
+            title={sessionId ? "We couldn't load this screening" : "No screening results yet"}
+            description={
+              sessionId
+                ? "This screening may still be processing, or the link may be invalid. Try again from your history."
+                : "Run a quick screening to see your child's developmental insights here."
+            }
+            action={
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={() => router.push("/assessment")}>Start a screening</Button>
+                <Button variant="outline" onClick={() => router.push("/dashboard/parent/history")}>
+                  View history
+                </Button>
+              </div>
+            }
+          />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface min-h-screen text-on-surface font-body antialiased">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
+        {/* Clinical disclaimer — prominent, always visible, never dismissible */}
+        <Alert
+          variant="warning"
+          title="Preliminary screening — not a diagnosis"
+          className="mb-10"
+        >
+          This AI-assisted screening highlights behavioral patterns to discuss with a professional. It does
+          not diagnose autism or any condition. Always review these results with a qualified pediatrician or
+          developmental specialist.
+        </Alert>
+
         {/* Page header */}
         <div className="mb-12">
           <h2 className="font-headline font-extrabold text-4xl sm:text-6xl text-primary leading-tight mb-3 tracking-tighter">
@@ -193,19 +237,17 @@ export default function ResultsPage() {
                     riskLabel === "medium" ? "text-tertiary" :
                     "text-error"
                   }`}>
-                    {displayResults ? `${Math.round(displayResults.riskScore)}%` : "—"}
+                    {`${Math.round(displayResults.riskScore)}%`}
                   </span>
                 </div>
                 <div>
                   <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest inline-block mb-2 shadow-sm">
-                    {displayResults ? "Analysis Complete" : "Awaiting Data"}
+                    Analysis Complete
                   </span>
                   <h3 className="font-headline font-extrabold text-2xl text-on-surface tracking-tight capitalize">
                     {riskLabel.replace("_", " ")} Risk Level
                   </h3>
-                  {displayResults && (
-                    <p className="text-xs text-on-surface-muted mt-1">ML model v{displayResults.modelVersion}</p>
-                  )}
+                  <p className="text-xs text-on-surface-muted mt-1">ML model v{displayResults.modelVersion}</p>
                 </div>
               </div>
             </div>
@@ -216,31 +258,21 @@ export default function ResultsPage() {
                 AI Observation Summary
               </h4>
               <div className="space-y-8">
-                {displayResults ? (
-                  <>
-                    <MilestoneBar
-                      label="Eye Contact"
-                      value={displayResults.behaviors.EyeContact ?? 0}
-                      status={displayResults.behaviors.EyeContact > 80 ? "Typical" : "Developing"}
-                    />
-                    <MilestoneBar
-                      label="Joint Attention"
-                      value={displayResults.behaviors.JointAttention ?? 0}
-                      status={displayResults.behaviors.JointAttention > 80 ? "Typical" : "Developing"}
-                    />
-                    <MilestoneBar
-                      label="Facial Expression"
-                      value={displayResults.behaviors.FacialExpression ?? 0}
-                      status={displayResults.behaviors.FacialExpression > 80 ? "Typical" : "Developing"}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <MilestoneBar label="Eye Contact" value={60} status="Developing" />
-                    <MilestoneBar label="Joint Attention" value={55} status="Developing" />
-                    <MilestoneBar label="Facial Expression" value={70} status="Developing" />
-                  </>
-                )}
+                <MilestoneBar
+                  label="Eye Contact"
+                  value={displayResults.behaviors.EyeContact ?? 0}
+                  status={displayResults.behaviors.EyeContact > 80 ? "Typical" : "Developing"}
+                />
+                <MilestoneBar
+                  label="Joint Attention"
+                  value={displayResults.behaviors.JointAttention ?? 0}
+                  status={displayResults.behaviors.JointAttention > 80 ? "Typical" : "Developing"}
+                />
+                <MilestoneBar
+                  label="Facial Expression"
+                  value={displayResults.behaviors.FacialExpression ?? 0}
+                  status={displayResults.behaviors.FacialExpression > 80 ? "Typical" : "Developing"}
+                />
               </div>
               <div className="mt-6 p-4 bg-surface-container-low rounded-2xl flex items-start gap-3 border border-outline-variant/10">
                 <span className="material-symbols-outlined text-primary text-lg shrink-0">info</span>

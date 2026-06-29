@@ -14,6 +14,7 @@ import { MlService } from './ml.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CameraScreeningDto, LiveInferenceDto } from './dto';
 import { Role } from '@prisma/client';
+import { Throttle } from '@nestjs/throttler';
 
 interface RequestWithUser {
   user: { sub: string; role: Role };
@@ -27,16 +28,18 @@ export class MlController {
   ) {}
 
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
   @Post('camera-screening')
   async cameraScreening(@Body() body: CameraScreeningDto) {
     const sessionKey = `session-${Date.now()}`;
+    // FrameDto validates metrics in 0–1 range; Python FrameInput expects 0–100.
     const frames = body.frames.map((frame, index) => ({
       frame_index: index,
-      eye_contact: frame.eyeContact,
-      attention_span: frame.attentionSpan,
-      emotion_signals: frame.emotionSignals,
-      gesture_analysis: frame.gestureAnalysis,
-      confidence: frame.confidence,
+      eye_contact: frame.eyeContact * 100,
+      attention_span: frame.attentionSpan * 100,
+      emotion_signals: frame.emotionSignals * 100,
+      gesture_analysis: frame.gestureAnalysis * 100,
+      confidence: frame.confidence * 100,
       image_base64: frame.imageBase64,
     }));
 
@@ -60,15 +63,16 @@ export class MlController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute for live streaming
   @Post('live-inference')
   async liveInference(@Body() body: LiveInferenceDto) {
     const frame = {
       frame_index: body.frame.frameIndex ?? 0,
-      eye_contact: body.frame.eyeContact,
-      attention_span: body.frame.attentionSpan,
-      emotion_signals: body.frame.emotionSignals,
-      gesture_analysis: body.frame.gestureAnalysis,
-      confidence: body.frame.confidence,
+      eye_contact: body.frame.eyeContact * 100,
+      attention_span: body.frame.attentionSpan * 100,
+      emotion_signals: body.frame.emotionSignals * 100,
+      gesture_analysis: body.frame.gestureAnalysis * 100,
+      confidence: body.frame.confidence * 100,
       image_base64: body.frame.imageBase64,
     };
 
@@ -88,6 +92,7 @@ export class MlController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 PDF reports per minute
   @Post('report/:sessionId')
   async generateReport(
     @Param('sessionId') sessionId: string,

@@ -498,6 +498,11 @@
     outline-offset: 3px;
   }
 
+  /* ── Light-side card shadow tiers (token-backed utilities) ── */
+  .shadow-card        { box-shadow: var(--shadow-card); }
+  .shadow-card-raised { box-shadow: var(--shadow-card-raised); }
+  .shadow-sheet       { box-shadow: var(--shadow-sheet); }
+
   /* ── Shadow-tier used by floating cards / hero mockup ── */
   .shadow-dark-card   { box-shadow: var(--shadow-dark-card); }
   .shadow-dark-card-lg{ box-shadow: var(--shadow-dark-card-lg); }
@@ -535,5 +540,50 @@
       background: linear-gradient(90deg, var(--color-aurora-2), var(--color-aurora-3));
       background-size: 100% 100%;
     }
+  }
+
+  /* ── High Contrast Mode (WCAG 2.1 AA) ───────────────────────────── */
+  .high-contrast {
+    --color-primary: #005a68;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #b8e8ef;
+    --color-secondary: #2d5038;
+    --color-error: #8b1a1a;
+    --color-on-surface: #000000;
+    --color-on-surface-variant: #1a1a1a;
+    --color-outline: #000000;
+    --color-outline-variant: #333333;
+  }
+
+  .high-contrast .glass {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .high-contrast button:not([class*="bg-primary"]),
+  .high-contrast a:not([class*="bg-primary"]) {
+    text-decoration: underline;
+  }
+
+  .high-contrast :focus-visible {
+    outline: 3px solid #000000;
+    outline-offset: 3px;
+  }
+
+  /* Reduced motion */
+  .reduced-motion *,
+  .reduced-motion *::before,
+  .reduced-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Large text sizing */
+  .font-large {
+    font-size: 112.5%;
+  }
+
+  .font-xlarge {
+    font-size: 125%;
   }
 }

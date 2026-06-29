@@ -15,7 +15,7 @@ interface Testimonial {
 const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "Within the first 10 minutes of using MannSaathi, my husband and I felt like we finally had a framework to talk with our pediatrician. The report read like a conversation, not a verdict.",
+      "Within the first 10 minutes of using AutiSense AI, my husband and I felt like we finally had a framework to talk with our pediatrician. The report read like a conversation, not a verdict.",
     name: "Aanya M.",
     role: "Parent of 4-yr-old · Mumbai",
     initials: "AM",
@@ -31,7 +31,7 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Our sensory clinic piloted MannSaathi with eight families. Six said it was the first assessment experience where their child completed the session voluntarily.",
+      "Our sensory clinic piloted AutiSense AI with eight families. Six said it was the first assessment experience where their child completed the session voluntarily.",
     name: "Marcus Lin",
     role: "OT lead · Boston Sensory Co.",
     initials: "ML",

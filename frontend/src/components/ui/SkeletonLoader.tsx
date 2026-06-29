@@ -7,7 +7,7 @@ export function DashboardStatsSkeleton() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-surface-container-lowest rounded-2xl p-5 space-y-3" style={{ boxShadow: "var(--shadow-card)" }}>
+        <div key={i} className="bg-surface-container-lowest rounded-2xl p-5 space-y-3 shadow-card">
           <div className="flex items-center justify-between">
             <Skeleton variant="line" width="40%" height="12px" />
             <Skeleton variant="circle" width="32px" height="32px" />
@@ -42,7 +42,7 @@ export function CardGridSkeleton({ cols = 3, cards = 6 }: { cols?: number; cards
   return (
     <div className={`grid ${colClass} gap-4`}>
       {Array.from({ length: cards }).map((_, i) => (
-        <div key={i} className="bg-surface-container-lowest rounded-2xl overflow-hidden" style={{ boxShadow: "var(--shadow-card)" }}>
+        <div key={i} className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-card">
           <Skeleton variant="card" height="160px" className="rounded-none" />
           <div className="p-4 space-y-2">
             <Skeleton variant="line" width="60%" height="14px" />
@@ -58,7 +58,7 @@ export function CardGridSkeleton({ cols = 3, cards = 6 }: { cols?: number; cards
 export function ParentDashboardSkeleton() {
   return (
     <div className="space-y-6 p-6">
-      <div className="bg-surface-container-lowest rounded-3xl p-6 space-y-4" style={{ boxShadow: "var(--shadow-card)" }}>
+      <div className="bg-surface-container-lowest rounded-3xl p-6 space-y-4 shadow-card">
         <Skeleton variant="line" width="30%" height="16px" />
         <Skeleton variant="line" width="50%" height="28px" className="rounded-lg" />
         <div className="flex gap-3 pt-2">

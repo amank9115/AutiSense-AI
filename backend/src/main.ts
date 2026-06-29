@@ -11,9 +11,7 @@ import {
   CORRELATION_ID_HEADER,
 } from './common/middleware/correlation-id.middleware';
 import cookieParser from 'cookie-parser';
-
-// Security headers with Helmet (requires: npm install helmet @types/helmet)
-// import helmet from 'helmet';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,23 +21,25 @@ async function bootstrap() {
   // Enable graceful shutdown hooks
   app.enableShutdownHooks();
 
-  // Security headers - uncomment after installing helmet:
-  // app.use(helmet({
-  //   contentSecurityPolicy: {
-  //     directives: {
-  //       defaultSrc: ["'self'"],
-  //       scriptSrc: ["'self'", "'unsafe-inline'"],
-  //       styleSrc: ["'self'", "'unsafe-inline'"],
-  //       imgSrc: ["'self'", "data:", "https:"],
-  //       connectSrc: ["'self'"],
-  //       fontSrc: ["'self'"],
-  //       objectSrc: ["'none'"],
-  //       upgradeInsecureRequests: [],
-  //     },
-  //   },
-  //   crossOriginEmbedderPolicy: false,
-  //   crossOriginResourcePolicy: { policy: "cross-origin" },
-  // }));
+  // Security headers with Helmet
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   // Get allowed origins from environment
   const allowedOrigins = (
@@ -169,6 +169,11 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('❌ Failed to start application:', err);
+  // At this point, logger may not be initialized, so we use console.error
+  // but in a production-safe manner (only in development)
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.error('❌ Failed to start application:', err);
+  }
   process.exit(1);
 });

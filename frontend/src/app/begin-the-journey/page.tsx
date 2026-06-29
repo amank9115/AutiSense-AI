@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -108,10 +108,13 @@ const BeginTheJourneyPage = () => {
                 transition={{ delay: 0.3 }}
                 className="w-full aspect-square rounded-[3rem] overflow-hidden rotate-3 shadow-sm"
               >
-                <img
+                <Image
                   className="w-full h-full object-cover"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp5q2EaDn3rBiX5A65T9cIVimufSiZih-rKy0bbfb_Y7YLMiGL_F5d1Z_VYFk5Rd2Z9VMSYUokkeD98VyCDG_pEEoMAKkMpqKIPJwHy_IAe34vGV8i81pFWQwVRuubHyu1zaHPt0bHZQycP33DTmQTx9zxpYpu_7XyO78okh8oSsakSbWErtPaBlX7fyxEmI9O-7fgJpzmqYHasUOy4zx3UJe_fcgjs6Xi6emjXLfp-6O2QCUSVVqsuThOrSGjJZ-dJ_V82xt1O1A"
                   alt="A tranquil digital illustration of a parent and a young child sitting together in a cozy, sun-drenched living room"
+                  width={600}
+                  height={600}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </motion.div>
               <motion.div
@@ -203,10 +206,13 @@ const BeginTheJourneyPage = () => {
           >
             <div className="flex-shrink-0">
               <div className="w-24 h-24 rounded-full border-4 border-secondary-container overflow-hidden">
-                <img
+                <Image
                   className="w-full h-full object-cover"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP2owu_CKz_vQ9h9u6OFJ5GRAGwQ8w1XgAGVMuYiij2q55i6IfmlO28b-RztDrxfsGz_XZcAk5vcCWnB_KfYWOG7JGOF30UH-KXeCvK38K3LB_lsRDmNLhTgqYgl0_YISxZXXElFraCoWbbBLvBTTEP7cZC3KoUcc-Hgz5JlMIEfgqZ0SSxq_xRAloEKNa2lqsc7hBDVPD851XS__wyB0QfxzMLZqMVd00hKM8rdlr35OuGfcNMqD0HkpdTQ3MZ_TENJNtXLsd58M"
                   alt="Sarah Jenkins portrait"
+                  width={96}
+                  height={96}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </div>
             </div>

@@ -27,18 +27,22 @@ const toneBg: Record<Tone, string> = {
   light: "bg-surface text-on-surface",
 };
 
-export default function Section({
-  tone = "light",
-  padX = "wide",
-  curve = false,
-  bgClass,
-  id,
-  className = "",
-  children,
-  ...rest
-}: SectionProps) {
+const Section = React.forwardRef<HTMLElement, SectionProps>(function Section(
+  {
+    tone = "light",
+    padX = "wide",
+    curve = false,
+    bgClass,
+    id,
+    className = "",
+    children,
+    ...rest
+  },
+  ref,
+) {
   return (
     <section
+      ref={ref}
       id={id}
       className={[
         "relative w-full overflow-hidden",
@@ -55,4 +59,6 @@ export default function Section({
       {children}
    </section>
   );
-}
+});
+
+export default Section;

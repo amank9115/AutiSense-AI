@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Navbar, Footer } from "@/components/layout/Navigation";
 
 const SupportPage = () => {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -70,11 +68,14 @@ const SupportPage = () => {
               </div>
             </div>
             <div className="absolute bottom-0 right-0 w-1/2 h-full hidden lg:block opacity-80 group-hover:scale-105 transition-transform duration-700">
-              <img
-                className="w-full h-full object-contain object-bottom"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNxN30eoktIixLq8gX4bf6VToReVg_qIhd-K8oqHD5CZD-JOfi3DLgjjN30-CxrmLGKVF10u_ODmFIhvqZlw9xLrJPftPbn2LR8wpKbozfuslHMXMPf1xoaXVTTymdLzK4evxBAyaq5aFkz0NTCUUSWQFTUpzU5Z5HXLljt35t3OD2xjy9MgQm7JFJdHmz4dJDocXhqHphTNWhccd0gqSkNAwnq3rH-YcTHZn05W7GkCF90Bg_IZO8heUhKTl-OZd_uq_gXzT2ICE"
-                alt="Sensory-Friendly Library"
-              />
+                <Image
+                  className="w-full h-full object-contain object-bottom"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNxN30eoktIixLq8gX4bf6VToReVg_qIhd-K8oqHD5CZD-JOfi3DLgjjN30-CxrmLGKVF10u_ODmFIhvqZlw9xLrJPftPbn2LR8wpKbozfuslHMXMPf1xoaXVTTymdLzK4evxBAyaq5aFkz0NTCUUSWQFTUpzU5Z5HXLljt35t3OD2xjy9MgQm7JFJdHmz4dJDocXhqHphTNWhccd0gqSkNAwnq3rH-YcTHZn05W7GkCF90Bg_IZO8heUhKTl-OZd_uq_gXzT2ICE"
+                  alt="Sensory-Friendly Library"
+                  width={600}
+                  height={600}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'bottom' }}
+                />
             </div>
           </section>
 
@@ -146,11 +147,14 @@ const SupportPage = () => {
               className="group cursor-pointer"
             >
               <div className="h-64 rounded-lg bg-secondary-container/20 overflow-hidden mb-6 relative">
-                <img
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmPloZYtEjdSnb7937LLm0sG1xXtQKhJmepDUa995GNBoBvVxmO72S8H_XvW22YY1hMpPqUg1SqVAnd5fgNl8XqRTXKyYSa8-cokApgHBMQdzGI2IBHxqtK4clkp3sT0Gcpr737MvL2m03UIehjp95VQI2F-rZeJFlQqkII2sgHynpkbF1TbE6iChBt-6s3WDtAo2c_F06hUAFzq8UEvGA7W_Tkwz1oBpy5yP5jCQt67VNib5ZwtyBJ2BbgRO7VYniPbn7Mrsyk_o"
-                  alt="Managing Meltdowns"
-                />
+                  <Image
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmPloZYtEjdSnb7937LLm0sG1xXtQKhJmepDUa995GNBoBvVxmO72S8H_XvW22YY1hMpPqUg1SqVAnd5fgNl8XqRTXKyYSa8-cokApgHBMQdzGI2IBHxqtK4clkp3sT0Gcpr737MvL2m03UIehjp95VQI2F-rZeJFlQqkII2sgHynpkbF1TbE6iChBt-6s3WDtAo2c_F06hUAFzq8UEvGA7W_Tkwz1oBpy5yP5jCQt67VNib5ZwtyBJ2BbgRO7VYniPbn7Mrsyk_o"
+                    alt="Managing Meltdowns"
+                    width={600}
+                    height={256}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
               </div>
               <h3 className="font-headline font-bold text-xl mb-2 group-hover:text-primary transition-colors">Managing Meltdowns</h3>
               <p className="text-on-surface-variant leading-relaxed">Step-by-step low-arousal techniques for de-escalation and recovery.</p>
@@ -165,11 +169,14 @@ const SupportPage = () => {
               className="group cursor-pointer"
             >
               <div className="h-64 rounded-lg bg-tertiary-container/20 overflow-hidden mb-6 relative">
-                <img
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcuNy0jQ8L-2xQLJGStZ6cTFLTP99Wc95v9vH6329rdsHERbQIwXs-ohvzsM00Qi765kOUbzYXFz3aorlEPmmNuLEhcZHIEq9PRnqwnYA89czIZxivipYLzugs_mcxWWDhU5W9Oq-yL9t7U8Wl9U98taYxbyC0-jZrGueBJeL9o0rO_epnMa50kxfVIff7iVC6IVMDlV3PGYcsrgOlxzsAa_qkVFnE_CkM6RMlwtJneTAo0JzvbFWiYuAbAlWfYPOYEOjKOgQ7l4Q"
-                  alt="School Advocacy"
-                />
+                  <Image
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcuNy0jQ8L-2xQLJGStZ6cTFLTP99Wc95v9vH6329rdsHERbQIwXs-ohvzsM00Qi765kOUbzYXFz3aorlEPmmNuLEhcZHIEq9PRnqwnYA89czIZxivipYLzugs_mcxWWDhU5W9Oq-yL9t7U8Wl9U98taYxbyC0-jZrGueBJeL9o0rO_epnMa50kxfVIff7iVC6IVMDlV3PGYcsrgOlxzsAa_qkVFnE_CkM6RMlwtJneTAo0JzvbFWiYuAbAlWfYPOYEOjKOgQ7l4Q"
+                    alt="School Advocacy"
+                    width={600}
+                    height={256}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
               </div>
               <h3 className="font-headline font-bold text-xl mb-2 group-hover:text-primary transition-colors">School Advocacy</h3>
               <p className="text-on-surface-variant leading-relaxed">Templates and scripts for communicating your child&apos;s sensory needs to teachers.</p>
@@ -184,11 +191,14 @@ const SupportPage = () => {
               className="group cursor-pointer"
             >
               <div className="h-64 rounded-lg bg-primary-container/20 overflow-hidden mb-6 relative">
-                <img
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGtqLCs0GO2GAvcb0qib-QSQmcyDQ0c2CMdaQbv0nszFYZ8489eIF62hnzmKCmiQzXwiL2rz4DCWuTnAK95SdVcxUk9Des8Q214BQ9lyk1dh50UYDhz_7_LvRHTJ01wccSNAv2cslptzPOTnaxFhBLCKUbs7Qg3QZ6L7dCbab1TS9_tn95_tdCAaLD5OlI0hu2BIWSdq3t9TjeIkcvva1GqCHvwJuBYUf6pfsMj_H0vBj4295UNRHDYulU1V2EtyFWF_6lwbhcwPY"
-                  alt="Caregiver Respite"
-                />
+                  <Image
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGtqLCs0GO2GAvcb0qib-QSQmcyDQ0c2CMdaQbv0nszFYZ8489eIF62hnzmKCmiQzXwiL2rz4DCWuTnAK95SdVcxUk9Des8Q214BQ9lyk1dh50UYDhz_7_LvRHTJ01wccSNAv2cslptzPOTnaxFhBLCKUbs7Qg3QZ6L7dCbab1TS9_tn95_tdCAaLD5OlI0hu2BIWSdq3t9TjeIkcvva1GqCHvwJuBYUf6pfsMj_H0vBj4295UNRHDYulU1V2EtyFWF_6lwbhcwPY"
+                    alt="Caregiver Respite"
+                    width={600}
+                    height={256}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
               </div>
               <h3 className="font-headline font-bold text-xl mb-2 group-hover:text-primary transition-colors">Caregiver Respite</h3>
               <p className="text-on-surface-variant leading-relaxed">Micro-self-care practices that fit into your busy, demanding schedule.</p>

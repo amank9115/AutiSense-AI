@@ -29,8 +29,8 @@ const MONTHS = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-/** Risk-score thresholds (0–1) used to bucket sessions into risk bands. */
-export const RISK_THRESHOLDS = { moderate: 0.3, elevated: 0.6 } as const;
+/** Risk-score thresholds (0–100) matching the backend RiskLevel bands. */
+export const RISK_THRESHOLDS = { moderate: 30, elevated: 60 } as const;
 
 /**
  * Derives the chart-ready analytics view-model from raw stats + sessions.
@@ -49,7 +49,7 @@ export function deriveAnalytics(
     if (!buckets[key]) buckets[key] = { count: 0, riskSum: 0, riskCount: 0 };
     buckets[key].count++;
     if (s.riskScore !== null) {
-      buckets[key].riskSum += s.riskScore * 100;
+      buckets[key].riskSum += s.riskScore; // already 0–100
       buckets[key].riskCount++;
     }
   });

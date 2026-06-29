@@ -15,12 +15,12 @@ global.MediaStream = vi.fn(() => ({
 
 global.navigator.mediaDevices = {
   getUserMedia: vi.fn(() => Promise.resolve(new MediaStream())),
-} as any;
+} as unknown as MediaDevices;
 
 global.URL = {
   createObjectURL: vi.fn(() => 'blob:test'),
   revokeObjectURL: vi.fn(),
-} as any;
+} as unknown as typeof URL;
 
 global.HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   drawImage: vi.fn(),
@@ -108,8 +108,8 @@ describe('CameraPreview', () => {
   describe('face detection', () => {
     it('should handle missing FaceDetector API gracefully', () => {
       // Temporarily remove FaceDetector
-      const originalFaceDetector = window.FaceDetector;
-      delete (window as any).FaceDetector;
+      const originalFaceDetector = (window as Window & { FaceDetector?: unknown }).FaceDetector;
+      delete (window as Window & { FaceDetector?: unknown }).FaceDetector;
       
       render(<CameraPreview onLiveMetrics={() => {}} />);
       
@@ -117,7 +117,7 @@ describe('CameraPreview', () => {
       expect(screen.getByText(/start screening/i)).toBeInTheDocument();
       
       // Restore
-      (window as any).FaceDetector = originalFaceDetector;
+      (window as Window & { FaceDetector?: unknown }).FaceDetector = originalFaceDetector;
     });
   });
 });

@@ -155,10 +155,11 @@ def analyze_frame(image: np.ndarray, frame_data: Dict[str, Any]) -> Dict[str, fl
         
         cv_confidence = 85.0
     else:
-        # Fallback if no face is detected but image exists
-        eye_score = default_scores["eye"] * 0.5
-        attention_score = default_scores["attention"] * 0.5
-        emotion_score = default_scores["emotion"] * 0.5
+        # No face detected — use client-supplied scores unchanged rather than
+        # penalizing them; they already reflect real pixel analysis.
+        eye_score = default_scores["eye"]
+        attention_score = default_scores["attention"]
+        emotion_score = default_scores["emotion"]
         cv_confidence = 30.0
 
     # --- 2. GESTURE ANALYSIS (Hand Tracking for Stimming) ---

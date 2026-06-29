@@ -9,3 +9,11 @@ pandas
 joblib
 reportlab
 ucimlrepo
+mlflow>=2.10.0
+structlog>=24.1.0
+redis>=5.0.0
+prometheus-client>=0.19.0
+scipy>=1.10.0
+requests>=2.28.0
+python-multipart>=0.0.6
+deepface>=0.0.90

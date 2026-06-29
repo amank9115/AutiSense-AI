@@ -29,11 +29,19 @@ import { MetricsModule } from './metrics/metrics.module';
 import { MetricsInterceptor } from './metrics/interceptors/metrics.interceptor';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { VersioningModule } from './common/versioning/versioning.module';
+import { RateLimitsModule } from './rate-limits/rate-limits.module';
+import { GdprModule } from './gdpr/gdpr.module';
+import { FhirModule } from './fhir/fhir.module';
 
 @Module({
   imports: [
     ConfigModule, // Import first!
     LoggerModule, // Import logger module
+    VersioningModule, // API versioning
+    RateLimitsModule, // Plan-based rate limiting
+    GdprModule, // GDPR data export
+    FhirModule, // FHIR R4 compliance layer
     // Redis connection for caching and lockout is handled by CacheModule
     CacheModule, // Cache service
     CircuitBreakerModule, // Circuit breaker for external services

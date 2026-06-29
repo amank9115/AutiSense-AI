@@ -1,13 +1,14 @@
 import { fetchJson, getApiBaseUrl } from "../../api/client"
 import { useAppStore } from "../../store"
 import type { ChildProfileForm } from "../../context/ScreeningContext"
+import { logger } from "@/lib/logger"
 
 // Enhanced ML error handling
 const withMLErrorHandling = async <T>(fetchPromise: Promise<T>, operation: string): Promise<T> => {
   try {
     return await fetchPromise
   } catch (error) {
-    console.error(`ML Operation failed: ${operation}`, error)
+    logger.error("ML", `Operation failed: ${operation}`, error)
     
     // Check if this is a network error vs ML service error
     if (error instanceof Error) {
@@ -45,6 +46,49 @@ export type ReportShare = {
     analysisData?: Record<string, unknown>
   }
   sharedBy?: { id: string; name: string; email: string }
+}
+
+export type DoctorStatistics = {
+  totalReports: number
+  pendingReviews: number
+  reviewedReports: number
+  totalPatients: number
+  averageRiskScore: number
+  reviewRate: number
+  riskDistribution: { low: number; moderate: number; high: number }
+  monthlyTrend: { month: string; count: number; avgRisk: number }[]
+}
+
+export type DoctorPatient = {
+  id: string
+  name: string
+  dateOfBirth: string
+  gender: string | null
+  parent: { name: string | null }
+  latest: {
+    shareId: string
+    status: "pending" | "reviewed"
+    riskScore: number | null
+    riskLevel: string | null
+    createdAt: string
+  }
+}
+
+export type Appointment = {
+  id: string
+  doctorId: string
+  parentId: string
+  childId: string
+  scheduledAt: string
+  durationMins: number
+  reason: string | null
+  status: "scheduled" | "completed" | "cancelled"
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  child?: { id: string; name: string; dateOfBirth: string }
+  parent?: { id: string; name: string }
+  doctor?: { id: string; name: string; specialization?: string | null }
 }
 
 export type ChildProfile = {
@@ -123,22 +167,31 @@ export const screeningApi = {
     })
   },
 
-  getReceivedReports: async (page = 1, limit = 10) => {
+  getReceivedReports: async (page = 1, limit = 10, status?: "pending" | "reviewed") => {
+    const q = status ? `&status=${status}` : ""
     return fetchJson<{
       data: ReportShare[]
       pagination: { total: number; page: number; limit: number; pages: number }
-    }>(`/api/v1/screening/reports/received?page=${page}&limit=${limit}`)
+    }>(`/api/v1/screening/reports/received?page=${page}&limit=${limit}${q}`)
   },
 
   getReportShare: async (shareId: string) => {
     return fetchJson<ReportShare>(`/api/v1/screening/reports/${shareId}`)
   },
 
-  reviewReport: async (shareId: string, notes: string, markReviewed = false) => {
+  reviewReport: async (shareId: string, notes: string, markReviewed = false, reopen = false) => {
     return fetchJson<ReportShare>(`/api/v1/screening/reports/${shareId}/review`, {
       method: "PUT",
-      body: JSON.stringify({ notes, markReviewed }),
+      body: JSON.stringify({ notes, markReviewed, reopen }),
     })
+  },
+
+  getDoctorStatistics: async () => {
+    return fetchJson<DoctorStatistics>("/api/v1/screening/doctor/statistics")
+  },
+
+  getDoctorPatients: async () => {
+    return fetchJson<DoctorPatient[]>("/api/v1/screening/doctor/patients")
   },
 
   // Generates the PDF report on the ML service and returns it as a Blob so the

@@ -24,10 +24,12 @@ export class ApiKeyGuard implements CanActivate {
 
     await this.apiKeysService.touchLastUsed(record.id);
 
+    // Include scopes from API key
     request.user = {
       sub: record.organizationId,
       organizationId: record.organizationId,
       apiKeyId: record.id,
+      scopes: record.scopes as string[],
     };
 
     return true;

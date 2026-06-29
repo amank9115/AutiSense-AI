@@ -56,22 +56,24 @@ export default function CTASection() {
  </h2>
 
           <p className="mx-auto mt-6 max-w-xl text-base sm:text-lg text-ink-300 leading-relaxed">
-            Join 12,000+ families who found clearer next steps through a sensory-first diagnostic co-pilot they can actually trust.
+            Join 10,000+ families who found clearer next steps through a sensory-first diagnostic co-pilot they can actually trust.
  </p>
 
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <Link href="/begin-the-journey" className="group">
-              <button className="btn-glow inline-flex items-center gap-2 rounded-full px-8 py-4 font-headline font-bold text-[15.5px] focus-aurora">
-                Create free account
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
-          </Link>
-            <Link href="/professionals">
-              <button className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md px-7 py-4 font-headline font-semibold text-[14.5px] text-ink-100 transition-all duration-300">
-                <Stethoscope className="h-4 w-4 text-cyan-300" />
-                Talk to a specialist
-            </button>
-          </Link>
+            <Link
+              href="/begin-the-journey"
+              className="group btn-glow inline-flex items-center gap-2 rounded-full px-8 py-4 font-headline font-bold text-[15.5px] focus-aurora"
+            >
+              Create free account
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/professionals"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-md px-7 py-4 font-headline font-semibold text-[14.5px] text-ink-100 transition-all duration-300"
+            >
+              <Stethoscope className="h-4 w-4 text-cyan-300" />
+              Talk to a specialist
+            </Link>
        </div>
 
           <p className="mt-7 text-[12px] text-ink-400">

@@ -18,11 +18,11 @@ export default function DoctorProfilePage() {
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
-    phone: "",
-    specialization: "",
-    licenseNumber: "",
-    hospital: "",
-    yearsOfExperience: "",
+    phone: user?.phone || "",
+    specialization: user?.specialization || "",
+    licenseNumber: user?.licenseNumber || "",
+    hospital: user?.hospital || "",
+    yearsExperience: user?.yearsExperience?.toString() || "",
   });
 
   // Change password state
@@ -57,9 +57,14 @@ export default function DoctorProfilePage() {
 
     setLoading(true);
     try {
+      const body: Record<string, unknown> = { name: formData.name, phone: formData.phone };
+      if (formData.licenseNumber)   body.licenseNumber   = formData.licenseNumber;
+      if (formData.specialization)  body.specialization  = formData.specialization;
+      if (formData.hospital)        body.hospital        = formData.hospital;
+      if (formData.yearsExperience) body.yearsExperience = parseInt(formData.yearsExperience);
       const response = await fetchJson<{ name: string }>("/api/v1/users/me", {
         method: "PUT",
-        body: JSON.stringify({ name: formData.name, phone: formData.phone }),
+        body: JSON.stringify(body),
       });
       updateUser({ ...user, name: response.name });
       setSuccess("Profile updated successfully!");
@@ -206,36 +211,38 @@ export default function DoctorProfilePage() {
 
         {/* Professional Information */}
         <Card className="p-8 rounded-3xl mb-8">
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-6">
             <h3 className="font-headline font-extrabold text-xl text-on-surface">Professional Information</h3>
+            {!isEditing && (
+              <Button variant="secondary" onClick={() => setIsEditing(true)} className="text-sm px-4 py-2">
+                Edit Profile
+              </Button>
+            )}
           </div>
-          <p className="text-sm text-on-surface-variant mb-6">
-            Contact your administrator to update professional credentials.
-          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="font-headline font-extrabold text-xs uppercase tracking-widest text-on-surface-muted">
                 License Number
               </label>
-              <Input name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} placeholder="Not set" disabled className="w-full" />
+              <Input name="licenseNumber" value={formData.licenseNumber} onChange={handleChange} placeholder="Add license number" disabled={!isEditing} className="w-full" />
             </div>
             <div className="space-y-2">
               <label className="font-headline font-extrabold text-xs uppercase tracking-widest text-on-surface-muted">
                 Specialization
               </label>
-              <Input name="specialization" value={formData.specialization} onChange={handleChange} placeholder="Not set" disabled className="w-full" />
+              <Input name="specialization" value={formData.specialization} onChange={handleChange} placeholder="e.g. Developmental Pediatrics" disabled={!isEditing} className="w-full" />
             </div>
             <div className="space-y-2">
               <label className="font-headline font-extrabold text-xs uppercase tracking-widest text-on-surface-muted">
                 Hospital / Clinic
               </label>
-              <Input name="hospital" value={formData.hospital} onChange={handleChange} placeholder="Not set" disabled className="w-full" />
+              <Input name="hospital" value={formData.hospital} onChange={handleChange} placeholder="Hospital or clinic name" disabled={!isEditing} className="w-full" />
             </div>
             <div className="space-y-2">
               <label className="font-headline font-extrabold text-xs uppercase tracking-widest text-on-surface-muted">
                 Years of Experience
               </label>
-              <Input name="yearsOfExperience" type="number" value={formData.yearsOfExperience} onChange={handleChange} placeholder="Not set" disabled className="w-full" />
+              <Input name="yearsExperience" type="number" value={formData.yearsExperience} onChange={handleChange} placeholder="0" disabled={!isEditing} className="w-full" />
             </div>
           </div>
         </Card>

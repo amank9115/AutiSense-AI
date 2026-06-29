@@ -12,6 +12,11 @@ export const REPORT_QUEUE = 'report';
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        maxRetriesPerRequest: null,
+        retryStrategy: (times: number) => {
+          if (times > 5) return null;
+          return Math.min(times * 500, 5000);
+        },
         ...(process.env.REDIS_PASSWORD
           ? { password: process.env.REDIS_PASSWORD }
           : {}),

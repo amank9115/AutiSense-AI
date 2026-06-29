@@ -7,8 +7,9 @@ import { Button, Card } from "@/components/ui/StitchUI";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { CardGridSkeleton } from "@/components/ui/SkeletonLoader";
 import { screeningApi, ChildProfile } from "@/services/api/screeningApi";
-import { useProtectedData } from "@/hooks/useProtectedData";
+import { useProtectedQuery } from "@/hooks/useProtectedQuery";
 import { calculateAge } from "@/lib/date";
+import { logger } from "@/lib/logger";
 
 type ChildrenData = {
   children: ChildProfile[];
@@ -21,7 +22,7 @@ export default function ChildrenPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "age" | "recent">("name");
 
-  const { data, loading, error } = useProtectedData<ChildrenData>(async () => {
+  const { data, loading, error } = useProtectedQuery<ChildrenData>(["children", "withSessions"], async () => {
     const [children, sessionsRes] = await Promise.all([
       screeningApi.getChildren(),
       screeningApi.getSessions(1, 100),
@@ -146,7 +147,7 @@ export default function ChildrenPage() {
                         e.stopPropagation();
                         if (confirm(`Remove ${child.name}'s profile? This cannot be undone.`)) {
                           // TODO: wire to API when endpoint is available
-                          console.warn("Delete child not yet supported by API:", child.id);
+                          logger.warn("ChildrenPage", "Delete child not yet supported by API", child.id);
                           alert("Delete feature coming soon.");
                         }
                       }}

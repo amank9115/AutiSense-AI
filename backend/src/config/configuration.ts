@@ -39,13 +39,21 @@ export interface IConfig {
 export const configuration = (): IConfig => {
   const jwtSecret = process.env.JWT_SECRET;
 
-  // Validate JWT_SECRET in production to prevent deployment without proper secrets
+  // Fail closed on the JWT secret (security audit finding H4).
+  // The insecure development fallback is only permitted when NODE_ENV is
+  // *explicitly* set to 'development' or 'test'. Any other value — including
+  // 'production', 'staging', or an unset NODE_ENV — requires a real, strong
+  // secret, so a deploy that forgets to set NODE_ENV can never silently boot
+  // with the hardcoded dev secret.
+  const explicitDevOrTest =
+    process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
   if (
-    process.env.NODE_ENV === 'production' &&
+    !explicitDevOrTest &&
     (!jwtSecret || jwtSecret.includes('dev-secret') || jwtSecret.length < 32)
   ) {
     throw new Error(
-      'JWT_SECRET must be set and be at least 32 characters in production. Use a cryptographically secure random string.',
+      'JWT_SECRET must be set and be at least 32 characters outside an explicit development/test environment. ' +
+        'Use a cryptographically secure random string (e.g. `openssl rand -base64 48`).',
     );
   }
 

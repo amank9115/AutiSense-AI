@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useProtectedData } from "@/hooks/useProtectedData";
+import { useProtectedQuery } from "@/hooks/useProtectedQuery";
+import { useQueryClient } from "@tanstack/react-query";
 import { screeningApi, ReportShare } from "@/services/api/screeningApi";
 import { EmptyState } from "@/components/ui/StitchUI";
 import { DoctorTopBar } from "@/components/layout/DoctorTopBar";
@@ -26,23 +27,32 @@ const DomainBar = ({ label, value, color }: { label: string; value: number; colo
 export default function DoctorReportPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const shareId = params?.id as string;
 
   const [notes, setNotes] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<"saved" | "error" | null>(null);
 
-  const { data: share, loading, error } = useProtectedData<ReportShare>(
+  const { data: share, loading, error } = useProtectedQuery<ReportShare>(
+    ["reports", "share", shareId],
     () => screeningApi.getReportShare(shareId),
-    [shareId],
+    { enabled: !!shareId },
   );
 
-  // Initialise notes from loaded data (only once)
-  const [notesInitialised, setNotesInitialised] = useState(false);
-  if (share && !notesInitialised) {
-    setNotes(share.doctorNotes ?? "");
-    setNotesInitialised(true);
-  }
+  // After a review, refresh this report (status badge) and the doctor lists/counts.
+  const invalidateReportCaches = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ["reports"] });
+    void queryClient.invalidateQueries({ queryKey: ["doctor"] });
+  }, [queryClient]);
+
+  // Initialise notes from loaded data (only once, in an effect)
+  useEffect(() => {
+    if (share && notes === undefined) {
+      setNotes(share.doctorNotes ?? "");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [share]);
 
   const handleMarkReviewed = useCallback(async () => {
     if (!shareId) return;
@@ -51,13 +61,14 @@ export default function DoctorReportPage() {
     try {
       await screeningApi.reviewReport(shareId, notes ?? "", true);
       setSaveMsg("saved");
+      invalidateReportCaches();
       setTimeout(() => setSaveMsg(null), 3000);
     } catch {
       setSaveMsg("error");
     } finally {
       setSaving(false);
     }
-  }, [shareId, notes]);
+  }, [shareId, notes, invalidateReportCaches]);
 
   const handleSaveNotes = useCallback(async () => {
     if (!shareId) return;
@@ -66,13 +77,14 @@ export default function DoctorReportPage() {
     try {
       await screeningApi.reviewReport(shareId, notes ?? "", false);
       setSaveMsg("saved");
+      invalidateReportCaches();
       setTimeout(() => setSaveMsg(null), 3000);
     } catch {
       setSaveMsg("error");
     } finally {
       setSaving(false);
     }
-  }, [shareId, notes]);
+  }, [shareId, notes, invalidateReportCaches]);
 
   // Derive display data
   const session = share?.session;
@@ -203,14 +215,19 @@ export default function DoctorReportPage() {
           {Object.keys(behaviors).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
               {Object.entries(behaviors).map(([key, val]) => {
-                const colors = ["text-secondary", "text-tertiary", "text-primary", "text-secondary-dim"];
-                const idx = Object.keys(behaviors).indexOf(key);
+                // Stable color map keyed by known behavior names; fallback for unknowns.
+                const colorMap: Record<string, string> = {
+                  EyeContact:        "text-secondary",
+                  JointAttention:    "text-tertiary",
+                  FacialExpression:  "text-primary",
+                };
+                const color = colorMap[key] ?? "text-on-surface-variant";
                 return (
                   <DomainBar
                     key={key}
                     label={key.replace(/([A-Z])/g, " $1").trim()}
                     value={typeof val === "number" ? val : 0}
-                    color={colors[idx % colors.length]}
+                    color={color}
                   />
                 );
               })}

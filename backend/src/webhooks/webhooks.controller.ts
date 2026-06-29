@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OrgMembershipGuard } from '../tenant/org-membership.guard';
@@ -39,5 +40,22 @@ export class WebhooksController {
     @Param('webhookId') webhookId: string,
   ) {
     await this.webhooks.delete(webhookId, orgId);
+  }
+
+  @Post(':orgId/:webhookId/test')
+  async test(
+    @Param('orgId') orgId: string,
+    @Param('webhookId') webhookId: string,
+  ) {
+    return this.webhooks.test(webhookId, orgId);
+  }
+
+  @Get(':orgId/:webhookId/deliveries')
+  async getDeliveries(
+    @Param('orgId') orgId: string,
+    @Param('webhookId') webhookId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.webhooks.getDeliveries(webhookId, orgId, limit ? parseInt(limit, 10) : 50);
   }
 }
