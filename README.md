@@ -49,48 +49,55 @@ AutiSense-AI/
 │
 ├── .github/workflows/ci.yml       # CI pipeline (lint → build → check)
 │
-├── frontend/                       # React 19 + Next.js 15 (App Router) + TypeScript
+├── frontend/                       # Next.js 15 (App Router) + React 19 + TS + Tailwind v4
 │   ├── src/
-│   │   ├── pages/                  # 23 page components
+│   │   ├── app/                    # App Router routes — (auth) group, screening, results,
+│   │   │                           #   parent/doctor dashboards, per-segment error.tsx
 │   │   ├── components/
-│   │   │   ├── ui/                 # Design primitives
+│   │   │   ├── ui/                 # Design-token primitives (Button, Card, Alert, RiskBadge…)
 │   │   │   ├── ai/                 # ML overlay components
 │   │   │   ├── camera/             # Camera preview + analysis
-│   │   │   ├── charts/             # Behavioral analytics charts
+│   │   │   ├── charts/             # Behavioral analytics (Recharts)
 │   │   │   ├── chat/               # AI agent chat
-│   │   │   ├── layout/             # Navbar, Footer, AppShell
-│   │   │   └── ...                 # auth, effects, story, etc.
-│   │   ├── hooks/                  # Custom React hooks
-│   │   ├── context/                # Auth, Screening, Theme
-│   │   ├── services/               # API clients
-│   │   ├── routes/                 # App router
+│   │   │   ├── layout/             # Navbar, Footer, sidebars
+│   │   │   └── ...                 # auth, effects, common, etc.
+│   │   ├── hooks/                  # Custom hooks (useProtectedQuery…)
+│   │   ├── context/                # Auth, Screening contexts
+│   │   ├── store/                  # Zustand store (auth, theme, accessibility)
+│   │   ├── services/ + api/        # API clients (fetch + TanStack Query)
+│   │   ├── lib/                    # Utilities (queryClient, screeningProgress…)
 │   │   └── types/                  # TypeScript definitions
 │   └── public/                     # Static assets
 │
-├── backend/                        # NestJS 11 + Prisma + PostgreSQL
+├── backend/                        # NestJS 11 + Prisma + PostgreSQL + Redis
 │   ├── prisma/                     # Prisma schema, migrations, seed
 │   └── src/
 │       ├── main.ts                 # Nest bootstrap (CORS, pipes, Swagger)
 │       ├── auth/                   # JWT auth, refresh tokens, lockout
 │       ├── ml/                     # Proxy/gateway to Python ML service
 │       ├── ai/                     # LangChain assistant + document ingest
-│       ├── screening/ users/ tenant/ billing/   # Domain modules
+│       ├── screening/              # Sessions, results, doctor sharing, statistics
+│       ├── appointments/ analytics/ fhir/ gdpr/   # Domain modules
+│       ├── users/ tenant/ webhooks/ rate-limits/  # + audit, api-keys, gamification
 │       └── common/                 # Filters, interceptors, exceptions
 │
-├── ml-service/                     # Python FastAPI + ML Models
+├── ml-service/                     # Python FastAPI + OpenCV ML service (:8001)
 │   ├── app/
-│   │   ├── main.py                 # FastAPI entry point
-│   │   ├── ml_analyzer.py          # ML analysis logic
-│   │   └── pdf_generator.py        # PDF report generation
-│   ├── ai-engine/                  # Computer vision modules
+│   │   ├── main.py                 # FastAPI entry (/health, /predict/live, /predict/window)
+│   │   ├── gaze_analyzer.py        # Eye-contact / gaze scoring
+│   │   ├── diagnosis_support.py    # Risk scoring + recommendations
+│   │   ├── session_store.py        # Per-session frame aggregation
+│   │   ├── model_registry.py       # Model versioning + registry
+│   │   ├── training_pipeline.py    # Retraining pipeline
+│   │   └── ...                     # drift detection, experiments, metrics
+│   ├── ai-engine/                  # Computer-vision modules
 │   │   ├── behavior_analysis.py
 │   │   ├── emotion_detection.py
-│   │   └── camera_stream.py
-│   ├── models/                     # Trained .pkl artifacts (gitignored)
-│   └── train_model.py              # Model training script
+│   │   └── metrics_engine.py
+│   └── models/                     # Trained artifacts (gitignored)
 │
 ├── docs/                           # Reference documentation
-├── docker-compose.yml              # Local MongoDB
+├── docker-compose.yml              # Local PostgreSQL (pgvector) + Redis + Ollama
 ├── .editorconfig                   # Consistent formatting
 ├── .env.example                    # All env vars documented
 └── package.json                    # Root scripts (concurrently)
@@ -141,9 +148,9 @@ This starts all three services concurrently:
 Or start individually:
 
 ```bash
-npm run dev:frontend    # React dev server
-npm run dev:backend     # Express API
-npm run dev:ml          # FastAPI ML service
+npm run dev:frontend    # Next.js dev server  (:3000)
+npm run dev:backend     # NestJS API          (:4000)
+npm run dev:ml          # FastAPI ML service   (:8001)
 ```
 
 ---
@@ -160,7 +167,9 @@ npm run dev:ml          # FastAPI ML service
 
 ---
 
-## 📡 API Endpoints
+## 📡 API Endpoints (selected)
+
+> The frontend proxies `/api/v1/*`, `/ml/*` and `/ai/*` to the backend (see `frontend/next.config.ts`).
 
 ### Authentication
 | Method | Endpoint | Description |
@@ -168,21 +177,26 @@ npm run dev:ml          # FastAPI ML service
 | POST | `/api/v1/auth/login` | Email/password login |
 | POST | `/api/v1/auth/register` | New user registration |
 | POST | `/api/v1/auth/google` | Google OAuth login |
+| POST | `/api/v1/auth/refresh` | Rotate access token (httpOnly refresh cookie) |
 
-### ML Screening
+### Screening & Reports
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/ml/camera-screening` | Analyze camera frames |
-| POST | `/api/v1/ml/live-inference` | Real-time per-frame scoring |
-| GET | `/api/v1/ml/sessions/:id` | Get session results |
-| GET | `/api/v1/ml/sessions/:id/report` | Download PDF report |
+| POST | `/api/v1/screening/sessions` | Create a screening session |
+| POST | `/api/v1/screening/sessions/:id/results` | Persist analysis results |
+| GET | `/api/v1/screening/sessions/:id` | Get session + results |
+| GET | `/api/v1/screening/statistics` | Parent dashboard stats |
+| GET | `/api/v1/screening/doctor/statistics` | Doctor dashboard stats |
+| POST | `/api/v1/screening/sessions/:id/share` | Share a report with a doctor |
+| GET | `/api/v1/screening/reports/received` | Reports shared to a doctor |
+| PUT | `/api/v1/screening/reports/:shareId/review` | Add notes / mark reviewed |
 
-### Analytics
+### ML Service (proxied → FastAPI :8001)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/analysis/live-behavior` | Behavioral timeline |
-| GET | `/api/v1/analysis/emotion-timeline` | Emotion tracking |
-| GET | `/api/v1/analysis/weekly-progress` | Weekly progress data |
+| POST | `/ml/camera-screening` | Analyze captured frames |
+| POST | `/ml/live-inference` | Real-time per-frame scoring |
+| POST | `/ml/report/:sessionId` | Generate PDF report |
 
 ---
 
@@ -190,9 +204,8 @@ npm run dev:ml          # FastAPI ML service
 
 | Role | Capabilities |
 |------|-------------|
-| **Parent** | Child screening, progress monitoring, development insights |
-| **Clinician** | Behavioral analysis tools, case monitoring, session reports |
-| **Doctor** | Clinical dashboards, longitudinal tracking, diagnostic insights |
+| **Parent** | Add children, run camera screenings, track progress, share reports with a doctor |
+| **Doctor** | Review shared reports, add clinical notes, patient list, analytics, appointments |
 
 ---
 
