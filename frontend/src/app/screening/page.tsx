@@ -8,6 +8,12 @@ import Webcam from "react-webcam";
 import { fetchJson } from "@/api/client";
 import { screeningApi } from "@/services/api/screeningApi";
 import { logger } from "@/lib/logger";
+import {
+  type CapturedFrame,
+  saveScreeningProgress,
+  loadScreeningProgress,
+  clearScreeningProgress,
+} from "@/lib/screeningProgress";
 
 const MODULES = [
   { id: "calibration", title: "Calibration", duration: 5, icon: "center_focus_strong", parentHint: "Ensure your child is facing the camera clearly.", childPrompt: "Look at the camera!" },
@@ -16,6 +22,19 @@ const MODULES = [
   { id: "name_response", title: "Name Response", duration: 10, icon: "hearing", parentHint: "Call their name. Wait 3 seconds, call again if needed.", childPrompt: "" },
   { id: "facial_expression", title: "Expressions", duration: 10, icon: "sentiment_satisfied", parentHint: "Smile at your child or make a silly face.", childPrompt: "Show me a big smile!" },
 ];
+
+type CaptureQuality = { level: "good" | "fair" | "poor"; hint: string };
+
+// Translate raw brightness (mean luma ~0–255) + inter-frame motion into a
+// human-facing capture-quality signal so parents can fix lighting/steadiness
+// in real time, reducing failed/insufficient screenings.
+function deriveQuality(brightness: number, motion: number): CaptureQuality {
+  if (brightness < 30) return { level: "poor", hint: "Too dark — add more light" };
+  if (brightness > 135) return { level: "poor", hint: "Too bright — reduce glare" };
+  if (motion > 45) return { level: "fair", hint: "Hold the camera steady" };
+  if (brightness < 45) return { level: "fair", hint: "A little more light helps" };
+  return { level: "good", hint: "Looks great — hold this position" };
+}
 
 export default function ScreeningPage() {
   const router = useRouter();
@@ -38,10 +57,13 @@ export default function ScreeningPage() {
   // "analysis" = capture succeeded but the ML/network call failed (can retry analysis).
   const [failure, setFailure] = useState<null | "insufficient" | "analysis">(null);
   const webcamRef = useRef<Webcam>(null);
-  const capturedFramesRef = useRef<Array<{ eyeContact: number; attentionSpan: number; emotionSignals: number; gestureAnalysis: number; confidence: number; imageBase64?: string }>>([]);
+  const capturedFramesRef = useRef<CapturedFrame[]>([]);
   const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousFrameSampleRef = useRef<number[] | null>(null);
+  const startedAtRef = useRef<number>(0);
   const [frameCount, setFrameCount] = useState(0);
+  const [quality, setQuality] = useState<CaptureQuality | null>(null);
+  const [hasSavedProgress, setHasSavedProgress] = useState(false);
 
   // Capture real video frames as base64 JPEGs and compute client-side behavioral metrics.
   // Metrics are in 0–1 scale to match FrameDto validation; the backend scales to 0–100
@@ -81,6 +103,9 @@ export default function ScreeningPage() {
     }
     previousFrameSampleRef.current = sample;
 
+    // Surface a live capture-quality signal from the same brightness/motion stats.
+    setQuality(deriveQuality(brightness, motion));
+
     const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
     const stability = clamp01((100 - motion * 2) / 100);
     const focus     = clamp01((80 - Math.abs(brightness - 60) * 0.5) / 100);
@@ -118,10 +143,66 @@ export default function ScreeningPage() {
       .catch(() => setHasPermission(false));
   }, []);
 
-  const startScreening = () => {
+  // Persist progress at each module boundary so a crash/refresh can resume.
+  useEffect(() => {
+    if (currentModuleIndex >= 0 && !isCompleted && childId) {
+      saveScreeningProgress(
+        {
+          childId,
+          moduleIndex: currentModuleIndex,
+          timeLeft: MODULES[currentModuleIndex].duration,
+          frames: capturedFramesRef.current,
+          startedAt: startedAtRef.current,
+        },
+        Date.now(),
+      );
+    }
+  }, [currentModuleIndex, isCompleted, childId]);
+
+  // On mount, offer a Resume option if an interrupted session exists for this child.
+  useEffect(() => {
+    if (childId) setHasSavedProgress(!!loadScreeningProgress(childId, Date.now()));
+  }, [childId]);
+
+  const startScreening = useCallback(() => {
+    clearScreeningProgress();
+    capturedFramesRef.current = [];
+    previousFrameSampleRef.current = null;
+    setFrameCount(0);
+    setHasSavedProgress(false);
+    startedAtRef.current = Date.now();
     setCurrentModuleIndex(0);
     setTimeLeft(MODULES[0].duration);
-  };
+  }, []);
+
+  // Pause: persist progress for crash recovery, then leave for the dashboard.
+  const pauseScreening = useCallback(() => {
+    if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
+    if (childId) {
+      saveScreeningProgress(
+        { childId, moduleIndex: currentModuleIndex, timeLeft, frames: capturedFramesRef.current, startedAt: startedAtRef.current },
+        Date.now(),
+      );
+    }
+    router.push("/dashboard/parent");
+  }, [childId, currentModuleIndex, timeLeft, router]);
+
+  // Resume an interrupted session: rehydrate frames + position and continue.
+  const resumeScreening = useCallback(() => {
+    if (!childId) return;
+    const saved = loadScreeningProgress(childId, Date.now());
+    if (!saved) {
+      setHasSavedProgress(false);
+      return;
+    }
+    capturedFramesRef.current = saved.frames;
+    previousFrameSampleRef.current = null;
+    startedAtRef.current = saved.startedAt;
+    setFrameCount(saved.frames.length);
+    setHasSavedProgress(false);
+    setCurrentModuleIndex(saved.moduleIndex);
+    setTimeLeft(MODULES[saved.moduleIndex]?.duration ?? MODULES[0].duration);
+  }, [childId]);
 
   // Submit captured frames to the backend ML pipeline. On failure we surface an
   // honest error + retry — we never fabricate or persist a synthetic risk score.
@@ -180,6 +261,7 @@ export default function ScreeningPage() {
         logger.error("ScreeningPage", "Failed to save screening results", e);
       }
 
+      clearScreeningProgress();
       setMlResults(results);
       setIsProcessing(false);
       setTimeout(() => router.push(`/results?sessionId=${session.id}`), 1500);
@@ -201,9 +283,11 @@ export default function ScreeningPage() {
 
   // Restart the whole screening from setup (used when too few frames were captured).
   const restartScreening = useCallback(() => {
+    clearScreeningProgress();
     capturedFramesRef.current = [];
     previousFrameSampleRef.current = null;
     setFrameCount(0);
+    setHasSavedProgress(false);
     setProcessingError(null);
     setFailure(null);
     setIsCompleted(false);
@@ -277,10 +361,20 @@ export default function ScreeningPage() {
                 </div>
               ))}
             </div>
-            {/* Live Indicator */}
-            <div className="flex items-center gap-2 bg-error/10 px-3 py-1.5 rounded-full border border-error/20">
-              <div className="w-2 h-2 bg-error rounded-full animate-pulse" />
-              <span className="text-xs font-bold text-error uppercase tracking-widest">Rec</span>
+            {/* Pause + Live Indicator */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={pauseScreening}
+                aria-label="Pause and save screening"
+                className="flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-3 py-1.5 rounded-full border border-outline-variant/20 transition-colors active:scale-95"
+              >
+                <span className="material-symbols-outlined text-[16px]">pause</span>
+                <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline">Pause</span>
+              </button>
+              <div className="flex items-center gap-2 bg-error/10 px-3 py-1.5 rounded-full border border-error/20">
+                <div className="w-2 h-2 bg-error rounded-full animate-pulse" />
+                <span className="text-xs font-bold text-error uppercase tracking-widest">Rec</span>
+              </div>
             </div>
           </div>
         </header>
@@ -305,10 +399,26 @@ export default function ScreeningPage() {
                  <span className="material-symbols-outlined text-secondary mt-1">lightbulb</span>
                  <p className="text-sm text-on-surface-variant">We will provide instructions for you (the parent) and visual prompts for your child on screen.</p>
                </div>
-               <button onClick={startScreening} disabled={hasPermission === null} className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2 mx-auto">
-                 {hasPermission === null ? "Waiting for Camera..." : "Start Session"}
-                 <span className="material-symbols-outlined">play_arrow</span>
-               </button>
+               {hasSavedProgress ? (
+                 <div className="flex flex-col gap-3">
+                   <div className="bg-primary-container/40 border border-primary/10 rounded-2xl p-3 flex items-center gap-3 text-left">
+                     <span className="material-symbols-outlined text-primary">history</span>
+                     <p className="text-sm text-on-surface-variant">We saved your earlier progress. You can pick up where you left off.</p>
+                   </div>
+                   <button onClick={resumeScreening} disabled={hasPermission === null} className="w-full bg-gradient-to-r from-primary to-secondary text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2">
+                     <span className="material-symbols-outlined">play_arrow</span>
+                     {hasPermission === null ? "Waiting for Camera..." : "Resume Screening"}
+                   </button>
+                   <button onClick={startScreening} disabled={hasPermission === null} className="w-full text-on-surface-variant font-semibold py-2 hover:text-on-surface transition-colors disabled:opacity-50">
+                     Start fresh instead
+                   </button>
+                 </div>
+               ) : (
+                 <button onClick={startScreening} disabled={hasPermission === null} className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2 mx-auto">
+                   {hasPermission === null ? "Waiting for Camera..." : "Start Session"}
+                   <span className="material-symbols-outlined">play_arrow</span>
+                 </button>
+               )}
             </div>
           </motion.div>
         )}
@@ -424,16 +534,25 @@ export default function ScreeningPage() {
                   {/* Scan line */}
                   <div className="absolute left-0 right-0 h-1 bg-primary/40 animate-scan-line blur-[2px]" />
 
-                  {/* Live Capture Status (Bottom Left) */}
-                  <div className="absolute bottom-4 left-4 bg-black/40 backdrop-blur-md rounded-xl p-3 border border-white/10 flex flex-col gap-1.5">
-                    <div className="flex items-center gap-2">
-                       <span className="text-white/80 text-[10px] font-mono">Frames</span>
-                       <span className="text-primary text-[10px] font-bold font-mono">{frameCount}</span>
+                  {/* Live Capture-Quality Meter (Bottom Left) */}
+                  <div className="absolute bottom-4 left-4 right-4 sm:right-auto bg-black/45 backdrop-blur-md rounded-xl p-3 border border-white/10 flex flex-col gap-1.5 sm:max-w-[16rem]">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${
+                          quality?.level === "good" ? "bg-success animate-pulse" :
+                          quality?.level === "fair" ? "bg-tertiary-fixed" :
+                          quality?.level === "poor" ? "bg-error animate-pulse" :
+                          "bg-white/50"
+                        }`} />
+                        <span className="text-white/90 text-[10px] font-bold font-mono uppercase tracking-wider">
+                          {quality ? `${quality.level} signal` : "Starting…"}
+                        </span>
+                      </div>
+                      <span className="text-white/70 text-[10px] font-mono">{frameCount} frames</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                       <span className="material-symbols-outlined text-success text-[12px]">videocam</span>
-                       <span className="text-white/80 text-[10px] font-mono">Capturing</span>
-                    </div>
+                    <p className="text-white/75 text-[10px] leading-snug" aria-live="polite">
+                      {quality?.hint ?? "Hold your child in view of the camera."}
+                    </p>
                   </div>
                   
                   {/* Top Right Status */}

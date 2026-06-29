@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/StitchUI";
@@ -8,6 +8,7 @@ import { DashboardStatsSkeleton, ParentDashboardSkeleton } from "@/components/ui
 import { StatCard } from "@/components/dashboard/StatCard";
 import { fetchJson } from "@/api/client";
 import { useProtectedQuery } from "@/hooks/useProtectedQuery";
+import { peekScreeningProgress, clearScreeningProgress } from "@/lib/screeningProgress";
 import type { DashboardStats } from "@/lib/analytics";
 
 const MilestoneCard = ({
@@ -78,6 +79,16 @@ export default function ParentDashboard() {
     () => fetchJson<DashboardStats>("/api/v1/screening/statistics"),
   );
 
+  // Surface a Resume CTA when the parent left a screening in progress.
+  const [resumeChildId, setResumeChildId] = useState<string | null>(null);
+  useEffect(() => {
+    setResumeChildId(peekScreeningProgress(Date.now())?.childId ?? null);
+  }, []);
+
+  // First-timers (and anyone starting a screening) need to pick a child first —
+  // the children page is where a screening actually launches with a childId.
+  const startScreening = () => router.push("/dashboard/parent/children");
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -90,6 +101,37 @@ export default function ParentDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 space-y-10">
+
+      {/* Resume in-progress screening */}
+      {resumeChildId && (
+        <div className="bg-primary-container/50 border border-primary/15 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-primary">play_circle</span>
+            </div>
+            <div>
+              <h3 className="font-headline font-bold text-on-surface">You have a screening in progress</h3>
+              <p className="text-sm text-on-surface-muted">Pick up where you left off — your captured progress was saved.</p>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button
+              variant="primary"
+              onClick={() => router.push(`/screening?childId=${resumeChildId}`)}
+              className="px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-sm"
+            >
+              Resume
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => { clearScreeningProgress(); setResumeChildId(null); }}
+              className="px-4 py-3 rounded-2xl font-bold uppercase tracking-widest text-sm"
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Welcome Hero */}
       {loading ? (
@@ -117,7 +159,7 @@ export default function ParentDashboard() {
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button
                   variant="primary"
-                  onClick={() => router.push(isFirstTime ? "/assessment" : "/results")}
+                  onClick={() => (isFirstTime ? startScreening() : router.push("/results"))}
                   className="px-8 py-3 rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-primary/15 hover:scale-[1.02] transition-all text-sm"
                 >
                   {isFirstTime ? "Start First Screening" : "View Latest Report"}

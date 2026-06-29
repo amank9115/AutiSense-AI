@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProtectedQuery } from "@/hooks/useProtectedQuery";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,8 +31,9 @@ export default function DoctorReportPage() {
   const shareId = params?.id as string;
 
   const [notes, setNotes] = useState<string | undefined>(undefined);
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<"saved" | "error" | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // The notes value last persisted — guards autosave against redundant writes.
+  const lastSavedRef = useRef<string | null>(null);
 
   const { data: share, loading, error } = useProtectedQuery<ReportShare>(
     ["reports", "share", shareId],
@@ -46,45 +47,38 @@ export default function DoctorReportPage() {
     void queryClient.invalidateQueries({ queryKey: ["doctor"] });
   }, [queryClient]);
 
-  // Initialise notes from loaded data (only once, in an effect)
+  // Initialise notes from loaded data (only once) and seed the last-saved marker.
   useEffect(() => {
     if (share && notes === undefined) {
       setNotes(share.doctorNotes ?? "");
+      lastSavedRef.current = share.doctorNotes ?? "";
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [share]);
 
-  const handleMarkReviewed = useCallback(async () => {
-    if (!shareId) return;
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      await screeningApi.reviewReport(shareId, notes ?? "", true);
-      setSaveMsg("saved");
-      invalidateReportCaches();
-      setTimeout(() => setSaveMsg(null), 3000);
-    } catch {
-      setSaveMsg("error");
-    } finally {
-      setSaving(false);
-    }
-  }, [shareId, notes, invalidateReportCaches]);
+  // Single persist path for autosave + the explicit buttons.
+  const persistNotes = useCallback(
+    async (markReviewed: boolean) => {
+      if (!shareId) return;
+      setSaveState("saving");
+      try {
+        await screeningApi.reviewReport(shareId, notes ?? "", markReviewed);
+        lastSavedRef.current = notes ?? "";
+        setSaveState("saved");
+        invalidateReportCaches();
+      } catch {
+        setSaveState("error");
+      }
+    },
+    [shareId, notes, invalidateReportCaches],
+  );
 
-  const handleSaveNotes = useCallback(async () => {
-    if (!shareId) return;
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      await screeningApi.reviewReport(shareId, notes ?? "", false);
-      setSaveMsg("saved");
-      invalidateReportCaches();
-      setTimeout(() => setSaveMsg(null), 3000);
-    } catch {
-      setSaveMsg("error");
-    } finally {
-      setSaving(false);
-    }
-  }, [shareId, notes, invalidateReportCaches]);
+  // Debounced autosave: persist 1.5s after the doctor stops typing.
+  useEffect(() => {
+    if (notes === undefined || notes === lastSavedRef.current) return;
+    const t = setTimeout(() => { void persistNotes(false); }, 1500);
+    return () => clearTimeout(t);
+  }, [notes, persistNotes]);
 
   // Derive display data
   const session = share?.session;
@@ -295,31 +289,40 @@ export default function DoctorReportPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-outline-variant/10">
-              <div className="flex items-center gap-3">
-                {saveMsg === "saved" && (
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-secondary">
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
-                    Saved
+              <div className="flex items-center gap-3 min-h-5" aria-live="polite">
+                {saveState === "saving" && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-on-surface-muted">
+                    <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                    Saving…
                   </span>
                 )}
-                {saveMsg === "error" && (
-                  <span className="text-xs font-bold text-error">Failed to save. Try again.</span>
+                {saveState === "saved" && (
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-secondary">
+                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    All changes saved
+                  </span>
+                )}
+                {saveState === "error" && (
+                  <button onClick={() => persistNotes(false)} className="flex items-center gap-1.5 text-xs font-bold text-error hover:underline">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    Couldn&apos;t save — retry
+                  </button>
                 )}
               </div>
               <div className="flex gap-3 w-full sm:w-auto">
                 <button
-                  onClick={handleSaveNotes}
-                  disabled={saving}
+                  onClick={() => persistNotes(false)}
+                  disabled={saveState === "saving"}
                   className="flex-1 sm:flex-none px-8 py-4 bg-surface-container-high text-on-surface font-extrabold rounded-2xl hover:bg-surface-variant transition-all text-[10px] uppercase tracking-widest disabled:opacity-40"
                 >
                   Save Notes
                 </button>
                 <button
-                  onClick={handleMarkReviewed}
-                  disabled={saving || share.status === "reviewed"}
+                  onClick={() => persistNotes(true)}
+                  disabled={saveState === "saving" || share.status === "reviewed"}
                   className="flex-1 sm:flex-none px-10 py-4 bg-gradient-to-br from-primary to-primary/80 text-on-primary font-extrabold rounded-2xl shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all text-[10px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  {share.status === "reviewed" ? "Already Reviewed ✓" : saving ? "Saving…" : "Mark as Reviewed"}
+                  {share.status === "reviewed" ? "Already Reviewed ✓" : saveState === "saving" ? "Saving…" : "Mark as Reviewed"}
                 </button>
               </div>
             </div>
