@@ -11,6 +11,8 @@ export const wait = (ms: number) =>
 
 export const getApiBaseUrl = () => API_BASE
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 export const fetchJson = async <T>(path: string, init?: RequestInit, isRetry = false): Promise<T> => {
   // Get token from store
   const token = useAppStore.getState().token;
@@ -24,11 +26,25 @@ export const fetchJson = async <T>(path: string, init?: RequestInit, isRetry = f
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
-    credentials: "include", // Ensure cookies (refresh token) are sent and received
-  })
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: "include",
+      signal: init?.signal ?? controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`);
+    }
+    throw err;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     // Never attempt token refresh on auth endpoints — it would count as

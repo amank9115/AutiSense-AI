@@ -5,7 +5,7 @@ import { CacheService } from '../cache/cache.service';
 
 describe('LockoutService', () => {
   let service: LockoutService;
-  let redisService: jest.Mocked<RedisService>;
+  let redisService: jest.Mocked<CacheService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

@@ -1,0 +1,71 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      image_tag:
+        description: Image SHA tag to roll back to (e.g. abc1234)
+        required: true
+        type: string
+      rolled_back_migration:
+        description: Migration name to mark as rolled back (leave empty if no schema change)
+        required: false
+        type: string
+
+jobs:
+  rollback-staging:
+    name: Rollback staging
+    if: ${{ inputs.environment == 'staging' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Rollback staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            cd /opt/autisense
+            export IMAGE_TAG=${{ inputs.image_tag }}
+            if [ -n "${{ inputs.rolled_back_migration }}" ]; then
+              docker compose -f docker-compose.prod.yml exec -T backend \
+                npx prisma migrate resolve --rolled-back "${{ inputs.rolled_back_migration }}"
+            fi
+            sed -i "s|:latest|:$IMAGE_TAG|g" docker-compose.prod.yml
+            docker compose -f docker-compose.prod.yml up -d
+            sleep 10
+            curl -sf http://localhost:4000/health
+            echo "Staging rollback to $IMAGE_TAG complete"
+
+  rollback-production:
+    name: Rollback production
+    if: ${{ inputs.environment == 'production' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Rollback production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            cd /opt/autisense
+            export IMAGE_TAG=${{ inputs.image_tag }}
+            if [ -n "${{ inputs.rolled_back_migration }}" ]; then
+              docker compose -f docker-compose.prod.yml exec -T backend \
+                npx prisma migrate resolve --rolled-back "${{ inputs.rolled_back_migration }}"
+            fi
+            sed -i "s|:latest|:$IMAGE_TAG|g" docker-compose.prod.yml
+            docker compose -f docker-compose.prod.yml up -d
+            sleep 10
+            curl -sf http://localhost:4000/health
+            echo "Production rollback to $IMAGE_TAG complete"

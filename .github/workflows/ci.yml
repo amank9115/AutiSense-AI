@@ -20,10 +20,12 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci --legacy-peer-deps
+      - run: npm audit --audit-level=high
       - run: npx prisma generate
       - run: npm run build
       - run: npm run lint
       - run: npm run test -- --passWithNoTests
+      - run: npm run test:cov -- --passWithNoTests
 
   frontend:
     runs-on: ubuntu-latest
@@ -38,6 +40,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --legacy-peer-deps
+      - run: npm audit --audit-level=high
       - run: echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:4000" > .env
       - run: npm run build
       - run: npm run lint
@@ -53,5 +56,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
+      - run: pip install pytest pytest-asyncio httpx anyio
       - run: python -m py_compile app/main.py
       - run: python -m py_compile app/ml_analyzer.py
+      - run: pytest tests/ -v --tb=short

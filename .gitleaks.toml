@@ -1,0 +1,11 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Safe files — examples and test fixtures"
+paths = [
+  '''\\.env\\.example$''',
+  '''__tests__''',
+  '''\\.test\\.(ts|js)$''',
+  '''\\.spec\\.(ts|js)$''',
+]

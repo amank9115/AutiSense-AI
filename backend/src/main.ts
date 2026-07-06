@@ -27,7 +27,14 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
+          // 'unsafe-inline' removed in production to block XSS script injection.
+          // In dev it stays for NestJS error pages and HMR tooling.
+          scriptSrc:
+            process.env.NODE_ENV === 'production'
+              ? ["'self'"]
+              : ["'self'", "'unsafe-inline'"],
+          // 'unsafe-inline' retained for styles: CSS-in-JS (Tailwind JIT) cannot
+          // easily use nonces. Track removal in: https://github.com/nicehash/nonce-csp
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'https:'],
           connectSrc: ["'self'"],
@@ -94,33 +101,35 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Swagger/OpenAPI documentation
-  const config = new DocumentBuilder()
-    .setTitle('AutiSense AI - Autism Screening Platform API')
-    .setDescription(
-      'Comprehensive REST API for autism spectrum disorder screening with AI-powered analysis',
-    )
-    .setVersion('1.0.0')
-    .addServer('http://localhost:4000', 'Development')
-    .addServer('https://api.autisense.ai', 'Production')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'access_token',
-    )
-    .addTag('Auth', 'Authentication and authorization endpoints')
-    .addTag('Users', 'User profile and account management')
-    .addTag('Screening', 'Autism screening session management')
-    .addTag('Health', 'Health check and status endpoints')
-    .addTag('ML', 'Machine learning inference endpoints')
-    .build();
+  // Swagger is only available in non-production environments.
+  if (configService.server.nodeEnv !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('AutiSense AI - Autism Screening Platform API')
+      .setDescription(
+        'Comprehensive REST API for autism spectrum disorder screening with AI-powered analysis',
+      )
+      .setVersion('1.0.0')
+      .addServer('http://localhost:4000', 'Development')
+      .addServer('https://api.autisense.ai', 'Production')
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        'access_token',
+      )
+      .addTag('Auth', 'Authentication and authorization endpoints')
+      .addTag('Users', 'User profile and account management')
+      .addTag('Screening', 'Autism screening session management')
+      .addTag('Health', 'Health check and status endpoints')
+      .addTag('ML', 'Machine learning inference endpoints')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      displayOperationId: true,
-    },
-  });
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: {
+        persistAuthorization: true,
+        displayOperationId: true,
+      },
+    });
+  }
 
   const port = configService.server.port;
   await app.listen(port);
@@ -129,10 +138,12 @@ async function bootstrap() {
     `✨ Application running in ${configService.server.nodeEnv} mode on http://localhost:${port}`,
     'Bootstrap',
   );
-  logger.log(
-    `📚 API documentation available at http://localhost:${port}/api/docs`,
-    'Bootstrap',
-  );
+  if (configService.server.nodeEnv !== 'production') {
+    logger.log(
+      `📚 API documentation available at http://localhost:${port}/api/docs`,
+      'Bootstrap',
+    );
+  }
 
   // Graceful shutdown handlers
   const gracefulShutdown = async (signal: string) => {

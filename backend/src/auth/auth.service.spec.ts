@@ -27,8 +27,8 @@ describe('AuthService', () => {
     passwordHash: 'hashedPassword123',
     role: Role.parent,
     emailVerified: true,
-    CreatedAt: new Date(),
-    UpdatedAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   beforeEach(async () => {

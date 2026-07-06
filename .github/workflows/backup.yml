@@ -1,0 +1,92 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Daily at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to back up
+        required: true
+        type: choice
+        options: [production, staging]
+        default: production
+
+jobs:
+  backup-production:
+    name: Backup production DB
+    if: ${{ github.event_name == 'schedule' || inputs.environment == 'production' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Create and upload backup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            BACKUP_FILE="autisense-production-${TIMESTAMP}.sql.gz"
+
+            # Dump inside the running postgres container and compress
+            docker compose -f /opt/autisense/docker-compose.prod.yml exec -T postgres \
+              pg_dump -U "${POSTGRES_USER:-postgres}" "${POSTGRES_DB:-autisense}" \
+              | gzip > "/tmp/${BACKUP_FILE}"
+
+            # Upload to S3
+            aws s3 cp "/tmp/${BACKUP_FILE}" \
+              "s3://${{ secrets.BACKUP_S3_BUCKET }}/production/${BACKUP_FILE}"
+
+            # Remove local copy
+            rm "/tmp/${BACKUP_FILE}"
+
+            echo "Backup uploaded: s3://${{ secrets.BACKUP_S3_BUCKET }}/production/${BACKUP_FILE}"
+
+      - name: Prune backups older than 30 days
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script: |
+            aws s3 ls "s3://${{ secrets.BACKUP_S3_BUCKET }}/production/" \
+              | awk '{print $4}' \
+              | while read -r key; do
+                  date_part=$(echo "$key" | grep -oP '\d{8}')
+                  file_date=$(date -d "${date_part}" +%s 2>/dev/null || true)
+                  cutoff=$(date -d "30 days ago" +%s)
+                  if [ -n "$file_date" ] && [ "$file_date" -lt "$cutoff" ]; then
+                    aws s3 rm "s3://${{ secrets.BACKUP_S3_BUCKET }}/production/$key"
+                    echo "Pruned: $key"
+                  fi
+                done
+
+  backup-staging:
+    name: Backup staging DB
+    if: ${{ inputs.environment == 'staging' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Create and upload backup
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            BACKUP_FILE="autisense-staging-${TIMESTAMP}.sql.gz"
+
+            docker compose -f /opt/autisense/docker-compose.prod.yml exec -T postgres \
+              pg_dump -U "${POSTGRES_USER:-postgres}" "${POSTGRES_DB:-autisense}" \
+              | gzip > "/tmp/${BACKUP_FILE}"
+
+            aws s3 cp "/tmp/${BACKUP_FILE}" \
+              "s3://${{ secrets.BACKUP_S3_BUCKET }}/staging/${BACKUP_FILE}"
+
+            rm "/tmp/${BACKUP_FILE}"
+            echo "Backup uploaded: s3://${{ secrets.BACKUP_S3_BUCKET }}/staging/${BACKUP_FILE}"

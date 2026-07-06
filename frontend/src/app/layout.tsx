@@ -4,8 +4,42 @@ import ClientProviders from "@/components/effects/ClientProviders";
 import SkipLink from "@/components/common/SkipLink";
 
 export const metadata: Metadata = {
-  title: "MannSaathi - Child Autism Screening Platform",
-  description: "A sanctuary for guidance and growth in neurodivergent care.",
+  title: {
+    default: "MannSaathi — Child Autism Screening Platform",
+    template: "%s | MannSaathi",
+  },
+  description:
+    "AI-powered autism spectrum disorder screening for children. Empowering parents and clinicians with early, evidence-based insights.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://app.autisense.ai"
+  ),
+  openGraph: {
+    type: "website",
+    siteName: "MannSaathi",
+    title: "MannSaathi — Child Autism Screening Platform",
+    description:
+      "AI-powered autism spectrum disorder screening for children. Early detection. Actionable insights.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "MannSaathi — Child Autism Screening Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MannSaathi — Child Autism Screening Platform",
+    description:
+      "AI-powered autism spectrum disorder screening for children.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({
