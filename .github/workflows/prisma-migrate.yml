@@ -39,9 +39,16 @@ jobs:
         run: npx prisma generate
         working-directory: backend
 
+      # prisma validate only checks schema syntax — it doesn't connect to the
+      # database, but it does require DATABASE_URL to be defined in the env
+      # because the schema references env("DATABASE_URL"). Use the real secret
+      # if set, otherwise fall back to a syntactically valid placeholder so
+      # schema validation always runs.
       - name: Validate Prisma Schema
         run: npx prisma validate
         working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://localhost:5432/validate_placeholder' }}
 
       - name: Check DATABASE_URL is configured
         id: db_check
