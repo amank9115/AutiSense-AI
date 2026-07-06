@@ -67,7 +67,9 @@ describe('ScreeningService', () => {
 
     it('throws NotFoundException when child does not exist', async () => {
       mockPrisma.child.findUnique.mockResolvedValue(null);
-      await expect(service.createSession(dto)).rejects.toThrow(NotFoundException);
+      await expect(service.createSession(dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('creates a session when child belongs to user', async () => {
@@ -137,7 +139,11 @@ describe('ScreeningService', () => {
         userId: 'user-1',
         status: ScreeningStatus.in_progress,
       });
-      const savedResult = { id: 'result-1', sessionId: 'session-3', riskScore: 60 };
+      const savedResult = {
+        id: 'result-1',
+        sessionId: 'session-3',
+        riskScore: 60,
+      };
       mockPrisma.screeningResult.create.mockResolvedValue(savedResult);
       mockPrisma.screeningSession.update.mockResolvedValue({});
 
@@ -156,7 +162,9 @@ describe('ScreeningService', () => {
   describe('deleteSession', () => {
     it('throws NotFoundException for unknown session', async () => {
       mockPrisma.screeningSession.findUnique.mockResolvedValue(null);
-      await expect(service.deleteSession('bad-id', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.deleteSession('bad-id', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('deletes session owned by user', async () => {
