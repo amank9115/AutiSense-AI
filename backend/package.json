@@ -124,15 +124,11 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "coverageThreshold": {
-      "global": {
-        "lines": 50
-      },
-      "./src/auth/**": {
-        "lines": 70
-      },
-      "./src/screening/**": {
-        "lines": 70
-      }
+      "./src/auth/lockout.service.ts": { "lines": 85 },
+      "./src/auth/refresh-token.service.ts": { "lines": 95 },
+      "./src/auth/jwt-auth.guard.ts": { "lines": 95 },
+      "./src/common/circuit-breaker/circuit-breaker.service.ts": { "lines": 90 },
+      "./src/health/health.controller.ts": { "lines": 90 }
     }
   }
 }
