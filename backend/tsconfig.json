@@ -24,13 +24,6 @@
   },
   "exclude": [
     "node_modules",
-    "dist",
-    "test",
-    "check-user.ts",
-    "list-users.ts",
-    "remove-user.ts",
-    "reset-password.ts",
-    "test-email.ts",
-    "verify-accounts.ts"
+    "dist"
   ]
 }
