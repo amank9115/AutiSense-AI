@@ -9,8 +9,8 @@ async def test_predict_window_single_frame(client):
     assert r.status_code == 200
     body = r.json()
     assert "risk_score" in body
-    assert "risk_level" in body
-    assert body["risk_level"] in ("low", "moderate", "high")
+    assert "risk_label" in body          # API uses risk_label, not risk_level
+    assert body["risk_label"] in ("low", "moderate", "high")
 
 
 async def test_predict_window_multiple_frames(client):

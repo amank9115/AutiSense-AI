@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '../common/exceptions';
 import { ScreeningService } from './screening.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CacheService } from '../cache/cache.service';
@@ -27,6 +27,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  organizationMember: { findMany: jest.fn() },
   child_profile: { findMany: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -47,6 +48,7 @@ describe('ScreeningService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockCache.get.mockResolvedValue(null);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -69,13 +71,18 @@ describe('ScreeningService', () => {
     });
 
     it('creates a session when child belongs to user', async () => {
-      mockPrisma.child.findUnique.mockResolvedValue({ id: 'child-1', userId: 'user-1' });
+      // service checks child.parentId (not userId)
+      mockPrisma.child.findUnique.mockResolvedValue({
+        id: 'child-1',
+        parentId: 'user-1',
+        organizationId: 'org-1',
+      });
       const created = {
         id: 'session-1',
         userId: 'user-1',
         childId: 'child-1',
-        status: ScreeningStatus.in_progress,
-        startTime: new Date(),
+        status: ScreeningStatus.pending,
+        child: {},
       };
       mockPrisma.screeningSession.create.mockResolvedValue(created);
 
@@ -88,9 +95,9 @@ describe('ScreeningService', () => {
   describe('getSessionDetails', () => {
     it('throws NotFoundException for unknown session', async () => {
       mockPrisma.screeningSession.findUnique.mockResolvedValue(null);
-      await expect(service.getSessionDetails('bad-id', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getSessionDetails('bad-id', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('returns session for the owning user', async () => {
@@ -100,13 +107,13 @@ describe('ScreeningService', () => {
         childId: 'child-1',
         status: ScreeningStatus.completed,
         child: {},
-        result: null,
-        analyses: [],
+        results: [],
+        analysisData: [],
+        report: null,
       };
       mockPrisma.screeningSession.findUnique.mockResolvedValue(session);
 
       const result = await service.getSessionDetails('session-2', 'user-1');
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(result!.id).toBe('session-2');
     });
   });
@@ -168,7 +175,10 @@ describe('ScreeningService', () => {
 
   describe('getUserSessions', () => {
     it('returns cached result when available', async () => {
-      const cached = [{ id: 'session-5' }];
+      const cached = {
+        data: [{ id: 'session-5' }],
+        pagination: { page: 1, limit: 20, total: 1, pages: 1 },
+      };
       mockCache.get.mockResolvedValue(cached);
 
       const result = await service.getUserSessions('user-1');
@@ -176,13 +186,14 @@ describe('ScreeningService', () => {
       expect(mockPrisma.screeningSession.findMany).not.toHaveBeenCalled();
     });
 
-    it('queries DB and caches when cache is cold', async () => {
-      mockCache.get.mockResolvedValue(null);
-      const sessions = [{ id: 'session-6', child: {}, result: null }];
+    it('queries DB, returns paginated result and caches when cache is cold', async () => {
+      const sessions = [{ id: 'session-6', child: {}, results: [] }];
       mockPrisma.screeningSession.findMany.mockResolvedValue(sessions);
+      mockPrisma.screeningSession.count.mockResolvedValue(1);
 
       const result = await service.getUserSessions('user-1');
-      expect(result).toEqual(sessions);
+      expect(result.data).toEqual(sessions);
+      expect(result.pagination.total).toBe(1);
       expect(mockCache.set).toHaveBeenCalledTimes(1);
     });
   });

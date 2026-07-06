@@ -930,7 +930,7 @@ def metrics():
         ModelMetrics.update_model_age(_MODEL_LOAD_TIME)
 
     # Update session count
-    SessionMetrics.set_active_count(len(SESSION_TIMESTAMPS))
+    SessionMetrics.set_active_count(session_store.count())
 
     return Response(
         content=get_metrics(),
