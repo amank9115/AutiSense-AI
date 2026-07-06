@@ -41,12 +41,17 @@ export default function ScreeningPage() {
   const searchParams = useSearchParams();
   const childId = searchParams?.get("childId");
   const setMlResults = useAppStore((state) => state.setMlResults);
+  const authToken = useAppStore((state) => state.token);
+  const isAuthenticated = !!authToken && authToken !== "guest-token";
 
   useEffect(() => {
     if (!childId) {
       router.push("/dashboard/parent/children");
+    } else if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      router.push(`/login?redirect=/screening?childId=${childId}`);
     }
-  }, [childId, router]);
+  }, [childId, isAuthenticated, router]);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(-1); // -1 = setup
   const [timeLeft, setTimeLeft] = useState(0);
@@ -220,13 +225,32 @@ export default function ScreeningPage() {
       return;
     }
 
+    // Verify authentication before making API calls
+    const currentToken = useAppStore.getState().token;
+    if (!currentToken || currentToken === "guest-token") {
+      setProcessingError("Please log in to complete the screening.");
+      setFailure("analysis");
+      setIsProcessing(false);
+      router.push(`/login?redirect=/screening?childId=${childId}`);
+      return;
+    }
+
     try {
       // 1. Create session in backend
-      const session = await screeningApi.createSession(childId, {
-        moduleCount: MODULES.length,
-        frameCount: frames.length,
-        source: "web-camera",
-      });
+      let session;
+      try {
+        session = await screeningApi.createSession(childId, {
+          moduleCount: MODULES.length,
+          frameCount: frames.length,
+          source: "web-camera",
+        });
+      } catch (sessionErr) {
+        logger.error("ScreeningPage", "Failed to create screening session", sessionErr);
+        setProcessingError(sessionErr instanceof Error ? sessionErr.message : "Failed to create screening session. Please try again.");
+        setFailure("analysis");
+        setIsProcessing(false);
+        return;
+      }
 
       // 2. Call ML service for analysis
       const mlResult = await fetchJson<{ riskScore?: number; riskLabel?: string; modelVersion?: string; featureAverages?: { eye_contact?: number; attention_span?: number; emotion_signals?: number }; recommendations?: string[] }>("/ml/camera-screening", {

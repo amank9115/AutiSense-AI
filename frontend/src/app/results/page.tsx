@@ -260,18 +260,18 @@ export default function ResultsPage() {
               <div className="space-y-8">
                 <MilestoneBar
                   label="Eye Contact"
-                  value={displayResults.behaviors.EyeContact ?? 0}
-                  status={displayResults.behaviors.EyeContact > 80 ? "Typical" : "Developing"}
+                  value={displayResults.behaviors.EyeContact ?? displayResults.behaviors.eye_contact ?? 0}
+                  status={(displayResults.behaviors.EyeContact ?? displayResults.behaviors.eye_contact ?? 0) > 80 ? "Typical" : "Developing"}
                 />
                 <MilestoneBar
                   label="Joint Attention"
-                  value={displayResults.behaviors.JointAttention ?? 0}
-                  status={displayResults.behaviors.JointAttention > 80 ? "Typical" : "Developing"}
+                  value={displayResults.behaviors.JointAttention ?? displayResults.behaviors.attention_span ?? 0}
+                  status={(displayResults.behaviors.JointAttention ?? displayResults.behaviors.attention_span ?? 0) > 80 ? "Typical" : "Developing"}
                 />
                 <MilestoneBar
                   label="Facial Expression"
-                  value={displayResults.behaviors.FacialExpression ?? 0}
-                  status={displayResults.behaviors.FacialExpression > 80 ? "Typical" : "Developing"}
+                  value={displayResults.behaviors.FacialExpression ?? displayResults.behaviors.emotion_signals ?? 0}
+                  status={(displayResults.behaviors.FacialExpression ?? displayResults.behaviors.emotion_signals ?? 0) > 80 ? "Typical" : "Developing"}
                 />
               </div>
               <div className="mt-6 p-4 bg-surface-container-low rounded-2xl flex items-start gap-3 border border-outline-variant/10">
@@ -320,7 +320,7 @@ export default function ResultsPage() {
           <aside className="lg:col-span-4 space-y-6">
 
             {/* Next steps */}
-            <div className="bg-primary text-on-primary rounded-3xl p-8 shadow-2xl sticky top-32 border border-white/10">
+            <div className="bg-primary text-on-primary rounded-3xl p-8 shadow-2xl border border-white/10">
               <h4 className="font-headline font-bold text-2xl mb-3 tracking-tight">Next Steps</h4>
               <p className="mb-6 opacity-80 leading-relaxed font-medium text-sm">
                 Discuss these results with a certified child development specialist.

@@ -4,9 +4,7 @@
 
 # Build output
 dist/
-
-# Prisma
-prisma/migrations/
+coverage/
 
 # Logging
 logs/

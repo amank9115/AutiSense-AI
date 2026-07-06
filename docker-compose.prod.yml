@@ -1,0 +1,169 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# AutiSense-AI — Production Stack
+# ──────────────────────────────────────────────────────────────────────────────
+# Builds and runs all three application services alongside their infrastructure.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml down
+#
+# Secrets are read from the environment / an .env file at the repo root.
+# Copy .env.example → .env and fill in real values before deploying.
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── PostgreSQL with pgvector ───────────────────────────────────────────────
+  postgres:
+    image: ankane/pgvector:v0.5.1
+    container_name: autisense-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-autisense}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - autisense
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (BullMQ + caching) ───────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: autisense-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - autisense
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Ollama (optional local LLM) ────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: autisense-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - autisense
+    profiles:
+      - local-ai
+
+  # ── Backend (NestJS API) ───────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    container_name: autisense-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:password@postgres:5432/autisense?schema=public}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      PY_ML_ENABLED: ${PY_ML_ENABLED:-true}
+      PY_ML_BASE_URL: http://ml-service:8001
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+    ports:
+      - "4000:4000"
+    networks:
+      - autisense
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:4000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  # ── ML Service (FastAPI) ───────────────────────────────────────────────────
+  ml-service:
+    build:
+      context: ./ml-service
+    container_name: autisense-ml
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 8001
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      LOG_FORMAT: json
+      ML_ALLOWED_ORIGINS: ${ML_ALLOWED_ORIGINS:-http://backend:4000}
+    ports:
+      - "8001:8001"
+    networks:
+      - autisense
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/health').getcode()==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          # CV/MediaPipe processing is memory-hungry; give it headroom
+          memory: 4g
+
+  # ── Frontend (Next.js) ─────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+    container_name: autisense-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Server-side proxy target (see next.config.ts rewrites)
+      BACKEND_URL: http://backend:4000
+    ports:
+      - "3000:3000"
+    networks:
+      - autisense
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+volumes:
+  pgdata:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  autisense:
+    driver: bridge

@@ -1,19 +1,25 @@
-fastapi
-uvicorn[standard]
-pydantic
-numpy
-opencv-python-headless
-mediapipe
-scikit-learn
-pandas
-joblib
-reportlab
-ucimlrepo
-mlflow>=2.10.0
-structlog>=24.1.0
-redis>=5.0.0
-prometheus-client>=0.19.0
-scipy>=1.10.0
-requests>=2.28.0
-python-multipart>=0.0.6
-deepface>=0.0.90
+# ──────────────────────────────────────────────────────────────────────────────
+# AutiSense-AI ML Service — Pinned Dependencies (Python 3.11)
+# Versions pinned for reproducible builds. Regenerate with:
+#   pip install -r requirements.txt && pip freeze > requirements.lock
+# ──────────────────────────────────────────────────────────────────────────────
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+mediapipe==0.10.18
+scikit-learn==1.5.2
+pandas==2.2.3
+joblib==1.4.2
+reportlab==4.2.5
+ucimlrepo==0.0.7
+mlflow==2.19.0
+structlog==24.4.0
+redis==5.2.1
+prometheus-client==0.21.1
+scipy==1.14.1
+requests==2.32.3
+python-multipart==0.0.20
+deepface==0.0.93

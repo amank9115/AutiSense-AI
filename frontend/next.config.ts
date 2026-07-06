@@ -1,8 +1,15 @@
 import type { NextConfig } from "next";
 
+// Backend origin the Next.js server-side proxy forwards to. Defaults to the
+// local backend; set BACKEND_URL in production (e.g. http://backend:4000 in Docker).
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:4000';
+
 const nextConfig: NextConfig = {
+  // Emit a minimal standalone server bundle for small production Docker images
+  output: 'standalone',
+
   allowedDevOrigins: ['*.devtunnels.ms', '*.inc1.devtunnels.ms'],
-  
+
   images: {
     remotePatterns: [
       {
@@ -22,21 +29,23 @@ const nextConfig: NextConfig = {
   },
 
   // Optimize package imports for tree shaking
-  optimizePackageImports: ['framer-motion', 'recharts'],
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'recharts'],
+  },
 
   async rewrites() {
     return [
       {
         source: '/api/v1/:path*',
-        destination: 'http://localhost:4000/api/v1/:path*',
+        destination: `${BACKEND_URL}/api/v1/:path*`,
       },
       {
         source: '/ml/:path*',
-        destination: 'http://localhost:4000/ml/:path*',
+        destination: `${BACKEND_URL}/ml/:path*`,
       },
       {
         source: '/ai/:path*',
-        destination: 'http://localhost:4000/ai/:path*',
+        destination: `${BACKEND_URL}/ai/:path*`,
       },
     ];
   },
