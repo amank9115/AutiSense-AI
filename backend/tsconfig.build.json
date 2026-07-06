@@ -4,12 +4,6 @@
     "node_modules",
     "test",
     "dist",
-    "**/*spec.ts",
-    "check-user.ts",
-    "list-users.ts",
-    "remove-user.ts",
-    "reset-password.ts",
-    "test-email.ts",
-    "verify-accounts.ts"
+    "**/*spec.ts"
   ]
 }

@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { Request } from 'express';
 
 /**
@@ -13,7 +18,9 @@ export class MetricsAuthGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest<Request>();
     const authHeader = req.headers['authorization'] ?? '';
-    const provided = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const provided = authHeader.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : '';
 
     if (provided !== token) {
       throw new UnauthorizedException('Invalid metrics token');
