@@ -14,7 +14,8 @@ from pathlib import Path as PathlibPath
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, Depends, Security
+from fastapi.security import APIKeyHeader
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
@@ -190,6 +191,30 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# ── Admin API Key Authentication ───────────────────────────────────────────────
+# Admin endpoints require ML_ADMIN_API_KEY environment variable to be set
+# This prevents unauthorized access to sensitive model management operations
+_API_KEY_HEADER = APIKeyHeader(name="X-Admin-API-Key", auto_error=False)
+
+def get_admin_api_key(api_key: str = Security(_API_KEY_HEADER)) -> str:
+    """Validate admin API key for protected endpoints.
+
+    Raises HTTPException if ML_ADMIN_API_KEY is not configured or key is invalid.
+    """
+    expected_key = os.getenv("ML_ADMIN_API_KEY")
+    if not expected_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Admin API key not configured. Set ML_ADMIN_API_KEY environment variable."
+        )
+    if not api_key or api_key != expected_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing admin API key. Include X-Admin-API-Key header."
+        )
+    return api_key
+
 
 # Session configuration
 MAX_WINDOW = 45
@@ -818,9 +843,14 @@ def health_drift() -> Dict[str, Any]:
 
 
 @app.post("/admin/reload-model")
-async def reload_model(version: Optional[str] = None) -> Dict[str, Any]:
+async def reload_model(
+    version: Optional[str] = None,
+    api_key: str = Depends(get_admin_api_key)
+) -> Dict[str, Any]:
     """
     Reload model without restarting service.
+
+    Requires X-Admin-API-Key header with valid ML_ADMIN_API_KEY.
 
     Args:
         version: Optional specific model version to load (e.g., "v20240601_abc123")
@@ -1167,8 +1197,14 @@ def registry_get_model(version: str) -> Dict[str, Any]:
 
 
 @app.post("/admin/registry/models/{version}/promote")
-def registry_promote_model(version: str) -> Dict[str, Any]:
-    """Promote a model to production."""
+def registry_promote_model(
+    version: str,
+    api_key: str = Depends(get_admin_api_key)
+) -> Dict[str, Any]:
+    """Promote a model to production.
+
+    Requires X-Admin-API-Key header with valid ML_ADMIN_API_KEY.
+    """
     try:
         result = _model_registry.promote(version)
 
@@ -1187,8 +1223,14 @@ def registry_promote_model(version: str) -> Dict[str, Any]:
 
 
 @app.post("/admin/registry/models/{version}/demote")
-def registry_demote_model(version: str) -> Dict[str, Any]:
-    """Demote a staging model to archived."""
+def registry_demote_model(
+    version: str,
+    api_key: str = Depends(get_admin_api_key)
+) -> Dict[str, Any]:
+    """Demote a staging model to archived.
+
+    Requires X-Admin-API-Key header with valid ML_ADMIN_API_KEY.
+    """
     try:
         return _model_registry.demote(version)
     except ValueError as e:
@@ -1196,8 +1238,14 @@ def registry_demote_model(version: str) -> Dict[str, Any]:
 
 
 @app.post("/admin/registry/rollback")
-def registry_rollback(steps: int = 1) -> Dict[str, Any]:
-    """Rollback to a previous production model."""
+def registry_rollback(
+    steps: int = 1,
+    api_key: str = Depends(get_admin_api_key)
+) -> Dict[str, Any]:
+    """Rollback to a previous production model.
+
+    Requires X-Admin-API-Key header with valid ML_ADMIN_API_KEY.
+    """
     result = _model_registry.rollback(steps=steps)
     if not result:
         raise HTTPException(status_code=404, detail="No archived models available for rollback")
@@ -1223,8 +1271,14 @@ def registry_compare_models(version_a: str, version_b: str) -> Dict[str, Any]:
 
 
 @app.delete("/admin/registry/models/{version}")
-def registry_delete_model(version: str) -> Dict[str, Any]:
-    """Delete a model from the registry (cannot delete production models)."""
+def registry_delete_model(
+    version: str,
+    api_key: str = Depends(get_admin_api_key)
+) -> Dict[str, Any]:
+    """Delete a model from the registry (cannot delete production models).
+
+    Requires X-Admin-API-Key header with valid ML_ADMIN_API_KEY.
+    """
     deleted = _model_registry.delete(version)
     if not deleted:
         raise HTTPException(status_code=400, detail="Cannot delete model (not found or is production)")

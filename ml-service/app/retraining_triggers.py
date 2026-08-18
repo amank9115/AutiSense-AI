@@ -121,6 +121,47 @@ class RetrainingTriggerSystem:
         self._monitor_thread: Optional[threading.Thread] = None
         self._stop_monitoring = threading.Event()
 
+    def _validate_script_path(self, script_path: str) -> str:
+        """Validate and resolve training script path to prevent command injection.
+
+        Ensures:
+        - Path contains no shell metacharacters
+        - Path resolves to a file within the application directory
+        - File has .py extension
+        - File exists and is readable
+
+        Raises:
+            ValueError: If path is invalid or potentially malicious
+        """
+        # Check for shell metacharacters that could enable injection
+        dangerous_chars = {'$', '`', ';', '|', '&', '>', '<', '\n', '\r', '(', ')'}
+        if any(char in script_path for char in dangerous_chars):
+            raise ValueError(f"Invalid script path: contains dangerous characters")
+
+        # Check for path traversal attempts
+        if '..' in script_path or script_path.startswith(('/', '\\')):
+            raise ValueError(f"Invalid script path: path traversal not allowed")
+
+        # Only allow .py files
+        if not script_path.endswith('.py'):
+            raise ValueError(f"Invalid script path: only .py files allowed")
+
+        # Resolve to absolute path within the application directory
+        app_dir = Path(__file__).parent.resolve()
+        resolved_path = (app_dir / script_path).resolve()
+
+        # Ensure resolved path is within application directory
+        try:
+            resolved_path.relative_to(app_dir)
+        except ValueError:
+            raise ValueError(f"Invalid script path: must be within application directory")
+
+        # Check file exists
+        if not resolved_path.is_file():
+            raise ValueError(f"Script not found: {script_path}")
+
+        return str(resolved_path)
+
     def start_monitoring(self) -> None:
         """Start background monitoring thread."""
         if self._monitor_thread and self._monitor_thread.is_alive():
@@ -375,9 +416,10 @@ class RetrainingTriggerSystem:
         )
 
         try:
-            # Run training script
+            # Run training script with path validation to prevent command injection
+            script_path = self._validate_script_path(self.config.training_script_path)
             result = subprocess.run(
-                ["python", self.config.training_script_path],
+                ["python", script_path],
                 capture_output=True,
                 text=True,
                 timeout=self.config.training_timeout_minutes * 60,

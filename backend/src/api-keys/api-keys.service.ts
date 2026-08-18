@@ -1,11 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { ApiKey } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ApiKeysService {
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * Constant-time string comparison to prevent timing attacks.
+   * Returns true if strings are equal, false otherwise.
+   */
+  private constantTimeEquals(a: string, b: string): boolean {
+    // Convert strings to buffers for timing-safe comparison
+    const bufA = Buffer.from(a, 'hex');
+    const bufB = Buffer.from(b, 'hex');
+
+    // If lengths differ, we still need to compare to maintain constant time
+    // Use the longer length and pad the shorter one
+    if (bufA.length !== bufB.length) {
+      // Still perform a comparison to maintain constant time
+      // This prevents attackers from determining length differences via timing
+      const dummyBuf = Buffer.alloc(bufA.length);
+      try {
+        timingSafeEqual(bufA, dummyBuf);
+      } catch {
+        // Ignore error - we just want the timing
+      }
+      return false;
+    }
+
+    try {
+      return timingSafeEqual(bufA, bufB);
+    } catch {
+      return false;
+    }
+  }
 
   async generate(
     organizationId: string,
@@ -25,7 +55,21 @@ export class ApiKeysService {
 
   async findByHash(rawKey: string) {
     const keyHash = createHash('sha256').update(rawKey).digest('hex');
-    return this.prisma.apiKey.findUnique({ where: { keyHash } });
+
+    // Find by prefix first for faster lookup, then verify with constant-time comparison
+    const keyPrefix = rawKey.substring(0, 10);
+    const candidates = await this.prisma.apiKey.findMany({
+      where: { keyPrefix, revokedAt: null },
+    });
+
+    // Use constant-time comparison to prevent timing attacks
+    for (const candidate of candidates) {
+      if (this.constantTimeEquals(keyHash, candidate.keyHash)) {
+        return candidate;
+      }
+    }
+
+    return null;
   }
 
   async listForOrg(organizationId: string) {

@@ -2,11 +2,13 @@
 
 import json
 import os
+import re
 import sqlite3
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
+from werkzeug.utils import secure_filename
 
 import cv2
 from flask import Flask, jsonify, request
@@ -214,9 +216,31 @@ def upload_video():
     if not file.filename:
         return jsonify({"error": "Empty filename."}), 400
 
+    # Sanitize filename to prevent path traversal attacks
+    # Use werkzeug's secure_filename and additional validation
+    safe_filename = secure_filename(file.filename)
+    if not safe_filename:
+        safe_filename = "video.mp4"
+
+    # Additional validation: ensure no directory separators remain
+    safe_filename = safe_filename.replace("/", "_").replace("\\", "_")
+
+    # Validate file extension for allowed video formats
+    allowed_extensions = {".mp4", ".webm", ".avi", ".mov", ".mkv"}
+    file_ext = Path(safe_filename).suffix.lower()
+    if file_ext not in allowed_extensions:
+        return jsonify({"error": f"Invalid file type. Allowed: {', '.join(allowed_extensions)}"}), 400
+
     timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
-    filename = f"{timestamp}-{file.filename}"
+    filename = f"{timestamp}-{safe_filename}"
     safe_path = UPLOAD_DIR / filename
+
+    # Ensure the path is within UPLOAD_DIR (defense in depth)
+    try:
+        safe_path.resolve().relative_to(UPLOAD_DIR.resolve())
+    except ValueError:
+        return jsonify({"error": "Invalid file path."}), 400
+
     file.save(str(safe_path))
 
     try:
