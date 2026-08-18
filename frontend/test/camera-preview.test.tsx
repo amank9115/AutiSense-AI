@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { CameraPreview } from '../src/components/camera/CameraPreview';
+import CameraPreview from '../src/components/camera/CameraPreview';
 
 // Mock browser APIs
 global.clamp = (value: number) => Math.max(0, Math.min(100, value));
@@ -38,7 +38,7 @@ describe('CameraPreview', () => {
 
   it('should render without errors', () => {
     render(<CameraPreview onLiveMetrics={() => {}} />);
-    expect(screen.getByText(/start screening/i)).toBeInTheDocument();
+    expect(screen.getByText(/grant camera access/i)).toBeInTheDocument();
   });
 
   describe('metric calculations', () => {
@@ -90,18 +90,9 @@ describe('CameraPreview', () => {
   describe('cleanup', () => {
     it('should have proper cleanup effect', () => {
       const { unmount } = render(<CameraPreview onLiveMetrics={() => {}} />);
-      
-      // Mock video element
-      const video = document.createElement('video');
-      vi.spyOn(video, 'srcObject', 'get').mockReturnValue(new MediaStream());
-      
-      // Simulate unmount
-      unmount();
-      
-      // Should not throw errors during cleanup
-      expect(() => {
-        // Cleanup would be called here
-      }).not.toThrow();
+
+      // Simulate unmount — cleanup stops camera tracks without throwing
+      expect(() => unmount()).not.toThrow();
     });
   });
 
@@ -114,7 +105,7 @@ describe('CameraPreview', () => {
       render(<CameraPreview onLiveMetrics={() => {}} />);
       
       // Should not crash without FaceDetector
-      expect(screen.getByText(/start screening/i)).toBeInTheDocument();
+      expect(screen.getByText(/grant camera access/i)).toBeInTheDocument();
       
       // Restore
       (window as Window & { FaceDetector?: unknown }).FaceDetector = originalFaceDetector;
